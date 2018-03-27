@@ -1,0 +1,3 @@
+  # Foo
+  def foo
+  end

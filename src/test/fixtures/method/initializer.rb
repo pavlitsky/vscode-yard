@@ -1,0 +1,2 @@
+def initialize(bar)
+end

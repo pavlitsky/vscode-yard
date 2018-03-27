@@ -1,0 +1,68 @@
+{
+    "name": "yard",
+    "displayName": "YARD Generator",
+    "description": "Document Ruby source code with YARD comments",
+    "version": "0.1.0",
+    "publisher": "pavlitsky",
+    "engines": {
+        "vscode": "^1.18.0"
+    },
+    "lincense": "SEE LICENSE IN LICENSE.txt",
+    "keywords": [
+      "documentation",
+      "ruby",
+      "rails",
+      "yard",
+      "yardoc",
+      "rdoc"
+    ],
+    "author": {
+      "name": "Vitaly Pavlitsky"
+    },
+    "categories": [
+        "Other"
+    ],
+    "galleryBanner": {
+      "color": "#2d2d2d",
+      "theme": "dark"
+    },
+    "icon": "images/icon.png",
+    "bugs": {
+      "url": "https://github.com/pavlitsky/vscode-yard/issues",
+      "email": "pavlitsky@gmail.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/pavlitsky/vscode-yard.git"
+    },
+    "homepage": "https://github.com/pavlitsky/vscode-yard/blob/master/README.md",
+    "activationEvents": [
+        "onCommand:extension.generateYard"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "commands": [{
+            "command": "extension.generateYard",
+            "title": "Document with YARD"
+        }],
+        "keybindings": [{
+            "command": "extension.generateYard",
+            "key": "ctrl+alt+enter",
+            "mac": "cmd+alt+enter",
+            "when": "editorTextFocus && !editorReadonly && editorLangId == ruby"
+        }]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.6",
+        "@types/node": "^7.0.43",
+        "@types/mocha": "^2.2.42"
+    }
+}
