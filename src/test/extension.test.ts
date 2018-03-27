@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import * as path from "path";
 import { commands, extensions, TextDocument, TextEditor, window, workspace } from "vscode";
 
-const extensionID = "pavlitsky.vscode-yard";
+const extensionID = "pavlitsky.yard";
 const extensionPath = extensions.getExtension(extensionID).extensionPath;
 const fixturesPath = path.join(extensionPath, "src", "test", "fixtures");
 
