@@ -1,5 +1,7 @@
 # YARD Generator
 
+[![Build Status](https://travis-ci.org/pavlitsky/vscode-yard.svg?branch=master)](https://travis-ci.org/pavlitsky/vscode-yard)
+
 Extension helps to document Ruby source code with [YARD](https://yardoc.org/) comments.
 
 See [Readme](http://www.rubydoc.info/gems/yard/file/README.md) for more information on this tool.
