@@ -3,7 +3,7 @@ import { EndOfLine, Position, TextEditor, TextLine, window } from "vscode";
 import documenterResolver from "./documenter_resolver";
 
 // Generate YARD comment
-export default class YardGenerator {
+export default class YardDocumenter {
   private editor: TextEditor;
   private position: Position;
   private line: TextLine;
@@ -15,7 +15,7 @@ export default class YardGenerator {
     // Update current editor, line, cursor position
     this.updateContext();
 
-    // Check if generator should run
+    // Check if documenter should run
     if (!this.shouldRun()) { return; }
 
     // Resolve documenter by current line's content
@@ -51,7 +51,7 @@ export default class YardGenerator {
     return prevLine.text.trim().startsWith("#");
   }
 
-  // Is generator should run
+  // Is documenter should run
   private shouldRun(): boolean {
     return this.editor &&
       this.editor.document.languageId === "ruby" &&

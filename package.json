@@ -1,6 +1,6 @@
 {
     "name": "yard",
-    "displayName": "YARD Generator",
+    "displayName": "YARD Documenter",
     "description": "Document Ruby source code with YARD comments",
     "version": "0.1.0",
     "publisher": "pavlitsky",

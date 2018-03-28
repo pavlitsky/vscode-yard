@@ -1,4 +1,4 @@
-# YARD Generator
+# YARD Documenter
 
 [![Build Status](https://travis-ci.org/pavlitsky/vscode-yard.svg?branch=master)](https://travis-ci.org/pavlitsky/vscode-yard)
 [![Maintainability](https://api.codeclimate.com/v1/badges/54361b514cbeb2dd279c/maintainability)](https://codeclimate.com/github/pavlitsky/vscode-yard/maintainability)
@@ -14,8 +14,7 @@ No need to remember a formatting tags and styling, just type and describe your c
 
 ## Installation
 
-Type `ext install yard` in VS Code command palette and choose to install the extension. It can also
-be found on the VS Code Marketplace.
+Bring up the Extensions view, search for `yard` and click the Install button.
 
 ## Usage
 
