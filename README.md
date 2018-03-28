@@ -59,11 +59,12 @@ List of supported tags: `@author`, `@option`, `@param`, `@return`.
 
 No configuration yet.
 
-## Coming soon
+## TODO
 
 * Configuration options.
 * Ability to document attributes: `attr_reader`, `attr_writer`, `attr_accessor`.
 * Support for non-empty options hash parameters.
+* Resolve `@author` information from environment or settings.
 * (maybe) Editor snippets for tags (`@option`, `@param` etc) or tags autocompletion
 * (maybe) A better support for array / keyword args splats, see
   [comment](https://github.com/lsegal/yard/issues/439#issuecomment-3292412).
