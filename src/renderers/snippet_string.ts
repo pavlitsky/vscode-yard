@@ -1,0 +1,110 @@
+"use strict";
+import { SnippetString } from "vscode";
+import { Author } from "../entities/author";
+import { TagOption } from "../entities/tag_option";
+import { TagWithOptions } from "../entities/tag_with_options";
+import { TagWithTypes } from "../entities/tag_with_types";
+import { IEntity } from "../types";
+import { SpacerHelper } from "./snippet_string/spacer_helper";
+
+// Render documentation tree into a snippet
+export class Renderer {
+  private snippet: SnippetString;
+  private spacer: SpacerHelper;
+
+  constructor(private entities: IEntity[], private eol: string) {}
+
+  // Render entities and return documentation snippet
+  public render(): SnippetString {
+    this.snippet = new SnippetString();
+    this.spacer = new SpacerHelper(this.snippet, this.eol);
+    this.entities.forEach((entity, index, entities) => {
+      this.spacer.beforeEntity(entity, entities, index);
+      this.renderEntity(entity);
+      this.spacer.afterEntity();
+    });
+    return this.decorateSnippet();
+  }
+
+  // Render a single entity depending of its type
+  private renderEntity(entity) {
+    switch (entity.type) {
+      case("Author"): this.authorEntity(entity); break;
+      case("TagOption"): this.tagOptionEntity(entity); break;
+      case("TagWithOptions"): this.tagWithOptionsEntity(entity); break;
+      case("TagWithTypes"): this.tagWithTypesEntity(entity); break;
+      case("Text"): this.textEntity(entity); break;
+    }
+  }
+
+  // Render an @author tag line
+  // @author Name <<email>>
+  private authorEntity(entity: Author) {
+    this.snippet.appendText("@author ");
+    this.textOrPlaceholder(entity.authorName, "<Name>");
+    this.snippet.appendText(" <");
+    this.textOrPlaceholder(entity.authorEmail, "<email>");
+    this.snippet.appendText(">");
+    this.spacer.endOfLine();
+  }
+
+  // Render an @option tag line
+  // @option paramName [types] :<key> <description>
+  private tagOptionEntity(entity: TagOption) {
+    this.snippet.appendText("@option " + entity.paramName + " [");
+    this.textOrPlaceholder(entity.types, "<Type>");
+    this.snippet.appendText("] :");
+    this.textOrPlaceholder(entity.key, "<key>");
+    this.snippet.appendText(" ");
+    this.textOrPlaceholder(entity.text, "<description>");
+    this.spacer.endOfLine();
+  }
+
+  // Render a tag with a types and options line
+  // @tagName [types] name <description>
+  // @option paramName [types] :<key> <description>
+  private tagWithOptionsEntity(entity: TagWithOptions) {
+    this.tagWithTypesEntity(entity);
+    entity.options.forEach((option) => { this.tagOptionEntity(option); });
+  }
+
+  // Render a tag with a types line
+  // @tagName [types] name <description>
+  private tagWithTypesEntity(entity: TagWithTypes) {
+    this.snippet.appendText("@" + entity.tagName + " [");
+    this.textOrPlaceholder(entity.types, "<Type>");
+    this.snippet.appendText("] ");
+    if (entity.name) { this.snippet.appendText(entity.name + " "); }
+    this.textOrPlaceholder(entity.text, "<description>");
+    this.spacer.endOfLine();
+  }
+
+  // Render a descriptive text line
+  // <Description>
+  private textEntity(entity) {
+    this.textOrPlaceholder(entity.text, "<Description>");
+    this.spacer.endOfLine();
+  }
+
+  // Render a text or a placeholder if text is empty
+  private textOrPlaceholder(text, placeholder) {
+    if (text) {
+      this.snippet.appendText(text);
+    } else {
+      this.snippet.appendPlaceholder(placeholder);
+    }
+  }
+
+  // Decorate the snippet and return a rebuilt one.
+  // Snippet is prepended with a comment symbol, also consecutive empty lines are stripped.
+  private decorateSnippet() {
+    let lines: string[] = this.snippet.value.split(this.eol);
+    lines = lines.filter((element, position, array) => {
+      return (position === 0 || element !== array[position - 1]) && position < array.length - 1;
+    });
+    const decoratedLines: string = lines
+      .map((line) => "#" + (line ? " " + line : ""))
+      .join(this.eol) + this.eol;
+    return new SnippetString(decoratedLines);
+  }
+}

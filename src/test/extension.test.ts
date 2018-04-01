@@ -1,3 +1,4 @@
+"use strict";
 import * as assert from "assert";
 import { readFileSync } from "fs";
 import * as path from "path";

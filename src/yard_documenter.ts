@@ -1,6 +1,6 @@
 "use strict";
 import { EndOfLine, Position, TextEditor, TextLine, window } from "vscode";
-import documenterResolver from "./documenter_resolver";
+import { Builder } from "./builder";
 
 // Generate YARD comment
 export default class YardDocumenter {
@@ -19,13 +19,11 @@ export default class YardDocumenter {
     if (!this.shouldRun()) { return; }
 
     // Resolve documenter by current line's content
-    const documenter = (new documenterResolver(this.lineText)).resolve();
-    if (!documenter) { return; }
+    const snippet = (new Builder(this.lineText, this.eol)).build();
+    if (!snippet) { return; }
 
     // Insert documentation snippet
-    return this.editor.insertSnippet(
-      documenter.buildSnippet(this.eol), this.snippetPosition(),
-    );
+    return this.editor.insertSnippet(snippet, this.snippetPosition());
   }
 
   private updateContext(textEditor?: TextEditor) {
@@ -53,8 +51,6 @@ export default class YardDocumenter {
 
   // Is documenter should run
   private shouldRun(): boolean {
-    return this.editor &&
-      this.editor.document.languageId === "ruby" &&
-      !this.commentExists();
+    return this.editor && !this.commentExists();
   }
 }
