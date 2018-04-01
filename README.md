@@ -12,10 +12,6 @@ See [Readme](http://www.rubydoc.info/gems/yard/file/README.md) for more informat
 Extension prepends methods, classes, modules etc with documentation snippets.
 No need to remember a formatting tags and styling, just type and describe your code.
 
-## Installation
-
-Bring up the Extensions view, search for `yard` and click the Install button.
-
 ## Usage
 
 Position cursor on a definition you wish to document.
@@ -63,8 +59,10 @@ No configuration yet.
 
 * Configuration options.
 * Ability to document attributes: `attr_reader`, `attr_writer`, `attr_accessor`.
+* Ability to document blocks: `@yield`, `@yieldparam`, `@yieldreturn`.
 * Support for non-empty options hash parameters.
 * Resolve `@author` information from environment or settings.
+* Ability to update existing documentation.
 * (maybe) Editor snippets for tags (`@option`, `@param` etc) or tags autocompletion
 * (maybe) A better support for array / keyword args splats, see
   [comment](https://github.com/lsegal/yard/issues/439#issuecomment-3292412).
