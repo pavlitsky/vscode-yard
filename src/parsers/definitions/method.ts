@@ -9,7 +9,17 @@ import { IBaseParser } from "./base_parser";
 // Parse a class or an instance method definition into documentation entities
 export default class MethodDef implements IBaseParser {
   // Regexp to extract method's name, its scope and params
-  public readonly regExp = /(def)\s+(self)?\.?(\w+)?(\(.*\))?/;
+  // See https://docs.ruby-lang.org/en/trunk/syntax/methods_rdoc.html#label-Method+Names
+  // tslint:disable:max-line-length
+  public regExp = new RegExp([
+      /(def)\s+/ // def
+    , /(self)?\.?/ // self.
+    , /([a-zA-Z_\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf][a-zA-Z_0-9\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]+[!?=]?|\+|-|\*|\*\*|\/|%|&|\^|>>|<<|==|!=|===|=~|!~|<=>|<|<=|>|>=|\[\]=|\[\]|\+@|-@|!@|~@)?/ // method name
+    , /(\(.*\))?/, // method parameters
+    ].map((r) => r.source).join(""),
+    );
+  // tslint:enable:max-line-length
+
   // Method name
   private parsedName: string = "";
   // Method params string with parenthesis
