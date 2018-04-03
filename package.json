@@ -23,7 +23,7 @@
         "Other"
     ],
     "galleryBanner": {
-      "color": "#2d2d2d",
+    "color": "#333333",
       "theme": "dark"
     },
     "icon": "images/icon.png",
