@@ -1,5 +1,5 @@
 "use strict";
-import { SnippetString } from "vscode";
+import { SnippetString, workspace, WorkspaceConfiguration } from "vscode";
 import { Author } from "../entities/author";
 import { TagOption } from "../entities/tag_option";
 import { TagWithOptions } from "../entities/tag_with_options";
@@ -11,19 +11,29 @@ import { SpacerHelper } from "./snippet_string/spacer_helper";
 export class Renderer {
   private snippet: SnippetString;
   private spacer: SpacerHelper;
+  private config: WorkspaceConfiguration;
 
-  constructor(private entities: IEntity[], private eol: string) {}
+  constructor(private entities: IEntity[], private eol: string) {
+    this.config = workspace.getConfiguration("yard.tags");
+  }
 
   // Render entities and return documentation snippet
   public render(): SnippetString {
     this.snippet = new SnippetString();
     this.spacer = new SpacerHelper(this.snippet, this.eol);
     this.entities.forEach((entity, index, entities) => {
+      if (!this.shouldRenderEntity(entity)) { return; }
       this.spacer.beforeEntity(entity, entities, index);
       this.renderEntity(entity);
       this.spacer.afterEntity();
     });
     return this.decorateSnippet();
+  }
+
+  // Is entity should be rendered
+  private shouldRenderEntity(entity): boolean {
+    if (entity.type === "Author" && !this.config.get("author")) { return false; }
+    return true;
   }
 
   // Render a single entity depending of its type

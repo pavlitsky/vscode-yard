@@ -1,0 +1,3 @@
+# <Description>
+class Foo
+end

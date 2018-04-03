@@ -53,11 +53,19 @@ List of supported tags: `@author`, `@option`, `@param`, `@return`.
 
 ## Configuration
 
-No configuration yet.
+```ts
+"yard.spacers.beforeDescription" // Prepend an empty line to descriptive texts
+"yard.spacers.afterDescription" // Append an empty line to descriptive texts
+"yard.spacers.beforeTags" // Prepend an empty line to all method's tags
+"yard.spacers.separateTags" // Separate method's tags of the same name (@params and @return) with an empty line
+"yard.spacers.afterTags" // Append an empty line to all method's tags
+"yard.spacers.beforeSingleTag" // Prepend an empty line to a single tag documentation (for example a constant)
+"yard.spacers.afterSingleTag" // Append an empty line to a single tag documentation (for example a constant)
+"yard.tags.author" // Append @author tag to Class and Module documentation
+```
 
 ## TODO
 
-* Configuration options.
 * Ability to document attributes: `attr_reader`, `attr_writer`, `attr_accessor`.
 * Ability to document blocks: `@yield`, `@yieldparam`, `@yieldreturn`.
 * Support for non-empty options hash parameters.
