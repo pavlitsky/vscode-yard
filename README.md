@@ -18,7 +18,7 @@ It's able to document:
 * Classes and Modules.
 * Constants.
 
-Methods named in Japanese are supported.
+Methods named in ASCII and Japanese are supported.
 
 ## Usage
 
@@ -107,19 +107,13 @@ end
 
 Feel free to append any needed tags like `@note`, `@example`, `@see` manually after snippet filled in.
 
-Extension can document:
-
-* Methods: instance methods, initializers, class methods.
-* Classes and Modules.
-* Constants.
-
 ## Details
 
 List of generated tags: `@author`, `@option`, `@param`, `@return`.
 
 ## Configuration
 
-Insertion of empty lines are confirugable to make it able to tune between a compact and most verbose documentation style.
+Insertion of empty lines are configurable to make it able to tune between a compact and most verbose documentation style.
 
 ```ts
 "yard.spacers.beforeDescription" // Prepend an empty line to descriptive texts
