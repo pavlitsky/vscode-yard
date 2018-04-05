@@ -3,13 +3,16 @@
 [![Build Status](https://travis-ci.org/pavlitsky/vscode-yard.svg?branch=master)](https://travis-ci.org/pavlitsky/vscode-yard)
 [![Maintainability](https://api.codeclimate.com/v1/badges/54361b514cbeb2dd279c/maintainability)](https://codeclimate.com/github/pavlitsky/vscode-yard/maintainability)
 
-Extension generates [YARD](https://yardoc.org/) documentation comments for Ruby source code.
+Extension generates [YARD](https://yardoc.org/) documentation comments for Ruby
+source code.
 
-See [Readme](http://www.rubydoc.info/gems/yard/file/README.md) for more information on this tool.
+See [Readme](http://www.rubydoc.info/gems/yard/file/README.md) for more
+information on this tool.
 
 ## Features
 
-Extension automatically prepends definitions of methods, classes etc with documentation snippets.
+Extension automatically prepends definitions of methods, classes etc with
+documentation snippets.
 No need to remember a formatting tags and styling, just type and describe your code.
 
 It's able to document:
@@ -29,8 +32,8 @@ def foo(bar, baz = false) # <- put cursor at any place of this line
 end
 ```
 
-Hit `Ctrl+Alt+Enter` (`Cmd+Alt+Enter` on macOS) or invoke `Document with YARD` from the command
-palette.
+Hit `Ctrl+Alt+Enter` (`Cmd+Alt+Enter` on macOS) or invoke `Document with YARD`
+from the command palette.
 
 ```ruby
   #
@@ -105,7 +108,8 @@ class Foo
 end
 ```
 
-Feel free to append any needed tags like `@note`, `@example`, `@see` manually after snippet filled in.
+Feel free to append any needed tags like `@note`, `@example`, `@see` manually
+after snippet filled in.
 
 ## Details
 
@@ -113,7 +117,8 @@ List of generated tags: `@author`, `@option`, `@param`, `@return`.
 
 ## Configuration
 
-Insertion of empty lines are configurable to make it able to tune between a compact and most verbose documentation style.
+Insertion of empty lines are configurable to make it able to tune between
+a curt and verbose documentation styles.
 
 ```ts
 "yard.spacers.beforeDescription" // Prepend an empty line to descriptive texts
@@ -144,7 +149,8 @@ Insertion of the `@author` tag can be opted with this setting.
 
 ## Troubleshooting
 
-If hotkey isn't working open VS Code Keyboard Shortcuts and check for keybinging conflicts.
+If hotkey isn't working open VS Code Keyboard Shortcuts and check for keybinging
+conflicts.
 
-This also may happen if destination is already documented. In this case extension silently does
-nothing.
+This also may happen if destination is already documented. In this case extension
+silently does nothing.

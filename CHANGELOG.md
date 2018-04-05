@@ -6,7 +6,8 @@
 
 ## [0.2.1] - 2018-04-03
 
-- Improve method name detection. Added operators (like `def >>; end`) and Japanese symbols detection.
+- Improve method name detection. Added operators (like `def >>; end`)
+ and Japanese symbols detection.
 - Fix detection of methods ending with `!?=`.
 
 ## [0.2.0] - 2018-04-03
