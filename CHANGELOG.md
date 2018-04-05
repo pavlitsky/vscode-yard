@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.2.2] - 2018-04-05
+
+- Update README with more examples.
+
 ## [0.2.1] - 2018-04-03
 
 - Improve method name detection. Added operators (like `def >>; end`) and Japanese symbols detection.
