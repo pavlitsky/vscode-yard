@@ -3,14 +3,22 @@
 [![Build Status](https://travis-ci.org/pavlitsky/vscode-yard.svg?branch=master)](https://travis-ci.org/pavlitsky/vscode-yard)
 [![Maintainability](https://api.codeclimate.com/v1/badges/54361b514cbeb2dd279c/maintainability)](https://codeclimate.com/github/pavlitsky/vscode-yard/maintainability)
 
-Extension helps to document Ruby source code with [YARD](https://yardoc.org/) comments.
+Extension generates [YARD](https://yardoc.org/) documentation comments for Ruby source code.
 
 See [Readme](http://www.rubydoc.info/gems/yard/file/README.md) for more information on this tool.
 
 ## Features
 
-Extension prepends methods, classes, modules etc with documentation snippets.
+Extension automatically prepends definitions of methods, classes etc with documentation snippets.
 No need to remember a formatting tags and styling, just type and describe your code.
+
+It's able to document:
+
+* Methods: instance methods, initializers, class methods.
+* Classes and Modules.
+* Constants.
+
+Methods named in Japanese are supported.
 
 ## Usage
 
@@ -41,6 +49,64 @@ Documentation snippet appears on top of the method.
 
 Use `Tab` and `Shift+Tab` keys to navigate and fill in placeholders.
 
+```ruby
+  #
+  # An example instance method description.
+  #
+  # @param [Integer] bar first param used for demonstration
+  # @param [Boolean] baz second param with a default value
+  #
+  # @return [nil] nothing returned so it's always nil
+  #
+  def foo(bar, baz = false)
+  end
+```
+
+Done!
+
+Another snippets examples, default spacers setup:
+
+```ruby
+#
+# Class to retry and fail.
+#
+# @author Author Name <author@example.com>
+#
+class Foo
+  # @return [Integer] count of retries performed before failing
+  RETRIES_COUNT=3
+
+  #
+  # Retry something.
+  #
+  # @return [Boolean] processing result, true if succeed
+  #
+  def self.retry
+    RETRIES_COUNT.times { puts 'Retrying...' }
+    false
+  end
+end
+```
+
+Minimal setup:
+
+```ruby
+# Class to retry and fail.
+class Foo
+  # @return [Integer] count of retries performed before failing
+  RETRIES_COUNT=3
+
+  # Retry something.
+  # @return [Boolean] processing result, true if succeed
+  def self.retry
+    RETRIES_COUNT.times { puts 'Retrying...' }
+    false
+  end
+end
+```
+
+Feel free to append any needed tags like `@note`, `@example`, `@see` manually after snippet filled in.
+
 Extension can document:
 
 * Methods: instance methods, initializers, class methods.
@@ -49,9 +115,11 @@ Extension can document:
 
 ## Details
 
-List of supported tags: `@author`, `@option`, `@param`, `@return`.
+List of generated tags: `@author`, `@option`, `@param`, `@return`.
 
 ## Configuration
+
+Insertion of empty lines are confirugable to make it able to tune between a compact and most verbose documentation style.
 
 ```ts
 "yard.spacers.beforeDescription" // Prepend an empty line to descriptive texts
@@ -61,6 +129,11 @@ List of supported tags: `@author`, `@option`, `@param`, `@return`.
 "yard.spacers.afterTags" // Append an empty line to all method's tags
 "yard.spacers.beforeSingleTag" // Prepend an empty line to a single tag documentation (for example a constant)
 "yard.spacers.afterSingleTag" // Append an empty line to a single tag documentation (for example a constant)
+```
+
+Insertion of the `@author` tag can be opted with this setting.
+
+```ts
 "yard.tags.author" // Append @author tag to Class and Module documentation
 ```
 
@@ -70,7 +143,7 @@ List of supported tags: `@author`, `@option`, `@param`, `@return`.
 * Ability to document blocks: `@yield`, `@yieldparam`, `@yieldreturn`.
 * Support for non-empty options hash parameters.
 * Resolve `@author` information from environment or settings.
-* Ability to update existing documentation.
+* (killer feature :fire:) Ability to update existing documentation.
 * (maybe) Editor snippets for tags (`@option`, `@param` etc) or tags autocompletion
 * (maybe) A better support for array / keyword args splats, see
   [comment](https://github.com/lsegal/yard/issues/439#issuecomment-3292412).
