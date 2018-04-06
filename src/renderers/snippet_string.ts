@@ -1,6 +1,7 @@
 "use strict";
 import { SnippetString, workspace, WorkspaceConfiguration } from "vscode";
 import { Author } from "../entities/author";
+import { Directive } from "../entities/directive";
 import { TagOption } from "../entities/tag_option";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { TagWithTypes } from "../entities/tag_with_types";
@@ -39,12 +40,27 @@ export class Renderer {
   // Render a single entity depending of its type
   private renderEntity(entity) {
     switch (entity.type) {
+      case("Directive"): this.directiveEntity(entity); break;
       case("Author"): this.authorEntity(entity); break;
       case("TagOption"): this.tagOptionEntity(entity); break;
       case("TagWithOptions"): this.tagWithOptionsEntity(entity); break;
       case("TagWithTypes"): this.tagWithTypesEntity(entity); break;
       case("Text"): this.textEntity(entity); break;
     }
+  }
+
+  // Render a directive
+  // @!attribute [r] foo_bar
+  //   @return [<Type>] <description>
+  private directiveEntity(entity: Directive) {
+    this.snippet.appendText("@!" + entity.tagName);
+    if (entity.tagTypes) { this.snippet.appendText(" [" + entity.tagTypes + "]"); }
+    this.snippet.appendText(" " + entity.name);
+    this.spacer.endOfLine();
+    entity.entities.forEach((e) => {
+      this.snippet.appendText("  "); // nested entities get two spaces identation
+      this.renderEntity(e);
+    });
   }
 
   // Render an @author tag line

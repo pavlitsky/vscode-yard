@@ -20,6 +20,7 @@ It's able to document:
 * Methods: instance methods, initializers, class methods.
 * Classes and Modules.
 * Constants.
+* Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
 
 Methods named in ASCII and Japanese are supported.
 
@@ -79,14 +80,18 @@ class Foo
   # @return [Integer] count of retries performed before failing
   RETRIES_COUNT=3
 
+  # @!attribute succeed
+  #   @return [Boolean] retry operation result
+  attr_accessor :succeed
+
   #
   # Retry something.
   #
   # @return [Boolean] processing result, true if succeed
   #
-  def self.retry
+  def retry
     RETRIES_COUNT.times { puts 'Retrying...' }
-    false
+    @succeed = false
   end
 end
 ```
@@ -99,11 +104,15 @@ class Foo
   # @return [Integer] count of retries performed before failing
   RETRIES_COUNT=3
 
+  # @!attribute succeed
+  #   @return [Boolean] retry operation result
+  attr_accessor :succeed
+
   # Retry something.
   # @return [Boolean] processing result, true if succeed
-  def self.retry
+  def retry
     RETRIES_COUNT.times { puts 'Retrying...' }
-    false
+    @succeed = false
   end
 end
 ```
@@ -113,7 +122,7 @@ after snippet filled in.
 
 ## Details
 
-List of generated tags: `@author`, `@option`, `@param`, `@return`.
+List of generated tags: `@author`, `@option`, `@param`, `@return`, `@!attribute`.
 
 ## Configuration
 
@@ -126,8 +135,8 @@ a curt and verbose documentation styles.
 "yard.spacers.beforeTags" // Prepend an empty line to all method's tags
 "yard.spacers.separateTags" // Separate method's tags of the same name (@params and @return) with an empty line
 "yard.spacers.afterTags" // Append an empty line to all method's tags
-"yard.spacers.beforeSingleTag" // Prepend an empty line to a single tag documentation (for example a constant)
-"yard.spacers.afterSingleTag" // Append an empty line to a single tag documentation (for example a constant)
+"yard.spacers.beforeSingleTag" // Prepend an empty line to directives or single tags (for example constants)
+"yard.spacers.afterSingleTag" // Append an empty line to directives or single tags (for example constants)
 ```
 
 Insertion of the `@author` tag can be opted with this setting.
@@ -138,7 +147,6 @@ Insertion of the `@author` tag can be opted with this setting.
 
 ## TODO
 
-* Ability to document attributes: `attr_reader`, `attr_writer`, `attr_accessor`.
 * Ability to document blocks: `@yield`, `@yieldparam`, `@yieldreturn`.
 * Support for non-empty options hash parameters.
 * Resolve `@author` information from environment or settings.

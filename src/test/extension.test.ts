@@ -85,6 +85,11 @@ suite("Default Documenter Tests", () => {
     "class_or_module/namespaced_and_nested",
     "constant/constant",
     "constant/constant_spaced",
+    "attribute/reader",
+    "attribute/writer",
+    "attribute/accessor",
+    "attribute/class_accessor",
+    "attribute/class_attribute",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -112,6 +117,7 @@ suite("Verbose Documenter Tests", () => {
     "verbose/instance_two_params",
     "verbose/options_hash_param",
     "verbose/constant",
+    "verbose/directive",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -139,6 +145,7 @@ suite("Curt Documenter Tests", () => {
     "curt/instance_two_params",
     "curt/options_hash_param",
     "curt/constant",
+    "curt/directive",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });

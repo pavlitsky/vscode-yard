@@ -86,12 +86,12 @@
                 "yard.spacers.beforeSingleTag": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Prepend an empty line to a single tag documentation (for example a constant)"
+                    "description": "Prepend an empty line to directives or single tags (for example constants)"
                 },
                 "yard.spacers.afterSingleTag": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Append an empty line to a single tag documentation (for example a constant)"
+                    "description": "Append an empty line to directives or single tags (for example constants)"
                 },
                 "yard.tags.author": {
                     "type": "boolean",

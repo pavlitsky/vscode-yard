@@ -11,13 +11,13 @@ export default class MethodDef implements IBaseParser {
   // Regexp to extract method's name, its scope and params
   // See https://docs.ruby-lang.org/en/trunk/syntax/methods_rdoc.html#label-Method+Names
   // tslint:disable:max-line-length
-  public regExp = new RegExp([
-      /(def)\s+/ // def
-    , /(self)?\.?/ // self.
-    , /([a-zA-Z_\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf][a-zA-Z_0-9\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]+[!?=]?|\+|-|\*|\*\*|\/|%|&|\^|>>|<<|==|!=|===|=~|!~|<=>|<|<=|>|>=|\[\]=|\[\]|\+@|-@|!@|~@)?/ // method name
-    , /(\(.*\))?/, // method parameters
+  public readonly regExp = new RegExp([
+      /(?:def)\s+/, // def
+      /(?:self)?\.?/, // self.
+      /([a-zA-Z_\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf][a-zA-Z_0-9\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]+[!?=]?|\+|-|\*|\*\*|\/|%|&|\^|>>|<<|==|!=|===|=~|!~|<=>|<|<=|>|>=|\[\]=|\[\]|\+@|-@|!@|~@)?/, // method name
+      /(\(.*\))?/, // method parameters
     ].map((r) => r.source).join(""),
-    );
+  );
   // tslint:enable:max-line-length
 
   // Method name
@@ -28,7 +28,7 @@ export default class MethodDef implements IBaseParser {
   constructor(text) {
     const match: RegExpExecArray = this.regExp.exec(text);
     if (match) {
-      const [, , , name, params] = match;
+      const [, name, params] = match;
       this.parsedName = name;
       this.parsedParams = params;
     }
