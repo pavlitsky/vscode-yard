@@ -2,7 +2,7 @@
     "name": "yard",
     "displayName": "YARD Documenter",
     "description": "Document Ruby source code with YARD",
-    "version": "0.2.2",
+    "version": "0.3.0",
     "publisher": "pavlitsky",
     "engines": {
         "vscode": "^1.18.0"
