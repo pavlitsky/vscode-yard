@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.3.0] - 2017-04-08
+## [0.3.0] - 2018-04-08
 
 - Add ability to document attributes accessors (`attr_reader`, `attr_writer`,
   `attr_accessor` and more).
