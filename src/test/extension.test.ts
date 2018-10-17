@@ -70,6 +70,7 @@ suite("Default Documenter Tests", () => {
     "method/single_line_parentheses",
     "method/initializer",
     "method/class_single_param",
+    "method/without_parentheses",
     "method/naming/setter",
     "method/naming/bang",
     "method/naming/boolean",
