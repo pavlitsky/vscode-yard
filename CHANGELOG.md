@@ -1,4 +1,8 @@
-# Change Log
+# Changelog
+
+## [0.3.1] - 2018-10-18
+
+- Fix documenting methods which parameters aren't enclosed in parentheses. ([@pablox-cl](https://github.com/pablox-cl))
 
 ## [0.3.0] - 2018-04-08
 
