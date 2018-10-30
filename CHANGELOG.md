@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Fix keyboard shortcut for Mac
+
 ## [0.3.1] - 2018-10-18
 
 - Fix documenting methods which parameters aren't enclosed in parentheses. ([@pablox-cl](https://github.com/pablox-cl))

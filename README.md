@@ -33,7 +33,7 @@ def foo(bar, baz = false) # <- put cursor at any place of this line
 end
 ```
 
-Hit `Ctrl+Alt+Enter` (`Cmd+Alt+Enter` on macOS) or invoke `Document with YARD`
+Hit `Ctrl+Alt+Enter` (`Option+Command+Enter` on macOS) or invoke `Document with YARD`
 from the command palette.
 
 ```ruby
