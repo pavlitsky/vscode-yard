@@ -1,2 +1,4 @@
+#
 # @return [<Type>] <description>
-class_attribute :foo_bar
+#
+attr_reader :foo_bar

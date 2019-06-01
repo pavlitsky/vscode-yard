@@ -1,5 +1,4 @@
 "use strict";
-import { AttributeTag } from "../../tags/attribute";
 import { ReturnTag } from "../../tags/return";
 import { IEntity } from "../../types";
 import { IBaseParser } from "./base_parser";
@@ -39,20 +38,6 @@ export default class Attribute implements IBaseParser {
 
   // Parse documentation tree
   public parse(): IEntity[] {
-    let accessor: string = "";
-
-    switch (this.parsedAccessor) {
-      case("reader"): accessor = "r"; break;
-      case("writer"): accessor = "w"; break;
-      case("accessor"): accessor = ""; break;
-    }
-
-    return [
-      new AttributeTag({
-        entities: [new ReturnTag()],
-        name: this.parsedName,
-        tagTypes: accessor,
-      }),
-    ];
+    return [new ReturnTag()];
   }
 }
