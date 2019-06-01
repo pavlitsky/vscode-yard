@@ -1,8 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [0.3.2] - 2019-06-01
 
 - Fix keyboard shortcut for Mac
+- Document attributes accessors with `@return` tag instead of an `@!attribute` directive.
+  ([@MicMicMon](https://github.com/pablox-cl))
 
 ## [0.3.1] - 2018-10-18
 
