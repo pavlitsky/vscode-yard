@@ -1,3 +1,2 @@
-# @!attribute [w] foo_bar
-#   @return [<Type>] <description>
+# @return [<Type>] <description>
 attr_writer :foo_bar

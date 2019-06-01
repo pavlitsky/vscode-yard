@@ -118,7 +118,7 @@ suite("Verbose Documenter Tests", () => {
     "verbose/instance_two_params",
     "verbose/options_hash_param",
     "verbose/constant",
-    "verbose/directive",
+    "verbose/attribute",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -146,7 +146,7 @@ suite("Curt Documenter Tests", () => {
     "curt/instance_two_params",
     "curt/options_hash_param",
     "curt/constant",
-    "curt/directive",
+    "curt/attribute",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });

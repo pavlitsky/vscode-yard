@@ -1,6 +1,5 @@
 "use strict";
 import { Tag } from "./tag";
-import { TagWithTypes } from "./tag_with_types";
 
 // Directive extends Tag with types specifier and entities list.
 export class Directive extends Tag {

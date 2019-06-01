@@ -3,7 +3,7 @@ import { IEntity } from "../types";
 // Single block of a descriptive text for a method or a class.
 export class Text implements IEntity {
   public text?: string;
-  public type?;
+  public type?: string;
 
   constructor(params: Text = {} as Text) {
     const {

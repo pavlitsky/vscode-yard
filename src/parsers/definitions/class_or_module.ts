@@ -12,7 +12,7 @@ export default class ClassOrModule implements IBaseParser {
   private parsedType: string = "";
   private parsedName: string = "";
 
-  constructor(text) {
+  constructor(text: string) {
     const match: RegExpExecArray = this.regExp.exec(text);
     if (match) {
       const [, type, name] = match;

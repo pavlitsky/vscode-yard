@@ -80,8 +80,7 @@ class Foo
   # @return [Integer] count of retries performed before failing
   RETRIES_COUNT=3
 
-  # @!attribute succeed
-  #   @return [Boolean] retry operation result
+  # @return [Boolean] retry operation result
   attr_accessor :succeed
 
   #
@@ -104,8 +103,7 @@ class Foo
   # @return [Integer] count of retries performed before failing
   RETRIES_COUNT=3
 
-  # @!attribute succeed
-  #   @return [Boolean] retry operation result
+  # @return [Boolean] retry operation result
   attr_accessor :succeed
 
   # Retry something.
@@ -122,7 +120,7 @@ after snippet filled in.
 
 ## Details
 
-List of generated tags: `@author`, `@option`, `@param`, `@return`, `@!attribute`.
+List of generated tags: `@author`, `@option`, `@param`, `@return`.
 
 ## Configuration
 
