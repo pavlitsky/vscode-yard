@@ -22,7 +22,7 @@ export default class Attribute implements IBaseParser {
   // Attribute accessor
   private parsedAccessor: string = "";
 
-  constructor(text) {
+  constructor(text: string) {
     const match: RegExpExecArray = this.regExp.exec(text);
     if (match) {
       const [, accessor, name] = match;

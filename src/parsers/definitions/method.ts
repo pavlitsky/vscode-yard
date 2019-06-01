@@ -25,7 +25,7 @@ export default class MethodDef implements IBaseParser {
   // Method params string with parenthesis
   private parsedParams: string = "";
 
-  constructor(text) {
+  constructor(text: string) {
     const match: RegExpExecArray = this.regExp.exec(text);
     if (match) {
       const [, name, params] = match;

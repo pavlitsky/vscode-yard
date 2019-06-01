@@ -10,7 +10,7 @@ export default class Constant implements IBaseParser {
   // Constant name
   private parsedName: string = "";
 
-  constructor(text) {
+  constructor(text: string) {
     const match: RegExpExecArray = this.regExp.exec(text);
     if (match) {
       const [, name] = match;
