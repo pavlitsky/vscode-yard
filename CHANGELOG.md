@@ -1,9 +1,9 @@
 # Changelog
 
-## Unreleased
+## [0.4.0] - 2020-03-23
 
 - Add an configuration option for the `@param` tag to render name-before-type variant,
-  i.e. `@param username [String]` (#7).
+  i.e. `@param username [String]` ([#8](https://github.com/pavlitsky/vscode-yard/pull/8)).
 
 ## [0.3.2] - 2019-06-01
 
