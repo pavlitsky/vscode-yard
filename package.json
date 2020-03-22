@@ -97,8 +97,13 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Append @author tag to Class and Module documentation"
-                }
-            }
+                },
+                "yard.tags.paramNameBeforeType": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Print param name before its type (for example '@param username [String]')"
+              }
+          }
         }
     },
     "scripts": {

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add an configuration option for the `@param` tag to render name-before-type variant,
+  i.e. `@param username [String]` (#7).
+
 ## [0.3.2] - 2019-06-01
 
 - Fix keyboard shortcut for Mac

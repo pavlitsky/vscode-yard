@@ -135,12 +135,8 @@ a curt and verbose documentation styles.
 "yard.spacers.afterTags" // Append an empty line to all method's tags
 "yard.spacers.beforeSingleTag" // Prepend an empty line to directives or single tags (for example constants)
 "yard.spacers.afterSingleTag" // Append an empty line to directives or single tags (for example constants)
-```
-
-Insertion of the `@author` tag can be opted with this setting.
-
-```ts
 "yard.tags.author" // Append @author tag to Class and Module documentation
+"yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 ```
 
 ## TODO

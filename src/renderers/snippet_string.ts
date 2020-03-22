@@ -55,7 +55,7 @@ export class Renderer {
   private directiveEntity(entity: Directive) {
     this.snippet.appendText("@!" + entity.tagName);
     if (entity.tagTypes) { this.typesList(entity.tagTypes); }
-    this.snippet.appendText(" " + entity.name);
+    this.spacer.spacedText(entity.name);
     this.spacer.endOfLine();
     entity.entities.forEach((e) => {
       this.snippet.appendText("  "); // nested entities get two spaces identation
@@ -98,8 +98,13 @@ export class Renderer {
   // @tagName [types] name <description>
   private tagWithTypesEntity(entity: TagWithTypes) {
     this.snippet.appendText("@" + entity.tagName);
-    this.typesList(entity.types);
-    if (entity.name) { this.snippet.appendText(" " + entity.name); }
+    if (this.config.get("paramNameBeforeType")) {
+      this.spacer.spacedText(entity.name);
+      this.typesList(entity.types);
+    } else {
+      this.typesList(entity.types);
+      this.spacer.spacedText(entity.name);
+    }
     this.snippet.appendText(" ");
     this.textOrPlaceholder(entity.text, "<description>");
     this.spacer.endOfLine();
