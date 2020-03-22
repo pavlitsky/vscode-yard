@@ -54,7 +54,7 @@ export class Renderer {
   //   @return [<Type>] <description>
   private directiveEntity(entity: Directive) {
     this.snippet.appendText("@!" + entity.tagName);
-    if (entity.tagTypes) { this.snippet.appendText(" [" + entity.tagTypes + "]"); }
+    if (entity.tagTypes) { this.typesList(entity.tagTypes); }
     this.snippet.appendText(" " + entity.name);
     this.spacer.endOfLine();
     entity.entities.forEach((e) => {
@@ -77,9 +77,9 @@ export class Renderer {
   // Render an @option tag line
   // @option paramName [types] :<key> <description>
   private tagOptionEntity(entity: TagOption) {
-    this.snippet.appendText("@option " + entity.paramName + " [");
-    this.textOrPlaceholder(entity.types, "<Type>");
-    this.snippet.appendText("] :");
+    this.snippet.appendText("@option " + entity.paramName);
+    this.typesList(entity.types);
+    this.snippet.appendText(" :");
     this.textOrPlaceholder(entity.key, "<key>");
     this.snippet.appendText(" ");
     this.textOrPlaceholder(entity.text, "<description>");
@@ -97,10 +97,10 @@ export class Renderer {
   // Render a tag with a types line
   // @tagName [types] name <description>
   private tagWithTypesEntity(entity: TagWithTypes) {
-    this.snippet.appendText("@" + entity.tagName + " [");
-    this.textOrPlaceholder(entity.types, "<Type>");
-    this.snippet.appendText("] ");
-    if (entity.name) { this.snippet.appendText(entity.name + " "); }
+    this.snippet.appendText("@" + entity.tagName);
+    this.typesList(entity.types);
+    if (entity.name) { this.snippet.appendText(" " + entity.name); }
+    this.snippet.appendText(" ");
     this.textOrPlaceholder(entity.text, "<description>");
     this.spacer.endOfLine();
   }
@@ -119,6 +119,14 @@ export class Renderer {
     } else {
       this.snippet.appendPlaceholder(placeholder);
     }
+  }
+
+  // Render entity types list
+  // [types]
+  private typesList(types: string) {
+    this.snippet.appendText(" [");
+    this.textOrPlaceholder(types, "<Type>");
+    this.snippet.appendText("]");
   }
 
   // Decorate the snippet and return a rebuilt one.
