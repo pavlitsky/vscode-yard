@@ -153,6 +153,32 @@ suite("Curt Documenter Tests", () => {
   expectDocumented(testCases);
 });
 
+suite("Special options", () => {
+  const configOptions = {
+    spacers: {
+      afterDescription: true,
+      afterSingleTag: false,
+      afterTags: true,
+      beforeDescription: true,
+      beforeSingleTag: false,
+      beforeTags: true,
+      separateTags: true,
+    },
+    tags: {
+      author: true,
+      paramNameBeforeType: true, // Non default
+    },
+  };
+
+  const testCases = [
+    "special/param_name_before_types"
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  expectDocumented(testCases);
+});
+
+
 suite("Extension Tests", () => {
   test("should be present", () => {
     assert.ok(extensions.getExtension(extensionID));

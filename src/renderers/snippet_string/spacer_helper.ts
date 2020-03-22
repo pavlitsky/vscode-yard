@@ -55,6 +55,11 @@ export class SpacerHelper {
     }
   }
 
+  // Append spaced string
+  public spacedText(text: string) {
+    if (text) { this.snippet.appendText(" " + text); }
+  }
+
   // Append empty line to a snippet
   public endOfLine() {
     this.snippet.appendText(this.eol);
