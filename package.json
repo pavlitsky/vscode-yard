@@ -13,12 +13,13 @@
         "ruby",
         "rails",
         "yard",
-        "yardoc"
+        "snippet"
     ],
     "author": {
         "name": "Vitaly Pavlitsky"
     },
     "categories": [
+        "Snippets",
         "Other"
     ],
     "galleryBanner": {
