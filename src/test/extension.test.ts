@@ -51,6 +51,7 @@ suite("Default Documenter Tests", () => {
     },
     tags: {
       author: true,
+      paramNameBeforeType: false,
     },
   };
 
@@ -110,6 +111,7 @@ suite("Verbose Documenter Tests", () => {
     },
     tags: {
       author: true,
+      paramNameBeforeType: false,
     },
   };
 
@@ -138,6 +140,7 @@ suite("Curt Documenter Tests", () => {
     },
     tags: {
       author: false,
+      paramNameBeforeType: false,
     },
   };
 
