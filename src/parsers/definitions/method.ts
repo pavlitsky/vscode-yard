@@ -75,7 +75,7 @@ export default class MethodDef implements IBaseParser {
   // Build options hash section
   private seedOptions(paramName: string, count: number = 3): OptionTag[] {
     const options: OptionTag[] = [];
-    Array.from(Array(count), (_, i) =>
+    Array.from(Array(count), () =>
     options.push(new OptionTag({ paramName, defaultValue: undefined })));
     return options;
   }

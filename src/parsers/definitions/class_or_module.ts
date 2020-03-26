@@ -1,7 +1,6 @@
 "use strict";
 import { AuthorTag } from "../../tags/author";
 import { DescriptionTag } from "../../tags/description";
-import { IEntity } from "../../types";
 import { IBaseParser } from "./base_parser";
 
 // Parse class or module definition into documentation entities
