@@ -7,6 +7,7 @@ import { TagWithOptions } from "../entities/tag_with_options";
 import { TagWithTypes } from "../entities/tag_with_types";
 import { IEntity } from "../types";
 import { SpacerHelper } from "./snippet_string/spacer_helper";
+import { Text } from "../entities/text";
 
 // Render documentation tree into a snippet
 export class Renderer {
@@ -32,13 +33,13 @@ export class Renderer {
   }
 
   // Is entity should be rendered
-  private shouldRenderEntity(entity): boolean {
+  private shouldRenderEntity(entity: IEntity): boolean {
     if (entity.type === "Author" && !this.config.get("author")) { return false; }
     return true;
   }
 
   // Render a single entity depending of its type
-  private renderEntity(entity) {
+  private renderEntity(entity: IEntity) {
     switch (entity.type) {
       case("Directive"): this.directiveEntity(entity); break;
       case("Author"): this.authorEntity(entity); break;
@@ -112,13 +113,13 @@ export class Renderer {
 
   // Render a descriptive text line
   // <Description>
-  private textEntity(entity) {
+  private textEntity(entity: Text) {
     this.textOrPlaceholder(entity.text, "<Description>");
     this.spacer.endOfLine();
   }
 
   // Render a text or a placeholder if text is empty
-  private textOrPlaceholder(text, placeholder) {
+  private textOrPlaceholder(text: string, placeholder: string) {
     if (text) {
       this.snippet.appendText(text);
     } else {
