@@ -101,7 +101,7 @@
                 },
                 "yard.tags.paramNameBeforeType": {
                   "type": "boolean",
-                  "default": false,
+                  "default": true,
                   "description": "Print param name before its type (for example '@param username [String]')"
               }
           }

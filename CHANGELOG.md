@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Change `yard.tags.paramNameBeforeType` setting to be `true` by default.
+
 ## [0.4.0] - 2020-03-23
 
 - Add an configuration option for the `@param` tag to render name-before-type variant,
