@@ -17,6 +17,7 @@ It's able to document:
 * Methods: instance methods, initializers, class methods.
 * Blocks accepted by methods (optional, see `yard.tags.yield` setting).
 * Exceptions raised in methods (optional, see `yard.tags.raise` setting).
+* Methods overloaded by rbs-inline annotations (optional, see `yard.tags.overload` setting).
 * Abstract methods raising `NotImplementedError`.
 * Deprecated methods warning about their deprecation.
 * Classes and Modules.
@@ -236,8 +237,8 @@ end
 ```
 
 rbs-inline `#:` annotation stays right above a method, documentation goes above it. A method type
-is read from a single `#:` annotation or `# @rbs (...) -> ...` comment, overloads aren't read.
-Types of single params are read from `# @rbs name: Type` comments:
+is read from a single `#:` annotation or `# @rbs (...) -> ...` comment, see [Overloads](#overloads)
+for methods with several of them. Types of single params are read from `# @rbs name: Type` comments:
 
 ```ruby
 #
@@ -383,6 +384,37 @@ def old_fetch(url)
 end
 ```
 
+### Overloads
+
+A method with several rbs-inline method types, written as several `#:` annotations or as
+`# @rbs (...) -> ...` comment followed by `#   | (...) -> ...` lines, gets an `@overload` tag
+for each method type when `yard.tags.overload` setting is enabled. Otherwise its tags aren't typed.
+Params of an overload are named after the method params they match by position or by keyword name,
+otherwise after names written in the method type. Unknown names are placeholders filled in together
+with the param tag:
+
+```ruby
+#
+# <Description>
+#
+# @overload find(id)
+#   @param id [Integer] <description>
+#   @return [User] <description>
+# @overload find(<name>, limit = <default>)
+#   @param <name> [String] <description>
+#   @param limit [Integer] <description>
+#   @return [Array<User>] <description>
+#
+#: (Integer id) -> User
+#: (String, ?Integer limit) -> Array[User]
+def find(*args)
+end
+```
+
+Updating documentation adds overloads if a method has none of them documented, documented overloads
+are kept as they're written. Documentation with params or return value documented without overloads
+is updated the usual way.
+
 ### Directives
 
 Methods and attributes defined by calls aren't seen by YARD unless they're documented with
@@ -439,6 +471,7 @@ a curt and verbose documentation styles.
 "yard.tags.authorFromGit" // Fill @author name and email from git config (user.name and user.email)
 "yard.tags.yield" // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
 "yard.tags.raise" // Document exceptions raised in methods with @raise tags
+"yard.tags.overload" // Document methods overloaded by rbs-inline annotations with @overload tags
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 "yard.completion.enabled" // Complete YARD tags in comments
 ```

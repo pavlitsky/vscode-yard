@@ -1,7 +1,7 @@
 "use strict";
 import type { Node, ParametersNode } from "@ruby/prism" with { "resolution-mode": "import" };
 import { nodeType } from "../../ast/prism";
-import { RbsParser } from "./rbs";
+import { IRbsMethodType, RbsParser } from "./rbs";
 import { ISignature, joinTypes } from "./signature";
 import { isSig, SorbetSignature } from "./sorbet";
 
@@ -9,6 +9,8 @@ import { isSig, SorbetSignature } from "./sorbet";
 const ANNOTATION_PATTERN = /^#:\s?(.*)$/;
 // rbs-inline method type written with @rbs: '# @rbs (Integer) -> String'
 const RBS_METHOD_PATTERN = /^#\s*@rbs\s+((?:\[|\(|\?\{|\{|->).*)$/;
+// Overload of a method type written with @rbs on a next line: '#   | (String) -> Integer'
+const RBS_OVERLOAD_PATTERN = /^#\s+\|\s*(.*)$/;
 // rbs-inline param annotation with an optional description: '# @rbs name: String -- description'
 const RBS_PARAM_PATTERN = /^#\s*@rbs\s+(return|[*&]{0,2}[a-z_]\w*)\s*:\s*(.*?)(?:\s+--(?:\s.*)?)?$/;
 
@@ -28,14 +30,33 @@ export function methodSignature(params: ParametersNode | null, previous: Node | 
   return rbsParamsSignature(comments, signature);
 }
 
+// Method types of rbs-inline overloads preceding a method without Sorbet sig.
+// Undefined if the method isn't overloaded or any of its overloads is malformed.
+export function rbsOverloads(previous: Node | null, comments: string[]): IRbsMethodType[] | undefined {
+  if (isSig(previous)) { return; }
+  const methodTypes = rbsMethodTypes(comments);
+  if (methodTypes.length < 2) { return; }
+  const overloads = methodTypes.map((methodType) => (new RbsParser(methodType)).methodType());
+  return overloads.some((overload) => !overload) ? undefined : overloads as IRbsMethodType[];
+}
+
+// Method types of rbs-inline annotations: '#:' lines right above a definition,
+// method types written with @rbs and their overloads on next lines
+function rbsMethodTypes(comments: string[]): string[] {
+  const annotations = comments.slice(comments.length - annotationLinesCount(comments));
+  const methodTypes = annotations.map((line) => (ANNOTATION_PATTERN.exec(line) as RegExpExecArray)[1]);
+  let isOverloaded = false;
+  comments.forEach((line) => {
+    const match = RBS_METHOD_PATTERN.exec(line) ?? (isOverloaded ? RBS_OVERLOAD_PATTERN.exec(line) : null);
+    if (match) { methodTypes.push(match[1]); }
+    isOverloaded = !!match;
+  });
+  return methodTypes;
+}
+
 // Signature of a single rbs-inline method type annotation, overloads aren't read
 function rbsMethodSignature(params: ParametersNode | null, comments: string[]): ISignature | undefined {
-  const annotations = comments.slice(comments.length - annotationLinesCount(comments));
-  const methodTypes = annotations.map((line) => (ANNOTATION_PATTERN.exec(line) as RegExpExecArray)[1])
-    .concat(comments.flatMap((line) => {
-      const match = RBS_METHOD_PATTERN.exec(line);
-      return match ? [match[1]] : [];
-    }));
+  const methodTypes = rbsMethodTypes(comments);
   if (methodTypes.length !== 1) { return; }
   const methodType = (new RbsParser(methodTypes[0])).methodType();
   if (!methodType) { return; }
@@ -89,7 +110,7 @@ function rbsParamsSignature(comments: string[], signature: ISignature | undefine
 }
 
 // Param name as it's documented, without sigils
-function paramName(param: Node): string {
+export function paramName(param: Node): string {
   if (nodeType(param) === "MultiTargetNode") { return param.location.slice(); }
   return "name" in param && param.name ? String(param.name) : "";
 }

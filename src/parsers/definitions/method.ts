@@ -2,10 +2,12 @@
 import type { BlockParameterNode, DefNode, HashNode, KeywordRestParameterNode, Node, ParametersNode }
   from "@ruby/prism" with { "resolution-mode": "import" };
 import { isNode, nodeType } from "../../ast/prism";
+import { IOverloadSignatureParam } from "../../entities/overload";
 import { AbstractTag } from "../../tags/abstract";
 import { DeprecatedTag } from "../../tags/deprecated";
 import { DescriptionTag } from "../../tags/description";
 import { OptionTag } from "../../tags/option";
+import { OverloadTag } from "../../tags/overload";
 import { ParamTag } from "../../tags/param";
 import { RaiseTag } from "../../tags/raise";
 import { ReturnTag } from "../../tags/return";
@@ -19,7 +21,9 @@ import { defaultTypes } from "../literal_types";
 import { OptionsUsage } from "../options_usage";
 import { RaiseUsage } from "../raise_usage";
 import { ReturnUsage } from "../return_usage";
-import { methodSignature } from "../signatures/method_signature";
+import { methodSignature, rbsOverloads } from "../signatures/method_signature";
+import { IOverloadParam, overloadParams } from "../signatures/overload";
+import { IRbsMethodType } from "../signatures/rbs";
 import { genericType, ISignature } from "../signatures/signature";
 import { isSig } from "../signatures/sorbet";
 import { IBaseParser, IDefinitionSite } from "./base_parser";
@@ -66,6 +70,14 @@ export default class MethodDef implements IBaseParser {
   // Params which can't be documented: arguments forwarding and anonymous splat and block params,
   // YARD doesn't list them in a method signature
   private readonly anonymousTypes = ["BlockParameterNode", "KeywordRestParameterNode", "RestParameterNode"];
+  // Types placeholders of splat and block params of overloads
+  private readonly overloadTypesPlaceholders: { [kind: string]: string } = {
+    block: "Proc",
+    keywordRest: "Hash{Symbol => Object}",
+    rest: "Array<Object>",
+  };
+  // Sigils of splat and block params of overloads
+  private readonly overloadPrefixes: { [kind: string]: string } = { block: "&", keywordRest: "**", rest: "*" };
 
   // Existing method documentation is synced with the method
   public readonly supportsUpdate: boolean = true;
@@ -78,7 +90,18 @@ export default class MethodDef implements IBaseParser {
   }
 
   // Parse documentation tree. Types are taken from a Sorbet or an rbs-inline signature if there's one.
+  // Method overloaded by rbs-inline annotations is documented with @overload tags if it's enabled.
   public parse(context: IParseContext = {}): IEntity[] {
+    const overloads = context.overloads ? rbsOverloads(this.site.previous ?? null, context.comments || []) : undefined;
+    if (overloads) {
+      return [
+        this.buildDescription(),
+        this.buildAbstract(),
+        this.buildDeprecated(),
+        ...overloads.map((overload, index) => this.buildOverload(context, overload, index)),
+        ...this.buildRaises(context),
+      ].filter((element): element is IEntity => element !== undefined);
+    }
     const signature = methodSignature(this.parameters, this.site.previous ?? null, context.comments || []);
     return [
       this.buildDescription(),
@@ -198,6 +221,56 @@ export default class MethodDef implements IBaseParser {
   private buildRaises(context: IParseContext): IEntity[] {
     if (!context.raises) { return []; }
     return this.raises().map((exception) => new RaiseTag({ types: exception }));
+  }
+
+  // Build an overload section: signature with its params, block and return value.
+  // Params of unknown names are linked placeholders shared by the signature and the param tags.
+  private buildOverload(context: IParseContext, methodType: IRbsMethodType, index: number): IEntity {
+    const params = overloadParams(this.parameters, methodType);
+    const nameLink = (position: number, param: IOverloadParam) => param.name ? "" : "overload" + index + "_" + position;
+    const signatureParams = params.map((param, position): IOverloadSignatureParam => ({
+      defaultValue: param.kind === "optional" || (param.kind === "keyword" && param.optional) ?
+        this.defaultSource(param.node) : undefined,
+      keyword: param.kind === "keyword",
+      name: param.name,
+      nameLink: nameLink(position, param),
+      prefix: this.overloadPrefixes[param.kind] ?? "",
+    }));
+    const paramTags = params
+      .map((param, position): IEntity | undefined => {
+        if (param.kind === "block" && context.blocks) { return; }
+        const value: Node | null = param.node && "value" in param.node ? param.node.value as Node : null;
+        const typesPlaceholder = this.overloadTypesPlaceholders[param.kind] || (value ? defaultTypes([value]) : "");
+        return new ParamTag({
+          name: param.name,
+          nameLink: nameLink(position, param),
+          options: param.node ? this.buildOptions(param.node, value) : [],
+          types: this.overloadTypes(param),
+          typesPlaceholder,
+        });
+      });
+    const block = methodType.block ? this.buildYield(context, { block: methodType.block.types, params: {} }) : undefined;
+    const returns = this.buildReturn({ params: {}, returns: methodType.returns });
+    return new OverloadTag({
+      entities: [...paramTags, block, returns].filter((element): element is IEntity => element !== undefined),
+      methodName: this.methodName,
+      params: signatureParams,
+    });
+  }
+
+  // Types of an overload param declared by RBS method type, splat params are declared with types of their elements
+  private overloadTypes(param: IOverloadParam): string {
+    if (param.kind === "block") { return param.optional ? "Proc, nil" : "Proc"; }
+    if (!param.types) { return ""; }
+    if (param.kind === "rest") { return genericType("Array", [param.types]) ?? ""; }
+    if (param.kind === "keywordRest") { return genericType("Hash", ["Symbol", param.types]) ?? ""; }
+    return param.types;
+  }
+
+  // Source of a default value of an optional param, empty if the param has no default value
+  private defaultSource(param: Node | undefined): string {
+    const value = param && "value" in param ? param.value as Node | null : null;
+    return value ? value.location.slice().replace(/\s*\n\s*/g, " ") : "";
   }
 
   // Build return section

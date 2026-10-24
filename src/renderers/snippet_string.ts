@@ -2,6 +2,7 @@
 import { SnippetString, workspace, WorkspaceConfiguration } from "vscode";
 import { Author } from "../entities/author";
 import { Directive } from "../entities/directive";
+import { Overload } from "../entities/overload";
 import { Raw } from "../entities/raw";
 import { Tag } from "../entities/tag";
 import { TagOption } from "../entities/tag_option";
@@ -61,6 +62,7 @@ export class Renderer {
       case("Tag"): this.tagEntity(entity as Tag); break;
       case("Author"): this.authorEntity(entity as Author); break;
       case("Directive"): this.directiveEntity(entity as Directive); break;
+      case("Overload"): this.overloadEntity(entity as Overload); break;
       case("TagOption"): this.tagOptionEntity(entity as TagOption); break;
       case("TagWithOptions"): this.tagWithOptionsEntity(entity as TagWithOptions); break;
       case("TagWithTypes"): this.tagWithTypesEntity(entity as TagWithTypes); break;
@@ -94,8 +96,35 @@ export class Renderer {
   private directiveEntity(entity: Directive) {
     this.snippet.appendText("@!" + entity.directiveName + " " + entity.signature);
     this.spacer.endOfLine();
+    this.nestedEntities(entity.entities);
+  }
+
+  // Render an overload signature line followed by its nested documentation indented without spacers
+  // @overload name(params)
+  //   @param name [types] <description>
+  private overloadEntity(entity: Overload) {
+    this.snippet.appendText("@" + entity.tagName + " " + entity.methodName);
+    if (entity.params.length > 0) {
+      this.snippet.appendText("(");
+      entity.params.forEach((param, index) => {
+        if (index > 0) { this.snippet.appendText(", "); }
+        this.snippet.appendText(param.prefix);
+        this.nameOrLinkedPlaceholder(param);
+        if (param.keyword) { this.snippet.appendText(":"); }
+        if (param.defaultValue === undefined) { return; }
+        this.snippet.appendText(param.keyword ? " " : " = ");
+        this.textOrPlaceholder(param.defaultValue, "<default>");
+      });
+      this.snippet.appendText(")");
+    }
+    this.spacer.endOfLine();
+    this.nestedEntities(entity.entities);
+  }
+
+  // Render nested entities indented without spacers
+  private nestedEntities(entities: IEntity[]) {
     const start = this.snippet.value.length;
-    entity.entities.forEach((nested) => { if (this.shouldRenderEntity(nested)) { this.renderEntity(nested); } });
+    entities.forEach((nested) => { if (this.shouldRenderEntity(nested)) { this.renderEntity(nested); } });
     const nested = this.snippet.value.slice(start).split(this.eol)
       .map((line) => line ? "  " + line : line).join(this.eol);
     this.snippet.value = this.snippet.value.slice(0, start) + nested;
@@ -207,7 +236,7 @@ export class Renderer {
   }
 
   // Render an entity name or a linked placeholder if name is unknown
-  private nameOrLinkedPlaceholder(entity: TagWithTypes) {
+  private nameOrLinkedPlaceholder(entity: { name: string; nameLink: string }) {
     if (entity.name) {
       this.snippet.appendText(entity.name);
     } else {

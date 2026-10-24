@@ -56,7 +56,9 @@ export default class YardDocumenter {
   // Collect environment-dependent details for the builder
   private async parseContext(builder: Builder, document: TextDocument, comments: string[]): Promise<IParseContext> {
     const config = workspace.getConfiguration("yard.tags");
-    const context: IParseContext = { blocks: !!config.get("yield"), comments, raises: !!config.get("raise") };
+    const context: IParseContext = {
+      blocks: !!config.get("yield"), comments, overloads: !!config.get("overload"), raises: !!config.get("raise"),
+    };
     if (builder.requiresAuthor() && config.get("author") && config.get("authorFromGit")) {
       context.author = await (new GitAuthorResolver(document)).resolve();
     }

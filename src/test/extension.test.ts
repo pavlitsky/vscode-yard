@@ -363,6 +363,48 @@ suite("Raise disabled", () => {
   expectDocumented(testCases);
 });
 
+suite("Overloads Documenter Tests", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      overload: true, // Non default
+      paramNameBeforeType: false,
+      raise: true,
+      yield: false,
+    },
+  };
+
+  const testCases = [
+    "method/overload/annotations",
+    "method/overload/optional",
+    "method/overload/splat",
+    "method/overload/keywords",
+    "method/overload/rbs_method",
+    "method/overload/update",
+    "method/overload/update_documented",
+    "method/overload/update_params",
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  suiteTeardown(async () => { await updateConfig({ tags: { overload: undefined } }); });
+  expectDocumented(testCases);
+
+  test("document method/overload/block", async () => {
+    await updateConfig({ tags: { yield: true } });
+    await expectFileDocumented("method/overload/block");
+    await updateConfig({ tags: { yield: false } });
+  });
+
+  test("complete overloads missing in method documentation", async () => {
+    const items = await yardCompletions("completion/overload", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@overload convert(value)", "@overload convert(value)"]);
+    assert.equal((items[0].insertText as SnippetString).value,
+      "@overload convert(value)\n#   @param [Integer] value ${1:<description>}\n#   @return [String] ${2:<description>}");
+  });
+});
+
 suite("Author from git", () => {
   const configOptions = {
     spacers: defaultSpacers,

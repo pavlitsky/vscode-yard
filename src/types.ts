@@ -17,6 +17,8 @@ export interface IParseContext {
   blocks?: boolean;
   // Is documenting of raised exceptions enabled
   raises?: boolean;
+  // Is documenting of overloaded methods with @overload tags enabled
+  overloads?: boolean;
   // Comments above a definition, rbs-inline annotations are read from them
   comments?: string[];
 }

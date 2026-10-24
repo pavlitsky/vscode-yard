@@ -2,7 +2,9 @@
 import { Raw } from "../entities/raw";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { IEntity } from "../types";
-import { generatedRaises, generatedReturn, generatedTextTag, generatedYield, isRaiseDocumented } from "./gaps";
+import {
+  generatedOverloads, generatedRaises, generatedReturn, generatedTextTag, generatedYield, isRaiseDocumented,
+} from "./gaps";
 import { bareName, paramNameBeforeType, sameName } from "./names";
 import { IDocItem } from "./parser";
 
@@ -12,10 +14,11 @@ export interface IMergeSpacers {
   separateTags: boolean;
 }
 
-// Order of tags: abstract and deprecated tags, then params with options, then yield section, then raised exceptions,
-// then return value. Other tags aren't ranked.
+// Order of tags: abstract and deprecated tags, then params with options or overloads, then yield section,
+// then raised exceptions, then return value. Other tags aren't ranked.
 const tagRanks: { [tag: string]: number } = {
-  abstract: 0, deprecated: 0, option: 1, param: 1, raise: 3, return: 4, yield: 2, yieldparam: 2, yieldreturn: 2,
+  abstract: 0, deprecated: 0, option: 1, overload: 1, param: 1, raise: 3, return: 4, yield: 2, yieldparam: 2,
+  yieldreturn: 2,
 };
 
 // Part of a merged docstring: an existing item or a new entity
@@ -25,6 +28,7 @@ type ISegment = { item: IDocItem; entity?: undefined; rank?: number } |
 // Merge an existing docstring with freshly generated documentation entities.
 // Texts and tags are kept as they're written, missing tags are added and params are synced with the method signature:
 // params are reordered, a stale param is renamed if a new param takes its place, otherwise it's removed.
+// Overloads are added if they're missing, documented overloads are kept as they're written.
 export class DocstringMerger {
   // Is merged docstring different from the existing one
   public changed = false;
@@ -52,7 +56,7 @@ export class DocstringMerger {
     }
     this.descriptionEndsWithText = description.length > 0 && !this.isBlank(description[description.length - 1]);
 
-    let segments = this.mergeParams(tags);
+    let segments = this.mergeOverloads(tags);
     segments = this.mergeTextTag(segments, "abstract");
     segments = this.mergeTextTag(segments, "deprecated");
     segments = this.mergeYield(segments);
@@ -62,6 +66,16 @@ export class DocstringMerger {
     const lines = description.flatMap((item) => item.lines);
     return [new Raw({ lines }) as IEntity].concat(segments.map((segment) =>
       segment.entity ? segment.entity : new Raw({ lines: segment.item.lines })));
+  }
+
+  // Add overloads if they're missing, params of an overloaded method are documented within overloads.
+  // Params are synced with the method signature if it isn't overloaded.
+  private mergeOverloads(tags: IDocItem[]): ISegment[] {
+    const generated = generatedOverloads(this.entities);
+    if (generated.length === 0) { return this.mergeParams(tags); }
+    const segments: ISegment[] = tags.map((item) => ({ item, rank: tagRanks[item.tag] }));
+    if (tags.some((item) => item.tag === "overload")) { return segments; }
+    return this.insertGroup(segments, generated.map((entity) => ({ entity, rank: 1 })), 1);
   }
 
   // Sync params and their options with the method signature

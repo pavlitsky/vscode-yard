@@ -1,4 +1,5 @@
 "use strict";
+import { Overload } from "../entities/overload";
 import { Tag } from "../entities/tag";
 import { TagOption } from "../entities/tag_option";
 import { TagWithOptions } from "../entities/tag_with_options";
@@ -26,6 +27,23 @@ export interface IDocGaps {
   yieldReturn?: TagWithTypes;
   // Undocumented return value
   returnTag?: TagWithTypes;
+  // Overloads of a method documented without @overload tags
+  overloads: Overload[];
+}
+
+// Tags documenting a method signature without overloads
+const signatureTags = ["option", "param", "return", "yield", "yieldparam", "yieldreturn"];
+
+// Can a method be documented with overloads: docstring has @overload tags or it doesn't document the method signature.
+// Docstring documenting params or return value without overloads is kept that way.
+export function isOverloadable(items: IDocItem[]): boolean {
+  const tags = items.map((item) => item.tag);
+  return tags.indexOf("overload") >= 0 || !tags.some((tag) => signatureTags.indexOf(tag) >= 0);
+}
+
+// Generated overloads
+export function generatedOverloads(entities: IEntity[]): Overload[] {
+  return entities.filter((entity) => entity.type === "Overload") as Overload[];
 }
 
 // Generated tag of a text only: @abstract, @deprecated
@@ -58,6 +76,7 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
   const gaps: IDocGaps = {
     options: params.filter(isDocumented).flatMap((param) => param.options.filter((option) =>
       option.key && !tagged("option").some((item) => sameName(item.name, param.name) && item.key === option.key))),
+    overloads: tagged("overload").length === 0 ? generatedOverloads(entities) : [],
     params: params.filter((param) => !isDocumented(param)),
     yieldParams: [],
   };
