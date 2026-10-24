@@ -100,24 +100,25 @@
                     "description": "Append @author tag to Class and Module documentation"
                 },
                 "yard.tags.paramNameBeforeType": {
-                  "type": "boolean",
-                  "default": true,
-                  "description": "Print param name before its type (for example '@param username [String]')"
-              }
-          }
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Print param name before its type (for example '@param username [String]')"
+                }
+            }
         }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+        "test": "npm run compile && node ./out/test/run_test.js"
     },
     "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
+        "@types/mocha": "^10.0.10",
+        "@types/node": "^22.20.5",
+        "@types/vscode": "~1.18.0",
+        "@vscode/test-electron": "^3.1.0",
+        "mocha": "^11.8.0",
+        "typescript": "^7.0.2"
     }
 }

@@ -6,6 +6,12 @@
         "lib": [
             "es6"
         ],
+        "types": [
+            "node",
+            "mocha"
+        ],
+        "esModuleInterop": true,
+        "strict": false,
         "sourceMap": true,
         "rootDir": "src"
     },
