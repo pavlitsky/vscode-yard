@@ -566,26 +566,28 @@ Point = Struct.new(:x, :y)
 ## Configuration
 
 Insertion of empty lines are configurable to make it able to tune between
-a curt and verbose documentation styles.
+a curt and verbose documentation styles. Settings are listed with their default values:
 
-```ts
-"yard.spacers.beforeDescription" // Prepend an empty line to descriptive texts
-"yard.spacers.afterDescription" // Append an empty line to descriptive texts
-"yard.spacers.beforeTags" // Prepend an empty line to all method's tags
-"yard.spacers.separateTags" // Separate method's tags of the same name (@params and @return) with an empty line
-"yard.spacers.afterTags" // Append an empty line to all method's tags
-"yard.spacers.beforeSingleTag" // Prepend an empty line to directives or single tags (for example constants)
-"yard.spacers.afterSingleTag" // Append an empty line to directives or single tags (for example constants)
-"yard.tags.author" // Append @author tag to Class and Module documentation
-"yard.tags.authorFromGit" // Fill @author name and email from git config (user.name and user.email)
-"yard.tags.yield" // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
-"yard.tags.raise" // Document exceptions raised in methods with @raise tags
-"yard.tags.overload" // Document methods overloaded by rbs-inline annotations with @overload tags
-"yard.tags.see" // Refer to methods of superclasses overridden by methods calling super with @see tags
-"yard.tags.since" // Append @since tag to new documentation, prefilled with a version of a gem
-"yard.tags.todo" // Document TODO, FIXME, XXX, HACK and OPTIMIZE notes written in method bodies with @todo tags
-"yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
-"yard.completion.enabled" // Complete YARD tags in comments
+```jsonc
+{
+  "yard.spacers.beforeDescription": true, // Prepend an empty line to descriptive texts
+  "yard.spacers.afterDescription": true, // Append an empty line to descriptive texts
+  "yard.spacers.beforeTags": true, // Prepend an empty line to all method's tags
+  "yard.spacers.separateTags": true, // Separate method's tags of the same name (@params and @return) with an empty line
+  "yard.spacers.afterTags": true, // Append an empty line to all method's tags
+  "yard.spacers.beforeSingleTag": false, // Prepend an empty line to directives or single tags (for example constants)
+  "yard.spacers.afterSingleTag": false, // Append an empty line to directives or single tags (for example constants)
+  "yard.tags.author": false, // Append @author tag to Class and Module documentation
+  "yard.tags.authorFromGit": true, // Fill @author name and email from git config (user.name and user.email)
+  "yard.tags.yield": false, // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
+  "yard.tags.raise": true, // Document exceptions raised in methods with @raise tags
+  "yard.tags.overload": false, // Document methods overloaded by rbs-inline annotations with @overload tags
+  "yard.tags.see": false, // Refer to methods of superclasses overridden by methods calling super with @see tags
+  "yard.tags.since": false, // Append @since tag to new documentation, prefilled with a version of a gem
+  "yard.tags.todo": false, // Document TODO, FIXME, XXX, HACK and OPTIMIZE notes written in method bodies with @todo tags
+  "yard.tags.paramNameBeforeType": true, // Print param name before its type (for example '@param username [String]')
+  "yard.completion.enabled": true // Complete YARD tags in comments
+}
 ```
 
 ## Troubleshooting
