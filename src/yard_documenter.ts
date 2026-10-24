@@ -3,6 +3,7 @@ import { EndOfLine, Position, Range, TextDocument, TextLine, window, workspace }
 import { CommentBlocks, ICommentBlock } from "./ast/comments";
 import { loadParser } from "./ast/prism";
 import { Builder } from "./builder";
+import { annotationLinesCount } from "./parsers/signatures/method_signature";
 import { GitAuthorResolver } from "./resolvers/git_author";
 import { IParseContext } from "./types";
 
@@ -31,32 +32,38 @@ export default class YardDocumenter {
       window.setStatusBarMessage("YARD: method signature has syntax errors", 5000);
       return;
     }
-    const existing = comments.above(line.lineNumber + 1);
+    // Documentation is placed above Sorbet sig of a definition.
+    // Trailing rbs-inline annotations of a comment stay right above the definition, documentation goes above them.
+    line = document.lineAt((builder.documentationLine() ?? line.lineNumber + 1) - 1);
+    const block = comments.above(line.lineNumber + 1);
+    const docLinesCount = block ? block.lines.length - annotationLinesCount(block.lines) : 0;
+    const existing = block && docLinesCount > 0 ? { ...block, lines: block.lines.slice(0, docLinesCount) } : undefined;
     if (existing && !builder.supportsUpdate()) { return; }
-    const context = await this.parseContext(builder, document);
+    const context = await this.parseContext(builder, document, block ? block.lines : []);
+    const below = block ? document.lineAt(block.startLine - 1 + docLinesCount) : line;
 
     // Update existing documentation or insert a new one
     if (existing) {
       const updated = builder.update(existing.lines, context);
       if (!updated) { return; }
-      return editor.insertSnippet(updated, this.commentRange(document, existing, line));
+      return editor.insertSnippet(updated, this.commentRange(document, existing, below));
     }
     const snippet = builder.build(context);
     if (!snippet) { return; }
-    return editor.insertSnippet(snippet, new Position(line.lineNumber, line.firstNonWhitespaceCharacterIndex));
+    return editor.insertSnippet(snippet, new Position(below.lineNumber, below.firstNonWhitespaceCharacterIndex));
   }
 
   // Collect environment-dependent details for the builder
-  private async parseContext(builder: Builder, document: TextDocument): Promise<IParseContext> {
+  private async parseContext(builder: Builder, document: TextDocument, comments: string[]): Promise<IParseContext> {
     const config = workspace.getConfiguration("yard.tags");
-    const context: IParseContext = { blocks: !!config.get("yield"), raises: !!config.get("raise") };
+    const context: IParseContext = { blocks: !!config.get("yield"), comments, raises: !!config.get("raise") };
     if (builder.requiresAuthor() && config.get("author") && config.get("authorFromGit")) {
       context.author = await (new GitAuthorResolver(document)).resolve();
     }
     return context;
   }
 
-  // Range of an existing comment, it ends where the definition starts the same way a new snippet is inserted
+  // Range of an existing comment, it ends where a line below starts the same way a new snippet is inserted
   private commentRange(document: TextDocument, block: ICommentBlock, line: TextLine): Range {
     const firstLine = document.lineAt(block.startLine - 1);
     return new Range(firstLine.lineNumber, firstLine.firstNonWhitespaceCharacterIndex,

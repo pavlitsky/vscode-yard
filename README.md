@@ -206,7 +206,50 @@ Splat and block params are named without `*`, `**` and `&` the same way YARD nam
 their types are prefilled with `Array<Object>`, `Hash{Symbol => Object}` and `Proc`. Anonymous
 splats and arguments forwarding (`...`) aren't documented since YARD doesn't list them.
 
-Types are prefilled as placeholders when they're known, so they can be kept or typed over:
+Types declared by a [Sorbet](https://sorbet.org/) signature or an [rbs-inline](https://github.com/soutaro/rbs-inline)
+annotation are filled in for params, block params, block return value and return value. Sorbet's
+and RBS types are written as YARD types: `T.nilable(String)` and `String?` are `String, nil`,
+`T::Array[Integer]` and `Array[Integer]` are `Array<Integer>`, `T::Boolean` and `bool` are `Boolean`,
+`T.untyped` and `untyped` are `Object`, `.void` and `void` are `void` and so on. Splat params are
+declared with types of their elements, they're documented as `Array<...>` and `Hash{Symbol => ...}`.
+
+Documentation goes above Sorbet `sig`, the same way [yard-sorbet](https://github.com/dduugg/yard-sorbet)
+expects it, put cursor on either `sig` or `def` line. A method declared `abstract` gets `@abstract` tag,
+`attr_reader` and other attributes get their types from `sig` too:
+
+```ruby
+#
+# <Description>
+#
+# @param url [String] <description>
+# @param retries [Integer, nil] <description>
+#
+# @return [Boolean] <description>
+#
+sig { params(url: String, retries: T.nilable(Integer)).returns(T::Boolean) }
+def fetch(url, retries = nil)
+end
+```
+
+rbs-inline `#:` annotation stays right above a method, documentation goes above it. A method type
+is read from a single `#:` annotation or `# @rbs (...) -> ...` comment, overloads aren't read.
+Types of single params are read from `# @rbs name: Type` comments:
+
+```ruby
+#
+# <Description>
+#
+# @param url [String] <description>
+# @param tags [Array<Symbol>] <description>
+#
+# @return [String, nil] <description>
+#
+#: (String url, *Symbol tags) -> String?
+def fetch(url, *tags)
+end
+```
+
+Otherwise types are prefilled as placeholders when they're known, so they can be kept or typed over:
 
 * Types of params and options with literal default values: `retries = 3` is `Integer`, `opts = {}`
   is `Hash`, `format: :json` is `Symbol`, `cache = Set.new` is `Set`, `parent = nil` is `Object, nil`.

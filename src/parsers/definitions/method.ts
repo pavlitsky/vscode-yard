@@ -1,7 +1,6 @@
 "use strict";
 import type { BlockParameterNode, DefNode, HashNode, KeywordRestParameterNode, Node }
   from "@ruby/prism" with { "resolution-mode": "import" };
-import type { ParseError } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
 import { isNode, nodeType } from "../../ast/prism";
 import { AbstractTag } from "../../tags/abstract";
 import { DeprecatedTag } from "../../tags/deprecated";
@@ -20,7 +19,10 @@ import { defaultTypes } from "../literal_types";
 import { OptionsUsage } from "../options_usage";
 import { RaiseUsage } from "../raise_usage";
 import { ReturnUsage } from "../return_usage";
-import { IBaseParser } from "./base_parser";
+import { methodSignature } from "../signatures/method_signature";
+import { genericType, ISignature } from "../signatures/signature";
+import { isSig } from "../signatures/sorbet";
+import { IBaseParser, IDefinitionSite } from "./base_parser";
 
 // Parse a class or an instance method definition into documentation entities
 export default class MethodDef implements IBaseParser {
@@ -68,24 +70,31 @@ export default class MethodDef implements IBaseParser {
   // Existing method documentation is synced with the method
   public readonly supportsUpdate = true;
 
-  constructor(private node: Node, private errors: ParseError[] = []) {}
+  constructor(private node: Node, private site: IDefinitionSite = {}) {}
 
   // Is this parser ready to process the node
   public isApplicable(): boolean {
     return isNode(this.node, "DefNode");
   }
 
-  // Parse documentation tree
+  // Parse documentation tree. Types are taken from a Sorbet or an rbs-inline signature if there's one.
   public parse(context: IParseContext = {}): IEntity[] {
+    const signature = methodSignature(this.def, this.site.previous ?? null, context.comments || []);
     return [
       this.buildDescription(),
-      this.buildAbstract(),
+      this.buildAbstract(signature),
       this.buildDeprecated(),
-      ...this.buildParams(context),
-      this.buildYield(context),
+      ...this.buildParams(context, signature),
+      this.buildYield(context, signature),
       ...this.buildRaises(context),
-      this.buildReturn(),
+      this.buildReturn(signature),
     ].filter((element): element is IEntity => element !== undefined);
+  }
+
+  // Documentation of a method with Sorbet sig is placed above the sig
+  public documentationLine(): number | undefined {
+    const previous = this.site.previous;
+    return isSig(previous) ? previous.location.startLine() : undefined;
   }
 
   // Is method signature malformed: params parentheses aren't closed or there's a syntax error within the signature.
@@ -95,7 +104,7 @@ export default class MethodDef implements IBaseParser {
     if (def.lparenLoc && !def.rparenLoc) { return true; }
     const end = def.rparenLoc ? def.rparenLoc.endOffset() :
       def.parameters ? def.parameters.location.endOffset() : def.nameLoc.endOffset();
-    return this.errors.some((error) =>
+    return (this.site.errors ?? []).some((error) =>
       error.location.startOffset >= def.location.startOffset && error.location.startOffset <= end);
   }
 
@@ -115,9 +124,9 @@ export default class MethodDef implements IBaseParser {
     return new DescriptionTag();
   }
 
-  // Build abstract tag if the method only raises NotImplementedError
-  private buildAbstract(): IEntity | undefined {
-    if (!(new RaiseUsage(this.def.body)).isAbstract()) { return; }
+  // Build abstract tag if the method only raises NotImplementedError or it's declared abstract by its signature
+  private buildAbstract(signature?: ISignature): IEntity | undefined {
+    if (!signature?.abstract && !(new RaiseUsage(this.def.body)).isAbstract()) { return; }
     return new AbstractTag();
   }
 
@@ -128,7 +137,7 @@ export default class MethodDef implements IBaseParser {
   }
 
   // Build params section, block param is documented with a yield section if blocks are documented
-  private buildParams(context: IParseContext): IEntity[] {
+  private buildParams(context: IParseContext, signature?: ISignature): IEntity[] {
     return this.params()
       .filter((param) => !(context.blocks && isNode(param, "BlockParameterNode")))
       .filter((param) => this.isDocumentable(param))
@@ -136,8 +145,17 @@ export default class MethodDef implements IBaseParser {
         const name = this.paramName(param);
         const value: Node | null = "value" in param ? param.value as Node : null;
         const typesPlaceholder = this.typesPlaceholders[nodeType(param)] || (value ? defaultTypes([value]) : "");
-        return new ParamTag({ name, options: this.buildOptions(param, value), typesPlaceholder });
+        const types = signature ? this.signatureTypes(param, signature.params[name]) : "";
+        return new ParamTag({ name, options: this.buildOptions(param, value), types, typesPlaceholder });
       });
+  }
+
+  // Types of a param declared by a signature, splat params are declared with types of their elements
+  private signatureTypes(param: Node, types: string | undefined): string {
+    if (!types) { return ""; }
+    if (isNode(param, "RestParameterNode")) { return genericType("Array", [types]) ?? ""; }
+    if (isNode(param, "KeywordRestParameterNode")) { return genericType("Hash", ["Symbol", types]) ?? ""; }
+    return types;
   }
 
   // Can param be documented with @param tag
@@ -148,15 +166,17 @@ export default class MethodDef implements IBaseParser {
   }
 
   // Build yield section if method accepts a block
-  private buildYield(context: IParseContext): IEntity | undefined {
+  private buildYield(context: IParseContext, signature?: ISignature): IEntity | undefined {
     if (!context.blocks) { return; }
     const blockParam = this.params().find((param) => isNode(param, "BlockParameterNode")) as BlockParameterNode;
     const blockName = blockParam ? blockParam.name || undefined : undefined;
     const usage = (new BlockUsage(this.def.body, blockParam !== undefined, blockName)).detect();
     if (!usage.usesBlock) { return; }
-    const yieldParams = usage.params.map((name, index) =>
-      new YieldParamTag({ name, nameLink: name ? "" : "yieldparam" + index }));
-    return new YieldTag({ yieldParams, yieldReturn: new YieldReturnTag() });
+    const block = signature?.block;
+    const yieldParams = usage.params.map((name, index) => new YieldParamTag({
+      name, nameLink: name ? "" : "yieldparam" + index, types: block?.params[index] ?? "",
+    }));
+    return new YieldTag({ yieldParams, yieldReturn: new YieldReturnTag({ types: block?.returns ?? "" }) });
   }
 
   // Build raise section of exceptions raised in the method body if documenting of exceptions is enabled
@@ -166,10 +186,10 @@ export default class MethodDef implements IBaseParser {
   }
 
   // Build return section
-  private buildReturn(): IEntity | undefined {
+  private buildReturn(signature?: ISignature): IEntity | undefined {
     if (this.def.name === "initialize") { return; }
     const typesPlaceholder = (new ReturnUsage(this.def.body)).detect() || this.returnTypesPlaceholder();
-    return new ReturnTag({ typesPlaceholder });
+    return new ReturnTag({ types: signature?.returns ?? "", typesPlaceholder });
   }
 
   // Return types placeholder of a conventional method, empty if return type is unknown

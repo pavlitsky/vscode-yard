@@ -211,6 +211,18 @@ suite("Default Documenter Tests", () => {
     "method/types/return_lambda",
     "method/types/return_multiple",
     "method/types/return_endless",
+    "method/sorbet/params",
+    "method/sorbet/splats_void",
+    "method/sorbet/abstract",
+    "method/sorbet/update",
+    "method/sorbet/private_def",
+    "method/sorbet/attribute",
+    "method/sorbet/without_runtime",
+    "method/rbs/annotation",
+    "method/rbs/update",
+    "method/rbs/rbs_params",
+    "method/rbs/overloads",
+    "method/rbs/malformed",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -218,6 +230,18 @@ suite("Default Documenter Tests", () => {
 
   test("document method/update/cursor_on_def", async () => {
     await expectFileDocumented("method/update/cursor_on_def", undefined, 2);
+  });
+
+  test("document method/sorbet/cursor_on_def", async () => {
+    await expectFileDocumented("method/sorbet/cursor_on_def", undefined, 1);
+  });
+
+  test("document method/sorbet/not_a_sig", async () => {
+    await expectFileDocumented("method/sorbet/not_a_sig", undefined, 1);
+  });
+
+  test("document method/rbs/cursor_on_def", async () => {
+    await expectFileDocumented("method/rbs/cursor_on_def", undefined, 1);
   });
 
   test("document method/update/magic_comment", async () => {
@@ -375,6 +399,8 @@ suite("Blocks Documenter Tests", () => {
     "method/yield/update",
     "method/yield/update_partial",
     "method/yield/raise",
+    "method/yield/sorbet",
+    "method/yield/rbs",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -462,6 +488,12 @@ suite("Tags Completion Tests", () => {
     const items = await yardCompletions("completion/return", 1, 3);
     assert.deepEqual(missingTagLabels(items), ["@return"]);
     assert.equal((items[0].insertText as SnippetString).value, "@return [${1:Boolean}] ${2:<description>}");
+  });
+
+  test("complete tags typed by Sorbet sig of a method below", async () => {
+    const items = await yardCompletions("completion/sorbet", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@param url", "@return"]);
+    assert.equal((items[0].insertText as SnippetString).value, "@param [String] url ${1:<description>}");
   });
 
   test("complete parts missing in documented sections", async () => {

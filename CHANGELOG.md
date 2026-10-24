@@ -27,6 +27,8 @@
 - Prefill return types of predicates, comparisons, conversions like `to_s` and size methods.
 - Prefill types of params and options with literal default values, and return types of methods returning
   literal values.
+- Fill in types declared by Sorbet signatures (`sig { params(...).returns(...) }`) and rbs-inline annotations
+  (`#: (String) -> bool`, `# @rbs name: String`). Documentation is placed above `sig` and above `#:` annotations.
 
 ## [0.4.0] - 2020-03-23
 

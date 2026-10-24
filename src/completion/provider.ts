@@ -70,7 +70,7 @@ export class TagCompletionProvider implements CompletionItemProvider {
     if (parser) {
       const authorFromGit = parser.requiresAuthor && workspace.getConfiguration("yard.tags").get("authorFromGit");
       const author = authorFromGit ? await (new GitAuthorResolver(document)).resolve() : undefined;
-      entities = parser.parse({ author, blocks: true });
+      entities = parser.parse({ author, blocks: true, comments: block.lines });
     }
     return { entities, eol, items, paramNameBeforeType: paramNameBeforeType(items), parser };
   }
