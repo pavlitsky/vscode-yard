@@ -1,7 +1,7 @@
 "use strict";
 import type { ArgumentsNode, CallNode, LocalVariableReadNode, Node, SplatNode, YieldNode }
   from "@ruby/prism" with { "resolution-mode": "import" };
-import { isNode, walk } from "../ast/prism";
+import { isNode, walkScope } from "../ast/prism";
 
 // Block usage found in a method body
 export interface IBlockUsage {
@@ -13,8 +13,6 @@ export interface IBlockUsage {
 
 // Detect block usage in a method body: yield calls, block_given? checks and explicit block param calls
 export class BlockUsage {
-  // Nested scopes where yield doesn't belong to the method
-  private readonly scopes = ["DefNode", "ClassNode", "ModuleNode", "SingletonClassNode"];
   // Methods calling a block: block.call(a), block.(a), block[a], block.yield(a)
   private readonly blockCalls = ["call", "[]", "yield", "==="];
 
@@ -24,17 +22,14 @@ export class BlockUsage {
   public detect(): IBlockUsage {
     let usesBlock = this.acceptsBlock;
     let args: Node[] = [];
-    if (this.body) {
-      walk(this.body, (node) => {
-        if (this.scopes.some((scope) => isNode(node, scope))) { return false; }
-        if (this.isBlockGiven(node)) { usesBlock = true; }
-        const callArgs = this.callArguments(node);
-        if (callArgs) {
-          usesBlock = true;
-          if (callArgs.length > args.length) { args = callArgs; }
-        }
-      });
-    }
+    walkScope(this.body, (node) => {
+      if (this.isBlockGiven(node)) { usesBlock = true; }
+      const callArgs = this.callArguments(node);
+      if (callArgs) {
+        usesBlock = true;
+        if (callArgs.length > args.length) { args = callArgs; }
+      }
+    });
     return { usesBlock, params: args.map((arg) => this.paramName(arg)) };
   }
 

@@ -129,6 +129,27 @@ List of generated tags: `@author`, `@option`, `@param`, `@return`, `@yield`,
 of the repository the document belongs to, or from global git config if it's outside
 of a repository. Placeholders are inserted when values can't be resolved.
 
+Options hash params, which are params with a hash default value (`opts = {}`) or keyword
+splats (`**opts`), get an `@option` tag for each symbol key found in the default hash or read
+in the method body (`opts[:key]`, `opts.fetch(:key, default)`, `opts[:key] || default` etc.).
+A default value is shown when it's known:
+
+```ruby
+#
+# <Description>
+#
+# @param url [<Type>] <description>
+# @param opts [<Type>] <description>
+# @option opts [<Type>] :timeout (5) <description>
+# @option opts [<Type>] :limit (10) <description>
+#
+# @return [<Type>] <description>
+#
+def fetch(url, opts = { timeout: 5 })
+  limit = opts.fetch(:limit, 10)
+end
+```
+
 Blocks are documented when `yard.tags.yield` setting is enabled. Method body is
 looked through for `yield`, `block_given?` and calls of an explicit `&block` param,
 values passed to the block become `@yieldparam` tags:
@@ -176,7 +197,6 @@ a curt and verbose documentation styles.
 
 ## TODO
 
-* Support for non-empty options hash parameters.
 * (killer feature :fire:) Ability to update existing documentation.
 * (maybe) Editor snippets for tags (`@option`, `@param` etc) or tags autocompletion
 * (maybe) A better support for array / keyword args splats, see

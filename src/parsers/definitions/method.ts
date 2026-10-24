@@ -1,5 +1,6 @@
 "use strict";
-import type { BlockParameterNode, DefNode, HashNode, Node } from "@ruby/prism" with { "resolution-mode": "import" };
+import type { BlockParameterNode, DefNode, HashNode, KeywordRestParameterNode, Node }
+  from "@ruby/prism" with { "resolution-mode": "import" };
 import { isNode, nodeType } from "../../ast/prism";
 import { DescriptionTag } from "../../tags/description";
 import { OptionTag } from "../../tags/option";
@@ -10,6 +11,7 @@ import { YieldParamTag } from "../../tags/yield_param";
 import { YieldReturnTag } from "../../tags/yield_return";
 import { IEntity, IParseContext } from "../../types";
 import { BlockUsage } from "../block_usage";
+import { OptionsUsage } from "../options_usage";
 import { IBaseParser } from "./base_parser";
 
 // Parse a class or an instance method definition into documentation entities
@@ -56,11 +58,7 @@ export default class MethodDef implements IBaseParser {
         const name = this.paramName(param);
         const value: Node = "value" in param ? param.value as Node : null;
         const defaultValue = value ? value.location.slice() : "";
-        let options: OptionTag[] = [];
-        if (isNode<HashNode>(value, "HashNode") && value.elements.length === 0) {
-          options = this.seedOptions(name);
-        }
-        return new ParamTag({ name, defaultValue, options });
+        return new ParamTag({ name, defaultValue, options: this.buildOptions(param, value) });
       });
   }
 
@@ -80,6 +78,21 @@ export default class MethodDef implements IBaseParser {
   private buildReturn(): IEntity {
     if (this.def.name === "initialize") { return; }
     return new ReturnTag();
+  }
+
+  // Build options of an options hash: a param with a hash default value or a keyword splat.
+  // Placeholders are seeded for an empty hash default if no keys are found.
+  private buildOptions(param: Node, value: Node | null): OptionTag[] {
+    const isHash = isNode<HashNode>(value, "HashNode");
+    const isKeywordRest = isNode<KeywordRestParameterNode>(param, "KeywordRestParameterNode") && !!param.name;
+    if (!isHash && !isKeywordRest) { return []; }
+    const paramName = String((param as KeywordRestParameterNode).name);
+    const options = (new OptionsUsage(paramName, value, this.def.body)).detect()
+      .map(({ key, defaultValue }) => new OptionTag({ paramName, key, defaultValue }));
+    if (options.length === 0 && isHash && (value as HashNode).elements.length === 0) {
+      return this.seedOptions(paramName);
+    }
+    return options;
   }
 
   // Build options hash section

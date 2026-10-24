@@ -9,6 +9,8 @@
   definitions spanning multiple lines, single line methods with parameters, attributes defined with parentheses
   and `class << self` blocks.
 - Require VS Code 1.90 or newer.
+- Document keys of options hash params with `@option` tags: keys of a default hash value and keys read
+  in a method body, including keyword splats (`**opts`).
 
 ## [0.4.0] - 2020-03-23
 
