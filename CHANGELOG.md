@@ -5,6 +5,10 @@
 - Change `yard.tags.paramNameBeforeType` setting to be `true` by default.
 - Resolve `@author` name and email from git config, configurable with `yard.tags.authorFromGit` setting.
 - Document blocks with `@yield`, `@yieldparam` and `@yieldreturn` tags, enabled with `yard.tags.yield` setting.
+- Parse source code with [Prism](https://github.com/ruby/prism) instead of regular expressions. Fixes documenting
+  definitions spanning multiple lines, single line methods with parameters, attributes defined with parentheses
+  and `class << self` blocks.
+- Require VS Code 1.90 or newer.
 
 ## [0.4.0] - 2020-03-23
 

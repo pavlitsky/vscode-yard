@@ -1,6 +1,9 @@
 "use strict";
+import type { ArgumentsNode, CallNode, LocalVariableReadNode, Node, SplatNode, YieldNode }
+  from "@ruby/prism" with { "resolution-mode": "import" };
+import { isNode, walk } from "../ast/prism";
 
-// Block usage found in a method source
+// Block usage found in a method body
 export interface IBlockUsage {
   // Is block accepted by the method
   usesBlock: boolean;
@@ -8,89 +11,58 @@ export interface IBlockUsage {
   params: string[];
 }
 
-// Detect block usage in a method source: yield calls, block_given? checks and explicit block calls.
-// Source is inspected line by line with string literals and comments stripped.
+// Detect block usage in a method body: yield calls, block_given? checks and explicit block param calls
 export class BlockUsage {
-  // Keywords and operators which end call arguments list
-  private readonly argumentsEnd = /^\s+(?:(?:if|unless|while|until|and|or|rescue|then|do|end)\b|&&|\|\|)/;
-  // Operators which follow a call without arguments
-  private readonly operators = /^\s+(?:\?|:|=|<|>|\+\s|-\s|\*\s|\/|%\s)/;
-  // Names which aren't suitable as block param names
-  private readonly reservedNames = ["nil", "self", "true", "false", "super"];
+  // Nested scopes where yield doesn't belong to the method
+  private readonly scopes = ["DefNode", "ClassNode", "ModuleNode", "SingletonClassNode"];
+  // Methods calling a block: block.call(a), block.(a), block[a], block.yield(a)
+  private readonly blockCalls = ["call", "[]", "yield", "==="];
 
-  constructor(private lines: string[], private acceptsBlock: boolean = false, private blockName?: string) {}
+  constructor(private body: Node | null, private acceptsBlock: boolean = false, private blockName?: string) {}
 
   // Detect block usage
   public detect(): IBlockUsage {
     let usesBlock = this.acceptsBlock;
-    let args: string[] = [];
-    this.lines.map((line) => this.strip(line)).forEach((line) => {
-      if (/\bblock_given\?/.test(line)) { usesBlock = true; }
-      this.callsArguments(line).forEach((callArgs) => {
-        usesBlock = true;
-        if (callArgs.length > args.length) { args = callArgs; }
+    let args: Node[] = [];
+    if (this.body) {
+      walk(this.body, (node) => {
+        if (this.scopes.some((scope) => isNode(node, scope))) { return false; }
+        if (this.isBlockGiven(node)) { usesBlock = true; }
+        const callArgs = this.callArguments(node);
+        if (callArgs) {
+          usesBlock = true;
+          if (callArgs.length > args.length) { args = callArgs; }
+        }
       });
-    });
+    }
     return { usesBlock, params: args.map((arg) => this.paramName(arg)) };
   }
 
-  // Strip string literals contents and a comment from a line
-  private strip(line: string): string {
-    return line
-      .replace(/"(?:\\.|[^"\\])*"/g, '""')
-      .replace(/'(?:\\.|[^'\\])*'/g, "''")
-      .replace(/#.*$/, "");
+  // Is node a block_given? check
+  private isBlockGiven(node: Node): boolean {
+    return isNode<CallNode>(node, "CallNode") && !node.receiver && node.name === "block_given?";
   }
 
-  // Find block calls in a line and return arguments list of each call
-  private callsArguments(line: string): string[][] {
-    const callees = ["yield\\b(?![?!])"];
-    if (this.blockName) { callees.push(this.blockName + "(?:\\.call\\b|\\.(?=\\()|(?=\\[))"); }
-    const regExp = new RegExp("(?<![\\w.:@$])(?:" + callees.join("|") + ")", "g");
-    const calls: string[][] = [];
-    let match: RegExpExecArray;
-    while ((match = regExp.exec(line)) !== null) {
-      calls.push(this.callArguments(line.slice(match.index + match[0].length)));
+  // Arguments of a yield or a block param call, undefined if node isn't a block call
+  private callArguments(node: Node): Node[] | undefined {
+    if (isNode<YieldNode>(node, "YieldNode")) { return this.argumentsList(node.arguments_); }
+    if (this.blockName && isNode<CallNode>(node, "CallNode") && this.blockCalls.indexOf(node.name) >= 0 &&
+      isNode<LocalVariableReadNode>(node.receiver, "LocalVariableReadNode") && node.receiver.name === this.blockName) {
+      return this.argumentsList(node.arguments_);
     }
-    return calls;
   }
 
-  // Extract call arguments from a text following the callee
-  private callArguments(text: string): string[] {
-    if (/^[(\[]/.test(text)) { return this.splitArguments(text.slice(1), true); }
-    const hasArguments = /^\s+[^\s;)\]}]/.test(text) && !this.argumentsEnd.test(text) && !this.operators.test(text);
-    return hasArguments ? this.splitArguments(text, false) : [];
+  // List arguments of a call
+  private argumentsList(args: ArgumentsNode | null): Node[] {
+    return args ? args.arguments_ : [];
   }
 
-  // Split arguments list on top level commas until it ends
-  private splitArguments(text: string, enclosed: boolean): string[] {
-    const args: string[] = [];
-    let depth = 0;
-    let current = "";
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      if ("([{".indexOf(char) >= 0) {
-        depth += 1;
-      } else if (")]}".indexOf(char) >= 0) {
-        if (depth === 0) { break; }
-        depth -= 1;
-      } else if (depth === 0 && char === ",") {
-        args.push(current);
-        current = "";
-        continue;
-      } else if (depth === 0 && !enclosed && (char === ";" || this.argumentsEnd.test(text.slice(i)))) {
-        break;
-      }
-      current += char;
-    }
-    args.push(current);
-    return args.map((arg) => arg.trim()).filter((arg) => arg !== "");
-  }
-
-  // Get param name from a passed argument, empty string if argument isn't a plain local name
-  private paramName(arg: string): string {
-    const name = arg.replace(/^(?:\*\*|\*|&)/, "");
-    if (!/^[a-z_][a-zA-Z0-9_]*$/.test(name) || this.reservedNames.indexOf(name) >= 0) { return ""; }
-    return name;
+  // Get param name from a passed argument: a local variable or a method call looking like a variable ('yield foo'),
+  // empty string for other expressions
+  private paramName(arg: Node): string {
+    const value = isNode<SplatNode>(arg, "SplatNode") ? arg.expression : arg;
+    if (isNode<LocalVariableReadNode>(value, "LocalVariableReadNode")) { return value.name; }
+    if (isNode<CallNode>(value, "CallNode") && value.isVariableCall()) { return value.name; }
+    return "";
   }
 }

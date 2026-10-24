@@ -1,8 +1,8 @@
 "use strict";
 import { EndOfLine, Position, TextEditor, TextLine, window, workspace } from "vscode";
+import { loadParser } from "./ast/prism";
 import { Builder } from "./builder";
 import { GitAuthorResolver } from "./resolvers/git_author";
-import { MethodBodyResolver } from "./resolvers/method_body";
 import { IParseContext } from "./types";
 
 // Generate YARD comment
@@ -10,7 +10,6 @@ export default class YardDocumenter {
   private editor: TextEditor;
   private position: Position;
   private line: TextLine;
-  private lineText: string;
   private eol: string;
 
   // Build and insert documentation snippet
@@ -21,8 +20,10 @@ export default class YardDocumenter {
     // Check if documenter should run
     if (!this.shouldRun()) { return; }
 
-    // Resolve documenter by current line's content
-    const builder = new Builder(this.lineText, this.eol);
+    // Parse document and resolve documenter by a definition starting on the current line
+    const parse = await loadParser();
+    const tree = parse(this.editor.document.getText());
+    const builder = new Builder(tree.value, this.line.lineNumber + 1, this.eol);
     const snippet = builder.build(await this.parseContext(builder));
     if (!snippet) { return; }
 
@@ -33,10 +34,7 @@ export default class YardDocumenter {
   // Collect environment-dependent details for the builder
   private async parseContext(builder: Builder): Promise<IParseContext> {
     const config = workspace.getConfiguration("yard.tags");
-    const context: IParseContext = {};
-    if (builder.requiresBody() && config.get("yield")) {
-      context.body = (new MethodBodyResolver(this.editor.document, this.line)).resolve();
-    }
+    const context: IParseContext = { blocks: !!config.get("yield") };
     if (builder.requiresAuthor() && config.get("author") && config.get("authorFromGit")) {
       context.author = await (new GitAuthorResolver(this.editor.document)).resolve();
     }
@@ -48,7 +46,6 @@ export default class YardDocumenter {
     if (this.editor) {
       this.position = this.editor.selection.active;
       this.line = this.editor.document.lineAt(this.position);
-      this.lineText = this.line.text;
       this.eol = this.editor.document.eol === EndOfLine.LF ? "\n" : "\r\n";
     }
   }

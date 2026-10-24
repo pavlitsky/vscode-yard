@@ -8,6 +8,8 @@ async function main() {
     const extensionTestsPath = path.resolve(__dirname, "./index");
     const workspacePath = path.resolve(__dirname, "../../src/test/project");
     await runTests({
+      // VS Code version to test against, latest stable by default
+      version: process.env.VSCODE_TEST_VERSION,
       extensionDevelopmentPath,
       extensionTestsPath,
       launchArgs: [workspacePath, "--disable-extensions"],

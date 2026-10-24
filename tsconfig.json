@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "node16",
         "target": "es6",
         "outDir": "out",
         "lib": [
@@ -12,6 +12,7 @@
         ],
         "esModuleInterop": true,
         "strict": false,
+        "skipLibCheck": true,
         "sourceMap": true,
         "rootDir": "src"
     },

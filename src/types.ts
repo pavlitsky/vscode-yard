@@ -13,6 +13,6 @@ export interface IAuthorInfo {
 // Environment-dependent details passed to parsers
 export interface IParseContext {
   author?: IAuthorInfo;
-  // Method body lines, present when documenting of blocks is enabled
-  body?: string[];
+  // Is documenting of blocks enabled
+  blocks?: boolean;
 }

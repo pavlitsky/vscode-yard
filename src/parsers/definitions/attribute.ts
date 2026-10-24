@@ -1,39 +1,22 @@
 "use strict";
+import type { CallNode, Node } from "@ruby/prism" with { "resolution-mode": "import" };
+import { isNode } from "../../ast/prism";
 import { ReturnTag } from "../../tags/return";
 import { IEntity } from "../../types";
 import { IBaseParser } from "./base_parser";
 
-// Parse a constant definition into documentation entities
+// Parse an attribute definition into documentation entities
 export default class Attribute implements IBaseParser {
-  // Regexp to extract attribute accessor and name
-  // See https://docs.ruby-lang.org/en/trunk/syntax/assignment_rdoc.html#label-Local+Variable+Names
-  // tslint:disable:max-line-length
-  public readonly regExp = new RegExp([
-      /^\s*/, // whitespace
-      /(?:(?:(?:attr|mattr|cattr)_(reader|writer|accessor))|(?:class_attribute))/, // attribute scope and access type
-      /\s+/, // whitespace
-      /:([a-z][a-zA-Z0-9_]*).*/, // attribute name
-    ].map((r) => r.source).join(""),
-  );
-  // tslint:enable:max-line-length
+  // Names of attribute definition methods
+  public readonly regExp = /^(?:(?:attr|mattr|cattr)_(?:reader|writer|accessor)|class_attribute)$/;
 
-  // Attribute name
-  private parsedName: string = "";
-  // Attribute accessor
-  private parsedAccessor: string = "";
+  constructor(private node: Node) {}
 
-  constructor(text: string) {
-    const match: RegExpExecArray = this.regExp.exec(text);
-    if (match) {
-      const [, accessor, name] = match;
-      this.parsedName = name;
-      this.parsedAccessor = accessor;
-    }
-  }
-
-  // Is this parser ready to process the text
+  // Is this parser ready to process the node: attr_reader :foo, class_attribute :foo etc.
   public isApplicable(): boolean {
-    return this.parsedName !== "" && this.parsedAccessor !== "";
+    if (!isNode<CallNode>(this.node, "CallNode")) { return false; }
+    const args = this.node.arguments_ ? this.node.arguments_.arguments_ : [];
+    return !this.node.receiver && this.regExp.test(this.node.name) && isNode(args[0] || null, "SymbolNode");
   }
 
   // Parse documentation tree

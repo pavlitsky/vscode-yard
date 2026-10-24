@@ -5,7 +5,7 @@
     "version": "0.4.0",
     "publisher": "pavlitsky",
     "engines": {
-        "vscode": "^1.18.0"
+        "vscode": "^1.90.0"
     },
     "lincense": "SEE LICENSE IN LICENSE.txt",
     "keywords": [
@@ -39,7 +39,7 @@
     "activationEvents": [
         "onCommand:extension.generateYard"
     ],
-    "main": "./out/extension",
+    "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
@@ -126,9 +126,12 @@
     "devDependencies": {
         "@types/mocha": "^10.0.10",
         "@types/node": "^22.20.5",
-        "@types/vscode": "~1.18.0",
+        "@types/vscode": "~1.90.0",
         "@vscode/test-electron": "^3.1.0",
         "mocha": "^11.8.0",
         "typescript": "^7.0.2"
+    },
+    "dependencies": {
+        "@ruby/prism": "^2.0.0"
     }
 }

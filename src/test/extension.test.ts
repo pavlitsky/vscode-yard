@@ -76,6 +76,10 @@ suite("Default Documenter Tests", () => {
     "method/initializer",
     "method/class_single_param",
     "method/without_parentheses",
+    "method/multiline_params",
+    "method/single_line_body_params",
+    "method/private_def",
+    "method/singleton_class",
     "method/naming/setter",
     "method/naming/bang",
     "method/naming/boolean",
@@ -91,11 +95,13 @@ suite("Default Documenter Tests", () => {
     "class_or_module/namespaced_and_nested",
     "constant/constant",
     "constant/constant_spaced",
+    "constant/constant_path",
     "attribute/reader",
     "attribute/writer",
     "attribute/accessor",
     "attribute/class_accessor",
     "attribute/class_attribute",
+    "attribute/parentheses",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -265,6 +271,9 @@ suite("Blocks Documenter Tests", () => {
     "method/yield/single_line",
     "method/yield/nested",
     "method/yield/not_a_block",
+    "method/yield/nested_def",
+    "method/yield/heredoc",
+    "method/yield/multiline_params",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });

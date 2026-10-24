@@ -24,7 +24,7 @@ Methods named in ASCII and Japanese are supported.
 
 ## Usage
 
-Position cursor on a definition you wish to document.
+Position cursor on a first line of a definition you wish to document.
 
 ```ruby
 def foo(bar, baz = false) # <- put cursor at any place of this line
@@ -117,6 +117,10 @@ Feel free to append any needed tags like `@note`, `@example`, `@see` manually
 after snippet filled in.
 
 ## Details
+
+Source code is parsed with [Prism](https://github.com/ruby/prism), the Ruby's own parser,
+so definitions spanning multiple lines and any Ruby syntax are supported.
+Requires VS Code 1.90 or newer.
 
 List of generated tags: `@author`, `@option`, `@param`, `@return`, `@yield`,
 `@yieldparam`, `@yieldreturn`.
