@@ -2,7 +2,7 @@
 # <Description>
 #
 # @param [<Type>] bar <description>
-# @param [<Type>] baz <description>
+# @param [Integer] baz <description>
 # @param [Proc] qux <description>
 #
 # @return [<Type>] <description>

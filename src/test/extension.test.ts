@@ -106,6 +106,7 @@ suite("Default Documenter Tests", () => {
       author: true,
       authorFromGit: false,
       paramNameBeforeType: false,
+      raise: true,
       yield: false,
     },
   };
@@ -176,6 +177,72 @@ suite("Default Documenter Tests", () => {
     "method/update/class_documented",
     "method/update/splat_names",
     "method/update/malformed",
+    "method/raise/raises",
+    "method/raise/initializer",
+    "method/raise/update",
+    "method/raise/update_missing",
+    "method/raise/up_to_date",
+    "method/abstract/abstract",
+    "method/abstract/endless",
+    "method/abstract/not_abstract",
+    "method/abstract/update",
+    "method/abstract/up_to_date",
+    "method/deprecated/warn",
+    "method/deprecated/category",
+    "method/deprecated/deprecator",
+    "method/deprecated/active_support",
+    "method/deprecated/not_deprecated",
+    "method/deprecated/update",
+    "method/deprecated/update_abstract",
+    "method/return/to_s",
+    "method/return/to_h",
+    "method/return/spaceship",
+    "method/return/equality",
+    "method/return/singleton_predicate",
+    "method/return/size",
+    "method/return/unknown",
+    "method/return/update",
+    "method/types/defaults",
+    "method/types/return_literal",
+    "method/types/return_nil",
+    "method/types/return_branches",
+    "method/types/return_unknown",
+    "method/types/return_name_fallback",
+    "method/types/return_lambda",
+    "method/types/return_multiple",
+    "method/types/return_endless",
+    "method/sorbet/params",
+    "method/sorbet/splats_void",
+    "method/sorbet/abstract",
+    "method/sorbet/update",
+    "method/sorbet/private_def",
+    "method/sorbet/attribute",
+    "method/sorbet/without_runtime",
+    "method/rbs/annotation",
+    "method/rbs/update",
+    "method/rbs/rbs_params",
+    "method/rbs/overloads",
+    "method/rbs/malformed",
+    "directive/define_method",
+    "directive/define_singleton_method",
+    "directive/define_method_no_block",
+    "directive/delegate",
+    "directive/delegate_prefix",
+    "directive/def_delegators",
+    "directive/def_delegator",
+    "directive/scope",
+    "directive/scope_lambda",
+    "directive/has_many",
+    "directive/has_many_irregular",
+    "directive/belongs_to",
+    "directive/has_one",
+    "directive/polymorphic",
+    "directive/struct",
+    "directive/data",
+    "directive/struct_superclass",
+    "directive/data_superclass",
+    "directive/documented",
+    "directive/not_a_delegate",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -183,6 +250,18 @@ suite("Default Documenter Tests", () => {
 
   test("document method/update/cursor_on_def", async () => {
     await expectFileDocumented("method/update/cursor_on_def", undefined, 2);
+  });
+
+  test("document method/sorbet/cursor_on_def", async () => {
+    await expectFileDocumented("method/sorbet/cursor_on_def", undefined, 1);
+  });
+
+  test("document method/sorbet/not_a_sig", async () => {
+    await expectFileDocumented("method/sorbet/not_a_sig", undefined, 1);
+  });
+
+  test("document method/rbs/cursor_on_def", async () => {
+    await expectFileDocumented("method/rbs/cursor_on_def", undefined, 1);
   });
 
   test("document method/update/magic_comment", async () => {
@@ -197,6 +276,7 @@ suite("Verbose Documenter Tests", () => {
       author: true,
       authorFromGit: false,
       paramNameBeforeType: false,
+      raise: true,
       yield: false,
     },
   };
@@ -220,6 +300,7 @@ suite("Curt Documenter Tests", () => {
       author: false,
       authorFromGit: false,
       paramNameBeforeType: false,
+      raise: true,
       yield: false,
     },
   };
@@ -230,6 +311,10 @@ suite("Curt Documenter Tests", () => {
     "curt/options_hash_param",
     "curt/options_keys",
     "curt/update",
+    "curt/raise",
+    "curt/abstract",
+    "curt/deprecated",
+    "curt/struct",
     "curt/constant",
     "curt/attribute",
   ];
@@ -245,12 +330,33 @@ suite("Special options", () => {
       author: true,
       authorFromGit: false,
       paramNameBeforeType: true, // Non default
+      raise: true,
       yield: false,
     },
   };
 
   const testCases = [
     "special/param_name_before_types"
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  expectDocumented(testCases);
+});
+
+suite("Raise disabled", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: false,
+      raise: false, // Non default
+      yield: false,
+    },
+  };
+
+  const testCases = [
+    "method/raise/disabled",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -264,6 +370,7 @@ suite("Author from git", () => {
       author: true,
       authorFromGit: true,
       paramNameBeforeType: true,
+      raise: true,
       yield: false,
     },
   };
@@ -290,6 +397,7 @@ suite("Blocks Documenter Tests", () => {
       author: false,
       authorFromGit: false,
       paramNameBeforeType: true,
+      raise: true,
       yield: true,
     },
   };
@@ -311,6 +419,10 @@ suite("Blocks Documenter Tests", () => {
     "method/yield/multiline_params",
     "method/yield/update",
     "method/yield/update_partial",
+    "method/yield/raise",
+    "method/yield/sorbet",
+    "method/yield/rbs",
+    "method/yield/define_method",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -333,6 +445,7 @@ suite("Curt Blocks Documenter Tests", () => {
       author: false,
       authorFromGit: false,
       paramNameBeforeType: true,
+      raise: true,
       yield: true,
     },
   };
@@ -355,6 +468,7 @@ suite("Tags Completion Tests", () => {
       author: true,
       authorFromGit: true,
       paramNameBeforeType: false,
+      raise: true,
       yield: false,
     },
   };
@@ -375,8 +489,33 @@ suite("Tags Completion Tests", () => {
     const param = items.find((item) => item.label === "@param opts");
     assert.ok(param);
     assert.equal((param.insertText as SnippetString).value,
-      "@param [${1:<Type>}] opts ${2:<description>}\n# @option opts [${3:<Type>}] :timeout (5) ${4:<description>}");
+      "@param [${1:Hash}] opts ${2:<description>}\n# @option opts [${3:Integer}] :timeout (5) ${4:<description>}");
     assert.ok(items.some((item) => item.label === "@note" && item.kind === CompletionItemKind.Keyword));
+  });
+
+  test("complete abstract tag of a method raising NotImplementedError", async () => {
+    const items = await yardCompletions("completion/abstract", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@abstract", "@param request", "@return"]);
+    const abstract = items.find((item) => item.label === "@abstract");
+    assert.ok(abstract);
+    assert.equal((abstract.insertText as SnippetString).value, "@abstract ${1:<description>}");
+  });
+
+  test("complete deprecated tag of a method warning about deprecation", async () => {
+    const items = await yardCompletions("completion/deprecated", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@deprecated", "@return"]);
+  });
+
+  test("complete return value of a predicate method with a types placeholder", async () => {
+    const items = await yardCompletions("completion/return", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@return"]);
+    assert.equal((items[0].insertText as SnippetString).value, "@return [${1:Boolean}] ${2:<description>}");
+  });
+
+  test("complete tags typed by Sorbet sig of a method below", async () => {
+    const items = await yardCompletions("completion/sorbet", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@param url", "@return"]);
+    assert.equal((items[0].insertText as SnippetString).value, "@param [String] url ${1:<description>}");
   });
 
   test("complete parts missing in documented sections", async () => {
@@ -395,7 +534,7 @@ suite("Tags Completion Tests", () => {
     const options = await yardCompletions("completion/names", 3, 10);
     assert.deepEqual(missingTagLabels(options), ["opts :timeout"]);
     assert.equal((options[0].insertText as SnippetString).value,
-      "opts [${1:<Type>}] :timeout (5) ${2:<description>}");
+      "opts [${1:Integer}] :timeout (5) ${2:<description>}");
   });
 
   test("complete only standard tags in a comment not documenting a definition", async () => {

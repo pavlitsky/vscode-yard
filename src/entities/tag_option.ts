@@ -3,6 +3,8 @@ export class TagOption {
   public paramName: string;
   public key: string;
   public types: string;
+  // Placeholder of unknown types, '<Type>' if empty
+  public typesPlaceholder: string;
   public defaultValue: string;
   public text: string;
   public type: string;
@@ -12,6 +14,7 @@ export class TagOption {
       paramName = "",
       key = "",
       types = "",
+      typesPlaceholder = "",
       defaultValue = "",
       text = "",
       type = "TagOption",
@@ -20,6 +23,7 @@ export class TagOption {
     this.paramName = paramName;
     this.key = key;
     this.types = types;
+    this.typesPlaceholder = typesPlaceholder;
     this.defaultValue = defaultValue;
     this.text = text;
     this.type = type;

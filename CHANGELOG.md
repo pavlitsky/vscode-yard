@@ -20,6 +20,18 @@
 - Complete YARD tags in comments, tags missing in documentation of a definition below are offered first.
   Names are completed after `@param`, `@yieldparam`, `@option` and `@raise` tags. Can be disabled with
   `yard.completion.enabled` setting.
+- Document exceptions raised in methods with `@raise` tags, configurable with `yard.tags.raise` setting.
+  Updating documentation adds tags of undocumented exceptions.
+- Document methods which only raise `NotImplementedError` with `@abstract` tag.
+- Document methods warning about their deprecation with `@deprecated` tag.
+- Prefill return types of predicates, comparisons, conversions like `to_s` and size methods.
+- Prefill types of params and options with literal default values, and return types of methods returning
+  literal values.
+- Fill in types declared by Sorbet signatures (`sig { params(...).returns(...) }`) and rbs-inline annotations
+  (`#: (String) -> bool`, `# @rbs name: String`). Documentation is placed above `sig` and above `#:` annotations.
+- Document methods and attributes YARD doesn't see with `@!method` and `@!attribute` directives: `define_method`,
+  `delegate`, `def_delegators`, Rails scopes and associations.
+- Document members of Struct and Data classes with `@attr` and `@attr_reader` tags.
 
 ## [0.4.0] - 2020-03-23
 

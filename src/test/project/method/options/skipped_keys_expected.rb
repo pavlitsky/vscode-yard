@@ -1,10 +1,10 @@
 #
 # <Description>
 #
-# @param [<Type>] opts <description>
-# @option opts [<Type>] :sym (3) <description>
-# @option opts [<Type>] :long <description>
-# @option opts [<Type>] :multi <description>
+# @param [Hash] opts <description>
+# @option opts [Integer] :sym (3) <description>
+# @option opts [String] :long <description>
+# @option opts [Array] :multi <description>
 #
 # @return [<Type>] <description>
 #

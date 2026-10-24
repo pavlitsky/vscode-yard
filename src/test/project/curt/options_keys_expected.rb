@@ -1,7 +1,7 @@
 # <Description>
 # @param [<Type>] url <description>
-# @param [<Type>] opts <description>
-# @option opts [<Type>] :timeout (5) <description>
+# @param [Hash] opts <description>
+# @option opts [Integer] :timeout (5) <description>
 # @option opts [<Type>] :format <description>
 # @return [<Type>] <description>
 def fetch(url, opts = { timeout: 5 })

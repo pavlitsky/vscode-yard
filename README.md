@@ -16,9 +16,15 @@ It's able to document:
 
 * Methods: instance methods, initializers, class methods.
 * Blocks accepted by methods (optional, see `yard.tags.yield` setting).
+* Exceptions raised in methods (optional, see `yard.tags.raise` setting).
+* Abstract methods raising `NotImplementedError`.
+* Deprecated methods warning about their deprecation.
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
+* Struct and Data classes (`Point = Struct.new(:x, :y)`, `Point = Data.define(:x, :y)`).
+* Methods and attributes YARD doesn't see, with `@!method` and `@!attribute` directives:
+  `define_method`, delegated methods (`delegate`, `def_delegators`), Rails scopes and associations.
 
 Methods named in ASCII and Japanese are supported.
 
@@ -41,7 +47,7 @@ from the command palette.
   # <Description>
   #
   # @param bar [<Type>] <description>
-  # @param baz [<Type>] <description>
+  # @param baz [Boolean] <description>
   #
   # @return [<Type>] <description>
   #
@@ -76,7 +82,9 @@ as they're written, missing tags are added as placeholders:
 
 * Params are reordered to match the method signature. A param which no longer exists is
   renamed if a new param takes its place, otherwise it's removed.
-* Missing `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn` and `@return` tags are added.
+* Missing `@abstract`, `@deprecated`, `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn`, `@raise`
+  and `@return` tags are added.
+  Documented exceptions are kept even if a method doesn't raise them.
 * New tags follow the params style of the existing documentation.
 
 ```ruby
@@ -110,7 +118,7 @@ def fetch(url, timeout, retries = 3)
 end
 ```
 
-Documentation of classes, modules, constants and attributes isn't updated.
+Documentation of classes, modules, constants, attributes and directives isn't updated.
 
 ### Tags completion
 
@@ -190,8 +198,9 @@ Source code is parsed with [Prism](https://github.com/ruby/prism), the Ruby's ow
 so definitions spanning multiple lines and any Ruby syntax are supported.
 Requires VS Code 1.90 or newer.
 
-List of generated tags: `@author`, `@option`, `@param`, `@return`, `@yield`,
-`@yieldparam`, `@yieldreturn`.
+List of generated tags: `@abstract`, `@attr`, `@attr_reader`, `@author`, `@deprecated`, `@option`,
+`@param`, `@raise`, `@return`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
+`@!attribute`, `@!method`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
 of the repository the document belongs to, or from global git config if it's outside
@@ -200,6 +209,69 @@ of a repository. Placeholders are inserted when values can't be resolved.
 Splat and block params are named without `*`, `**` and `&` the same way YARD names them,
 their types are prefilled with `Array<Object>`, `Hash{Symbol => Object}` and `Proc`. Anonymous
 splats and arguments forwarding (`...`) aren't documented since YARD doesn't list them.
+
+Types declared by a [Sorbet](https://sorbet.org/) signature or an [rbs-inline](https://github.com/soutaro/rbs-inline)
+annotation are filled in for params, block params, block return value and return value. Sorbet's
+and RBS types are written as YARD types: `T.nilable(String)` and `String?` are `String, nil`,
+`T::Array[Integer]` and `Array[Integer]` are `Array<Integer>`, `T::Boolean` and `bool` are `Boolean`,
+`T.untyped` and `untyped` are `Object`, `.void` and `void` are `void` and so on. Splat params are
+declared with types of their elements, they're documented as `Array<...>` and `Hash{Symbol => ...}`.
+
+Documentation goes above Sorbet `sig`, the same way [yard-sorbet](https://github.com/dduugg/yard-sorbet)
+expects it, put cursor on either `sig` or `def` line. A method declared `abstract` gets `@abstract` tag,
+`attr_reader` and other attributes get their types from `sig` too:
+
+```ruby
+#
+# <Description>
+#
+# @param url [String] <description>
+# @param retries [Integer, nil] <description>
+#
+# @return [Boolean] <description>
+#
+sig { params(url: String, retries: T.nilable(Integer)).returns(T::Boolean) }
+def fetch(url, retries = nil)
+end
+```
+
+rbs-inline `#:` annotation stays right above a method, documentation goes above it. A method type
+is read from a single `#:` annotation or `# @rbs (...) -> ...` comment, overloads aren't read.
+Types of single params are read from `# @rbs name: Type` comments:
+
+```ruby
+#
+# <Description>
+#
+# @param url [String] <description>
+# @param tags [Array<Symbol>] <description>
+#
+# @return [String, nil] <description>
+#
+#: (String url, *Symbol tags) -> String?
+def fetch(url, *tags)
+end
+```
+
+Otherwise types are prefilled as placeholders when they're known, so they can be kept or typed over:
+
+* Types of params and options with literal default values: `retries = 3` is `Integer`, `opts = {}`
+  is `Hash`, `format: :json` is `Symbol`, `cache = Set.new` is `Set`, `parent = nil` is `Object, nil`.
+* Return types of methods returning literal values, both the last expression and explicit `return`
+  values are looked through, including `if` and `unless` branches:
+
+  ```ruby
+  # @return [Record, nil] <description>
+  def record
+    return nil if @id.nil?
+    Record.new(@id)
+  end
+  ```
+
+* Otherwise return types of conventional methods: predicates (`valid?`) and comparisons (`==`, `<`,
+  `>=` etc.) return `Boolean`, conversions return their classes (`to_s` and `inspect` return `String`,
+  `to_h` returns `Hash`, `to_i` returns `Integer` and so on), `size`, `length`, `count` and `hash`
+  return `Integer`, `<=>` and `=~` return `Integer, nil`.
 
 Options hash params, which are params with a hash default value (`opts = {}`) or keyword
 splats (`**opts`), get an `@option` tag for each symbol key found in the default hash or read
@@ -211,9 +283,9 @@ A default value is shown when it's known:
 # <Description>
 #
 # @param url [<Type>] <description>
-# @param opts [<Type>] <description>
-# @option opts [<Type>] :timeout (5) <description>
-# @option opts [<Type>] :limit (10) <description>
+# @param opts [Hash] <description>
+# @option opts [Integer] :timeout (5) <description>
+# @option opts [Integer] :limit (10) <description>
 #
 # @return [<Type>] <description>
 #
@@ -248,6 +320,108 @@ An explicit `&block` param is documented with these tags instead of `@param`.
 When a passed value isn't a plain local variable (for example `yield @items.first`)
 its name is left as a placeholder, filled in once for both `@yield` and `@yieldparam`.
 
+Exceptions raised in a method body get a `@raise` tag each, when `yard.tags.raise` setting is
+enabled (it's on by default). Exceptions are detected in `raise` and `fail` calls with a class
+(`raise ArgumentError`, `raise ArgumentError, "message"`, `raise Net::ReadTimeout.new(...)`),
+raising a message is documented as `RuntimeError`. A bare re-raise and exceptions raised in nested
+method definitions are skipped:
+
+```ruby
+#
+# <Description>
+#
+# @param url [<Type>] <description>
+#
+# @raise [ArgumentError] <description>
+# @raise [RuntimeError] <description>
+#
+# @return [<Type>] <description>
+#
+def fetch(url)
+  raise ArgumentError, "bad url" unless url
+  fail "empty url" if url.empty?
+rescue IOError
+  raise
+end
+```
+
+A method whose body only raises `NotImplementedError` is documented as abstract with
+an `@abstract` tag, `NotImplementedError` isn't listed with `@raise` then:
+
+```ruby
+#
+# <Description>
+#
+# @abstract <description>
+#
+# @param request [<Type>] <description>
+#
+# @return [<Type>] <description>
+#
+def call(request)
+  raise NotImplementedError, "#{self.class} must implement #{__method__}"
+end
+```
+
+A method warning about its deprecation is documented with a `@deprecated` tag. Deprecation warnings
+are `warn` calls with a message mentioning a deprecation or with `category: :deprecated`, and `warn`
+calls of deprecators like `ActiveSupport::Deprecation.warn` or `MyGem.deprecator.warn`:
+
+```ruby
+#
+# <Description>
+#
+# @deprecated <description>
+#
+# @param url [<Type>] <description>
+#
+# @return [<Type>] <description>
+#
+def old_fetch(url)
+  warn "old_fetch is deprecated, use fetch instead"
+  fetch(url)
+end
+```
+
+### Directives
+
+Methods and attributes defined by calls aren't seen by YARD unless they're documented with
+`@!method` and `@!attribute` directives, their documentation is nested in a directive:
+
+```ruby
+# @!method greet(name, greeting = "Hello")
+#   <Description>
+#   @param name [<Type>] <description>
+#   @param greeting [String] <description>
+#   @return [String] <description>
+define_method(:greet) do |name, greeting = "Hello"|
+  "#{greeting}, #{name}"
+end
+```
+
+* `define_method` and `define_singleton_method` with a block or a lambda are documented the same way
+  methods are.
+* Each method delegated with Rails `delegate` (including its `prefix:` option) and Forwardable's
+  `def_delegators` and `def_delegator` gets its own `@!method` directive.
+* Rails `scope` is documented as a class method returning `ActiveRecord::Relation`.
+* Rails `has_many`, `has_one`, `belongs_to` and `has_and_belongs_to_many` are documented with
+  `@!attribute [rw]` directives. Their types are guessed from association names or `class_name:`
+  options: `has_many :categories` returns `ActiveRecord::Associations::CollectionProxy<Category>`,
+  `belongs_to :author, class_name: "User", optional: true` returns `User, nil`.
+
+Struct and Data classes assigned to constants are documented as classes, YARD reads types of their
+members from `@attr` and `@attr_reader` tags. `class Point < Struct.new(:x, :y)` gets `@attr` tags too:
+
+```ruby
+#
+# <Description>
+#
+# @attr x [<Type>] <description>
+# @attr y [<Type>] <description>
+#
+Point = Struct.new(:x, :y)
+```
+
 ## Configuration
 
 Insertion of empty lines are configurable to make it able to tune between
@@ -264,6 +438,7 @@ a curt and verbose documentation styles.
 "yard.tags.author" // Append @author tag to Class and Module documentation
 "yard.tags.authorFromGit" // Fill @author name and email from git config (user.name and user.email)
 "yard.tags.yield" // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
+"yard.tags.raise" // Document exceptions raised in methods with @raise tags
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 "yard.completion.enabled" // Complete YARD tags in comments
 ```

@@ -2,8 +2,8 @@
 # <Description>
 #
 # @param [<Type>] bar <description>
-# @param [<Type>] baz <description>
-# @param [<Type>] qux <description>
+# @param [Integer] baz <description>
+# @param [Integer] qux <description>
 #
 # @return [<Type>] <description>
 #

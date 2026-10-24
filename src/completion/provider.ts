@@ -70,7 +70,7 @@ export class TagCompletionProvider implements CompletionItemProvider {
     if (parser) {
       const authorFromGit = parser.requiresAuthor && workspace.getConfiguration("yard.tags").get("authorFromGit");
       const author = authorFromGit ? await (new GitAuthorResolver(document)).resolve() : undefined;
-      entities = parser.parse({ author, blocks: true });
+      entities = parser.parse({ author, blocks: true, comments: block.lines });
     }
     return { entities, eol, items, paramNameBeforeType: paramNameBeforeType(items), parser };
   }
@@ -82,6 +82,8 @@ export class TagCompletionProvider implements CompletionItemProvider {
     const add = (label: string, detail: string, entity: IEntity) =>
       items.push(this.item(label, detail, this.snippet(context, entity), range, "0" + this.pad(items.length)));
 
+    if (gaps.abstractTag) { add("@abstract", "Abstract method", gaps.abstractTag); }
+    if (gaps.deprecatedTag) { add("@deprecated", "Deprecated method", gaps.deprecatedTag); }
     gaps.params.forEach((param) =>
       add("@param " + param.name, param.options.length ? "Param with options" : "Param", param));
     gaps.options.forEach((option) =>

@@ -3,7 +3,7 @@
 #
 # @param [<Type>] bar <description>
 #
-# @return [<Type>] <description>
+# @return [Boolean] <description>
 #
 def foo?(bar)
 end

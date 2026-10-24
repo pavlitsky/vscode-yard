@@ -2,7 +2,7 @@
 import { Raw } from "../entities/raw";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { IEntity } from "../types";
-import { generatedReturn, generatedYield } from "./gaps";
+import { generatedRaises, generatedReturn, generatedTextTag, generatedYield, isRaiseDocumented } from "./gaps";
 import { bareName, paramNameBeforeType, sameName } from "./names";
 import { IDocItem } from "./parser";
 
@@ -12,9 +12,10 @@ export interface IMergeSpacers {
   separateTags: boolean;
 }
 
-// Order of tags: params with options, then yield section, then return value. Other tags aren't ranked.
+// Order of tags: abstract and deprecated tags, then params with options, then yield section, then raised exceptions,
+// then return value. Other tags aren't ranked.
 const tagRanks: { [tag: string]: number } = {
-  option: 1, param: 1, return: 3, yield: 2, yieldparam: 2, yieldreturn: 2,
+  abstract: 0, deprecated: 0, option: 1, param: 1, raise: 3, return: 4, yield: 2, yieldparam: 2, yieldreturn: 2,
 };
 
 // Part of a merged docstring: an existing item or a new entity
@@ -52,7 +53,10 @@ export class DocstringMerger {
     this.descriptionEndsWithText = description.length > 0 && !this.isBlank(description[description.length - 1]);
 
     let segments = this.mergeParams(tags);
+    segments = this.mergeTextTag(segments, "abstract");
+    segments = this.mergeTextTag(segments, "deprecated");
     segments = this.mergeYield(segments);
+    segments = this.mergeRaises(segments);
     segments = this.mergeReturn(segments);
 
     const lines = description.flatMap((item) => item.lines);
@@ -109,6 +113,13 @@ export class DocstringMerger {
     return segments;
   }
 
+  // Add a text only tag if it's missing: @abstract, @deprecated
+  private mergeTextTag(segments: ISegment[], tagName: string): ISegment[] {
+    const generated = generatedTextTag(this.entities, tagName);
+    if (!generated || segments.some((s) => s.item?.tag === tagName)) { return segments; }
+    return this.insertGroup(segments, [{ entity: generated, rank: 0 }], 0);
+  }
+
   // Add yield section or its missing parts: named block params and block return value
   private mergeYield(segments: ISegment[]): ISegment[] {
     const generated = generatedYield(this.entities);
@@ -134,11 +145,25 @@ export class DocstringMerger {
     return result;
   }
 
+  // Add tags of undocumented exceptions after documented ones, documented exceptions are kept even if they aren't raised
+  private mergeRaises(segments: ISegment[]): ISegment[] {
+    const missing = generatedRaises(this.entities)
+      .filter((tag) => !isRaiseDocumented(this.items, tag.types))
+      .map((entity) => ({ entity, rank: 3 }));
+    if (missing.length === 0) { return segments; }
+    const last = this.lastIndex(segments, (s) => s.item?.tag === "raise");
+    if (last < 0) { return this.insertGroup(segments, missing, 3); }
+    const result = segments.slice();
+    result.splice(last + 1, 0, ...missing);
+    this.changed = true;
+    return result;
+  }
+
   // Add return value tag if it's missing
   private mergeReturn(segments: ISegment[]): ISegment[] {
     const generated = generatedReturn(this.entities);
     if (!generated || segments.some((s) => s.item?.tag === "return")) { return segments; }
-    return this.insertGroup(segments, [{ entity: generated, rank: 3 }], 3);
+    return this.insertGroup(segments, [{ entity: generated, rank: 4 }], 4);
   }
 
   // Insert a new group of tags before tags ranked higher, or after the last tag ranked lower.

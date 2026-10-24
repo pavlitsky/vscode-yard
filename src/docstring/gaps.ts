@@ -1,4 +1,5 @@
 "use strict";
+import { Tag } from "../entities/tag";
 import { TagOption } from "../entities/tag_option";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { TagWithTypes } from "../entities/tag_with_types";
@@ -9,6 +10,10 @@ import { IDocItem } from "./parser";
 
 // Generated documentation entities missing in a docstring
 export interface IDocGaps {
+  // Undocumented abstract method
+  abstractTag?: Tag;
+  // Undocumented deprecated method
+  deprecatedTag?: Tag;
   // Undocumented params with their options
   params: TagWithOptions[];
   // Undocumented options of documented params
@@ -23,6 +28,11 @@ export interface IDocGaps {
   returnTag?: TagWithTypes;
 }
 
+// Generated tag of a text only: @abstract, @deprecated
+export function generatedTextTag(entities: IEntity[], tagName: string): Tag | undefined {
+  return entities.find((entity) => entity.type === "Tag" && (entity as Tag).tagName === tagName) as Tag | undefined;
+}
+
 // Generated yield section
 export function generatedYield(entities: IEntity[]): Yield | undefined {
   return entities.find((entity) => entity.type === "Yield") as Yield | undefined;
@@ -32,6 +42,12 @@ export function generatedYield(entities: IEntity[]): Yield | undefined {
 export function generatedReturn(entities: IEntity[]): TagWithTypes | undefined {
   return entities.find((entity) =>
     entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "return") as TagWithTypes | undefined;
+}
+
+// Generated tags of raised exceptions
+export function generatedRaises(entities: IEntity[]): TagWithTypes[] {
+  return entities.filter((entity) =>
+    entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "raise") as TagWithTypes[];
 }
 
 // Find generated documentation entities a docstring is missing
@@ -57,6 +73,11 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
       if (tagged("yieldreturn").length === 0) { gaps.yieldReturn = yieldSection.yieldReturn; }
     }
   }
+
+  const abstractTag = generatedTextTag(entities, "abstract");
+  if (abstractTag && tagged("abstract").length === 0) { gaps.abstractTag = abstractTag; }
+  const deprecatedTag = generatedTextTag(entities, "deprecated");
+  if (deprecatedTag && tagged("deprecated").length === 0) { gaps.deprecatedTag = deprecatedTag; }
 
   const returnTag = generatedReturn(entities);
   if (returnTag && tagged("return").length === 0) { gaps.returnTag = returnTag; }

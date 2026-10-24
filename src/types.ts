@@ -15,4 +15,8 @@ export interface IParseContext {
   author?: IAuthorInfo;
   // Is documenting of blocks enabled
   blocks?: boolean;
+  // Is documenting of raised exceptions enabled
+  raises?: boolean;
+  // Comments above a definition, rbs-inline annotations are read from them
+  comments?: string[];
 }

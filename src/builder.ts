@@ -21,6 +21,11 @@ export class Builder {
     return !!this.parser && !!this.parser.isMalformed && this.parser.isMalformed();
   }
 
+  // Line documentation is placed above, undefined if it's the first line of the definition
+  public documentationLine(): number | undefined {
+    return this.parser && this.parser.documentationLine ? this.parser.documentationLine() : undefined;
+  }
+
   // Is author info used to build the snippet
   public requiresAuthor(): boolean {
     return !!this.parser && !!this.parser.requiresAuthor;

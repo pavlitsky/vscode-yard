@@ -1,5 +1,5 @@
 # <Description>
-# @param [<Type>] opts <description>
+# @param [Hash] opts <description>
 # @option opts [<Type>] :<key> <description>
 # @option opts [<Type>] :<key> <description>
 # @option opts [<Type>] :<key> <description>

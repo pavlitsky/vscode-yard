@@ -3,7 +3,7 @@
 #
 # @param [<Type>] host <description>
 # @param [Hash{Symbol => Object}] options <description>
-# @option options [<Type>] :port (443) <description>
+# @option options [Integer] :port (443) <description>
 # @option options [<Type>] :ssl <description>
 #
 # @return [<Type>] <description>

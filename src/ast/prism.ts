@@ -1,5 +1,5 @@
 "use strict";
-import type { Node, ProgramNode } from "@ruby/prism" with { "resolution-mode": "import" };
+import type { Node, ProgramNode, StatementsNode } from "@ruby/prism" with { "resolution-mode": "import" };
 import type { ParseResult as PrismParseResult } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
 
 // Result of parsing. Prism's declaration of the syntax tree root misses its type, it's declared here.
@@ -44,4 +44,26 @@ export function walkScope(body: Node | null, visitor: (node: Node) => void) {
     if (scopes.indexOf(nodeType(node)) >= 0) { return false; }
     visitor(node);
   });
+}
+
+// Does node contain other node
+function contains(node: Node, other: Node): boolean {
+  return node.location.startOffset <= other.location.startOffset &&
+    other.location.startOffset + other.location.length <= node.location.startOffset + node.location.length;
+}
+
+// Statements around a statement starting with a node, the node is the statement itself or it's wrapped
+// by a call on the same line like 'private def foo'
+export function neighbourStatements(root: Node, node: Node): { previous: Node | null; next: Node | null } {
+  const result: { previous: Node | null; next: Node | null } = { next: null, previous: null };
+  walk(root, (current) => {
+    if (!contains(current, node)) { return false; }
+    if (!isNode<StatementsNode>(current, "StatementsNode")) { return; }
+    const index = current.body.findIndex((statement) =>
+      contains(statement, node) && statement.location.startLine() === node.location.startLine());
+    if (index < 0) { return; }
+    result.previous = current.body[index - 1] ?? null;
+    result.next = current.body[index + 1] ?? null;
+  });
+  return result;
 }
