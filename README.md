@@ -1,8 +1,5 @@
 # YARD Documenter
 
-[![Build Status](https://travis-ci.org/pavlitsky/vscode-yard.svg?branch=master)](https://travis-ci.org/pavlitsky/vscode-yard)
-[![Maintainability](https://api.codeclimate.com/v1/badges/54361b514cbeb2dd279c/maintainability)](https://codeclimate.com/github/pavlitsky/vscode-yard/maintainability)
-
 Extension generates [YARD](https://yardoc.org/) documentation comments for Ruby
 source code.
 
