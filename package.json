@@ -104,6 +104,11 @@
                     "default": true,
                     "description": "Fill @author name and email from git config (user.name and user.email) of the current repository, or global git config outside of a repository"
                 },
+                "yard.tags.yield": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Document blocks of methods with @yield, @yieldparam and @yieldreturn tags"
+                },
                 "yard.tags.paramNameBeforeType": {
                     "type": "boolean",
                     "default": true,

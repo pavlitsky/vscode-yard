@@ -5,15 +5,20 @@ import { Directive } from "../entities/directive";
 import { TagOption } from "../entities/tag_option";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { TagWithTypes } from "../entities/tag_with_types";
+import { Text } from "../entities/text";
+import { Yield } from "../entities/yield";
 import { IEntity } from "../types";
 import { SpacerHelper } from "./snippet_string/spacer_helper";
-import { Text } from "../entities/text";
 
 // Render documentation tree into a snippet
 export class Renderer {
   private snippet: SnippetString;
   private spacer: SpacerHelper;
   private config: WorkspaceConfiguration;
+  // Number of a next placeholder
+  private tabstop: number;
+  // Placeholder numbers by link keys
+  private links: { [key: string]: number };
 
   constructor(private entities: IEntity[], private eol: string) {
     this.config = workspace.getConfiguration("yard.tags");
@@ -22,6 +27,8 @@ export class Renderer {
   // Render entities and return documentation snippet
   public render(): SnippetString {
     this.snippet = new SnippetString();
+    this.tabstop = 1;
+    this.links = {};
     this.spacer = new SpacerHelper(this.snippet, this.eol);
     this.entities.forEach((entity, index, entities) => {
       if (!this.shouldRenderEntity(entity)) { return; }
@@ -47,6 +54,7 @@ export class Renderer {
       case("TagWithOptions"): this.tagWithOptionsEntity(entity); break;
       case("TagWithTypes"): this.tagWithTypesEntity(entity); break;
       case("Text"): this.textEntity(entity); break;
+      case("Yield"): this.yieldEntity(entity); break;
     }
   }
 
@@ -100,15 +108,36 @@ export class Renderer {
   private tagWithTypesEntity(entity: TagWithTypes) {
     this.snippet.appendText("@" + entity.tagName);
     if (this.config.get("paramNameBeforeType")) {
-      this.spacer.spacedText(entity.name);
+      this.spacedName(entity);
       this.typesList(entity.types);
     } else {
       this.typesList(entity.types);
-      this.spacer.spacedText(entity.name);
+      this.spacedName(entity);
     }
     this.snippet.appendText(" ");
     this.textOrPlaceholder(entity.text, "<description>");
     this.spacer.endOfLine();
+  }
+
+  // Render a yield tag line followed by block params and block return value lines
+  // @yield [names] <description>
+  // @yieldparam name [types] <description>
+  // @yieldreturn [types] <description>
+  private yieldEntity(entity: Yield) {
+    this.snippet.appendText("@" + entity.tagName);
+    if (entity.yieldParams.length > 0) {
+      this.snippet.appendText(" [");
+      entity.yieldParams.forEach((param, index) => {
+        if (index > 0) { this.snippet.appendText(", "); }
+        this.nameOrLinkedPlaceholder(param);
+      });
+      this.snippet.appendText("]");
+    }
+    this.snippet.appendText(" ");
+    this.textOrPlaceholder(entity.text, "<description>");
+    this.spacer.endOfLine();
+    entity.yieldParams.forEach((param) => { this.tagWithTypesEntity(param); });
+    if (entity.yieldReturn) { this.tagWithTypesEntity(entity.yieldReturn); }
   }
 
   // Render a descriptive text line
@@ -123,7 +152,33 @@ export class Renderer {
     if (text) {
       this.snippet.appendText(text);
     } else {
-      this.snippet.appendPlaceholder(placeholder);
+      this.placeholder(placeholder);
+    }
+  }
+
+  // Render a placeholder. Placeholders of the same link key share a number and are filled in together.
+  private placeholder(value: string, link?: string) {
+    let tabstop = link ? this.links[link] : undefined;
+    if (tabstop === undefined) {
+      tabstop = this.tabstop++;
+      if (link) { this.links[link] = tabstop; }
+    }
+    this.snippet.appendPlaceholder(value, tabstop);
+  }
+
+  // Render a spaced entity name if it's known or linked
+  private spacedName(entity: TagWithTypes) {
+    if (!entity.name && !entity.nameLink) { return; }
+    this.snippet.appendText(" ");
+    this.nameOrLinkedPlaceholder(entity);
+  }
+
+  // Render an entity name or a linked placeholder if name is unknown
+  private nameOrLinkedPlaceholder(entity: TagWithTypes) {
+    if (entity.name) {
+      this.snippet.appendText(entity.name);
+    } else {
+      this.placeholder("<name>", entity.nameLink);
     }
   }
 

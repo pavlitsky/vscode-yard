@@ -21,11 +21,13 @@ async function updateConfig(options) {
   }
 }
 
-// Assert that processed file contains the same result as expected file
-async function expectFileDocumented(fileName: string) {
+// Assert that processed file contains the same result as expected file.
+// Snippet can be filled in with an optional callback before comparison.
+async function expectFileDocumented(fileName: string, fillSnippet?: () => Promise<void>) {
   const textDocument = await workspace.openTextDocument(path.join(projectPath, fileName + ".rb"));
   const editor = await window.showTextDocument(textDocument);
   await commands.executeCommand("extension.generateYard");
+  if (fillSnippet) { await fillSnippet(); }
   const generatedText = editor.document.getText();
   await commands.executeCommand("workbench.action.closeActiveEditor");
   const expectedText = readFileSync(path.join(projectPath, fileName + "_expected.rb"), "utf8");
@@ -53,6 +55,7 @@ suite("Default Documenter Tests", () => {
       author: true,
       authorFromGit: false,
       paramNameBeforeType: false,
+      yield: false,
     },
   };
 
@@ -114,6 +117,7 @@ suite("Verbose Documenter Tests", () => {
       author: true,
       authorFromGit: false,
       paramNameBeforeType: false,
+      yield: false,
     },
   };
 
@@ -144,6 +148,7 @@ suite("Curt Documenter Tests", () => {
       author: false,
       authorFromGit: false,
       paramNameBeforeType: false,
+      yield: false,
     },
   };
 
@@ -174,6 +179,7 @@ suite("Special options", () => {
       author: true,
       authorFromGit: false,
       paramNameBeforeType: true, // Non default
+      yield: false,
     },
   };
 
@@ -200,6 +206,7 @@ suite("Author from git", () => {
       author: true,
       authorFromGit: true,
       paramNameBeforeType: true,
+      yield: false,
     },
   };
 
@@ -224,6 +231,77 @@ suite("Author from git", () => {
   suiteTeardown(() => {
     Object.keys(gitEnv).forEach((key) => delete process.env[key]);
   });
+  expectDocumented(testCases);
+});
+
+suite("Blocks Documenter Tests", () => {
+  const configOptions = {
+    spacers: {
+      afterDescription: true,
+      afterSingleTag: false,
+      afterTags: true,
+      beforeDescription: true,
+      beforeSingleTag: false,
+      beforeTags: true,
+      separateTags: true,
+    },
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: true,
+      yield: true,
+    },
+  };
+
+  const testCases = [
+    "method/yield/implicit_args",
+    "method/yield/parentheses",
+    "method/yield/no_args",
+    "method/yield/block_given",
+    "method/yield/expression",
+    "method/yield/arity",
+    "method/yield/block_param",
+    "method/yield/block_param_stored",
+    "method/yield/single_line",
+    "method/yield/nested",
+    "method/yield/not_a_block",
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  expectDocumented(testCases);
+
+  test("document method/yield/linked_name", async () => {
+    await expectFileDocumented("method/yield/linked_name", async () => {
+      await commands.executeCommand("jumpToNextSnippetPlaceholder");
+      await commands.executeCommand("type", { text: "item" });
+    });
+  });
+});
+
+suite("Curt Blocks Documenter Tests", () => {
+  const configOptions = {
+    spacers: {
+      afterDescription: false,
+      afterSingleTag: false,
+      afterTags: false,
+      beforeDescription: false,
+      beforeSingleTag: false,
+      beforeTags: false,
+      separateTags: false,
+    },
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: true,
+      yield: true,
+    },
+  };
+
+  const testCases = [
+    "curt/yield",
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
   expectDocumented(testCases);
 });
 

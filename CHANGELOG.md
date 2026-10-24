@@ -4,6 +4,7 @@
 
 - Change `yard.tags.paramNameBeforeType` setting to be `true` by default.
 - Resolve `@author` name and email from git config, configurable with `yard.tags.authorFromGit` setting.
+- Document blocks with `@yield`, `@yieldparam` and `@yieldreturn` tags, enabled with `yard.tags.yield` setting.
 
 ## [0.4.0] - 2020-03-23
 

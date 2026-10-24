@@ -17,6 +17,11 @@ export class Builder {
     return !!this.parser && !!this.parser.requiresAuthor;
   }
 
+  // Is method body used to build the snippet
+  public requiresBody(): boolean {
+    return !!this.parser && !!this.parser.requiresBody;
+  }
+
   // Build and return documentation snippet
   public build(context: IParseContext = {}) {
     if (!this.parser) { return; }

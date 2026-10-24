@@ -18,6 +18,7 @@ No need to remember a formatting tags and styling, just type and describe your c
 It's able to document:
 
 * Methods: instance methods, initializers, class methods.
+* Blocks accepted by methods (optional, see `yard.tags.yield` setting).
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
@@ -120,11 +121,38 @@ after snippet filled in.
 
 ## Details
 
-List of generated tags: `@author`, `@option`, `@param`, `@return`.
+List of generated tags: `@author`, `@option`, `@param`, `@return`, `@yield`,
+`@yieldparam`, `@yieldreturn`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
 of the repository the document belongs to, or from global git config if it's outside
 of a repository. Placeholders are inserted when values can't be resolved.
+
+Blocks are documented when `yard.tags.yield` setting is enabled. Method body is
+looked through for `yield`, `block_given?` and calls of an explicit `&block` param,
+values passed to the block become `@yieldparam` tags:
+
+```ruby
+#
+# <Description>
+#
+# @param prefix [<Type>] <description>
+#
+# @yield [key, value] <description>
+# @yieldparam key [<Type>] <description>
+# @yieldparam value [<Type>] <description>
+# @yieldreturn [<Type>] <description>
+#
+# @return [<Type>] <description>
+#
+def each_pair(prefix)
+  @items.each { |key, value| yield key, value }
+end
+```
+
+An explicit `&block` param is documented with these tags instead of `@param`.
+When a passed value isn't a plain local variable (for example `yield @items.first`)
+its name is left as a placeholder, filled in once for both `@yield` and `@yieldparam`.
 
 ## Configuration
 
@@ -141,12 +169,12 @@ a curt and verbose documentation styles.
 "yard.spacers.afterSingleTag" // Append an empty line to directives or single tags (for example constants)
 "yard.tags.author" // Append @author tag to Class and Module documentation
 "yard.tags.authorFromGit" // Fill @author name and email from git config (user.name and user.email)
+"yard.tags.yield" // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 ```
 
 ## TODO
 
-* Ability to document blocks: `@yield`, `@yieldparam`, `@yieldreturn`.
 * Support for non-empty options hash parameters.
 * (killer feature :fire:) Ability to update existing documentation.
 * (maybe) Editor snippets for tags (`@option`, `@param` etc) or tags autocompletion

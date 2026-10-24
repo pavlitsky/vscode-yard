@@ -2,6 +2,7 @@
 import { EndOfLine, Position, TextEditor, TextLine, window, workspace } from "vscode";
 import { Builder } from "./builder";
 import { GitAuthorResolver } from "./resolvers/git_author";
+import { MethodBodyResolver } from "./resolvers/method_body";
 import { IParseContext } from "./types";
 
 // Generate YARD comment
@@ -32,8 +33,14 @@ export default class YardDocumenter {
   // Collect environment-dependent details for the builder
   private async parseContext(builder: Builder): Promise<IParseContext> {
     const config = workspace.getConfiguration("yard.tags");
-    if (!builder.requiresAuthor() || !config.get("author") || !config.get("authorFromGit")) { return {}; }
-    return { author: await (new GitAuthorResolver(this.editor.document)).resolve() };
+    const context: IParseContext = {};
+    if (builder.requiresBody() && config.get("yield")) {
+      context.body = (new MethodBodyResolver(this.editor.document, this.line)).resolve();
+    }
+    if (builder.requiresAuthor() && config.get("author") && config.get("authorFromGit")) {
+      context.author = await (new GitAuthorResolver(this.editor.document)).resolve();
+    }
+    return context;
   }
 
   private updateContext(textEditor?: TextEditor) {
