@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.0.0] - 2026-10-24
 
 - Change `yard.tags.paramNameBeforeType` setting to be `true` by default.
 - Resolve `@author` name and email from git config, configurable with `yard.tags.authorFromGit` setting.
