@@ -34,6 +34,17 @@ async function expectFileDocumented(fileName: string, fillSnippet?: () => Promis
   return assert.equal(generatedText, expectedText);
 }
 
+// Wait until active editor's selected text matches the expected one, snippet placeholders are selected asynchronously
+async function waitForSelection(text: string, timeout: number = 2000) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeout) {
+    const editor = window.activeTextEditor;
+    if (editor && editor.document.getText(editor.selection) === text) { return; }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  assert.fail(`Selection "${text}" expected`);
+}
+
 async function expectDocumented(testCases) {
   testCases.forEach (async (testCase) => {
     await test(`document ${testCase}`, async () => await expectFileDocumented(testCase));
@@ -281,7 +292,9 @@ suite("Blocks Documenter Tests", () => {
 
   test("document method/yield/linked_name", async () => {
     await expectFileDocumented("method/yield/linked_name", async () => {
+      await waitForSelection("<Description>");
       await commands.executeCommand("jumpToNextSnippetPlaceholder");
+      await waitForSelection("<name>");
       await commands.executeCommand("type", { text: "item" });
     });
   });
