@@ -28,6 +28,37 @@ export default class MethodDef implements IBaseParser {
     KeywordRestParameterNode: "Hash{Symbol => Object}",
     RestParameterNode: "Array<Object>",
   };
+  // Return types placeholders of conventional methods: conversions, comparisons and collection sizes.
+  // Predicate methods ending with '?' return Boolean.
+  private readonly returnTypesPlaceholders: { [name: string]: string } = {
+    "!": "Boolean",
+    "!=": "Boolean",
+    "<": "Boolean",
+    "<=": "Boolean",
+    "<=>": "Integer, nil",
+    "==": "Boolean",
+    "===": "Boolean",
+    "=~": "Integer, nil",
+    ">": "Boolean",
+    ">=": "Boolean",
+    count: "Integer",
+    hash: "Integer",
+    inspect: "String",
+    length: "Integer",
+    size: "Integer",
+    to_a: "Array",
+    to_ary: "Array",
+    to_f: "Float",
+    to_h: "Hash",
+    to_hash: "Hash",
+    to_i: "Integer",
+    to_int: "Integer",
+    to_json: "String",
+    to_proc: "Proc",
+    to_s: "String",
+    to_str: "String",
+    to_sym: "Symbol",
+  };
   // Params which can't be documented: arguments forwarding and anonymous splat and block params,
   // YARD doesn't list them in a method signature
   private readonly anonymousTypes = ["BlockParameterNode", "KeywordRestParameterNode", "RestParameterNode"];
@@ -135,7 +166,16 @@ export default class MethodDef implements IBaseParser {
   // Build return section
   private buildReturn(): IEntity | undefined {
     if (this.def.name === "initialize") { return; }
-    return new ReturnTag();
+    return new ReturnTag({ typesPlaceholder: this.returnTypesPlaceholder() });
+  }
+
+  // Return types placeholder of a conventional method, empty if return type is unknown
+  private returnTypesPlaceholder(): string {
+    const name = this.def.name;
+    if (Object.prototype.hasOwnProperty.call(this.returnTypesPlaceholders, name)) {
+      return this.returnTypesPlaceholders[name];
+    }
+    return name.endsWith("?") ? "Boolean" : "";
   }
 
   // Build options of an options hash: a param with a hash default value or a keyword splat.

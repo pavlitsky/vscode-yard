@@ -24,6 +24,7 @@
   Updating documentation adds tags of undocumented exceptions.
 - Document methods which only raise `NotImplementedError` with `@abstract` tag.
 - Document methods warning about their deprecation with `@deprecated` tag.
+- Prefill return types of predicates, comparisons, conversions like `to_s` and size methods.
 
 ## [0.4.0] - 2020-03-23
 

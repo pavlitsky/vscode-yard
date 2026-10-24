@@ -206,6 +206,11 @@ Splat and block params are named without `*`, `**` and `&` the same way YARD nam
 their types are prefilled with `Array<Object>`, `Hash{Symbol => Object}` and `Proc`. Anonymous
 splats and arguments forwarding (`...`) aren't documented since YARD doesn't list them.
 
+Return types of conventional methods are prefilled as placeholders: predicates (`valid?`) and
+comparisons (`==`, `<`, `>=` etc.) return `Boolean`, conversions return their classes (`to_s` and
+`inspect` return `String`, `to_h` returns `Hash`, `to_i` returns `Integer` and so on), `size`,
+`length`, `count` and `hash` return `Integer`, `<=>` and `=~` return `Integer, nil`.
+
 Options hash params, which are params with a hash default value (`opts = {}`) or keyword
 splats (`**opts`), get an `@option` tag for each symbol key found in the default hash or read
 in the method body (`opts[:key]`, `opts.fetch(:key, default)`, `opts[:key] || default` etc.).

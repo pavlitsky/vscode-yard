@@ -194,6 +194,14 @@ suite("Default Documenter Tests", () => {
     "method/deprecated/not_deprecated",
     "method/deprecated/update",
     "method/deprecated/update_abstract",
+    "method/return/to_s",
+    "method/return/to_h",
+    "method/return/spaceship",
+    "method/return/equality",
+    "method/return/singleton_predicate",
+    "method/return/size",
+    "method/return/unknown",
+    "method/return/update",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -439,6 +447,12 @@ suite("Tags Completion Tests", () => {
   test("complete deprecated tag of a method warning about deprecation", async () => {
     const items = await yardCompletions("completion/deprecated", 1, 3);
     assert.deepEqual(missingTagLabels(items), ["@deprecated", "@return"]);
+  });
+
+  test("complete return value of a predicate method with a types placeholder", async () => {
+    const items = await yardCompletions("completion/return", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@return"]);
+    assert.equal((items[0].insertText as SnippetString).value, "@return [${1:Boolean}] ${2:<description>}");
   });
 
   test("complete parts missing in documented sections", async () => {
