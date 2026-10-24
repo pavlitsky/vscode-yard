@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
         "module": "node16",
-        "target": "es6",
+        "target": "ES2022",
         "outDir": "out",
         "lib": [
-            "es6"
+            "ES2022"
         ],
         "types": [
             "node",
@@ -13,6 +13,7 @@
         "esModuleInterop": true,
         "strict": false,
         "skipLibCheck": true,
+        "useDefineForClassFields": false,
         "sourceMap": true,
         "rootDir": "src"
     },
