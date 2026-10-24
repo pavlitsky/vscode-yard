@@ -2,6 +2,7 @@
 import { SnippetString, workspace, WorkspaceConfiguration } from "vscode";
 import { Author } from "../entities/author";
 import { Raw } from "../entities/raw";
+import { Tag } from "../entities/tag";
 import { TagOption } from "../entities/tag_option";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { TagWithTypes } from "../entities/tag_with_types";
@@ -56,6 +57,7 @@ export class Renderer {
   private renderEntity(entity: IEntity) {
     switch (entity.type) {
       case("Raw"): this.rawEntity(entity as Raw); break;
+      case("Tag"): this.tagEntity(entity as Tag); break;
       case("Author"): this.authorEntity(entity as Author); break;
       case("TagOption"): this.tagOptionEntity(entity as TagOption); break;
       case("TagWithOptions"): this.tagWithOptionsEntity(entity as TagWithOptions); break;
@@ -73,6 +75,14 @@ export class Renderer {
     this.snippet.appendText(" <");
     this.textOrPlaceholder(entity.authorEmail, "<email>");
     this.snippet.appendText(">");
+    this.spacer.endOfLine();
+  }
+
+  // Render a tag line with a text only
+  // @tagName <description>
+  private tagEntity(entity: Tag) {
+    this.snippet.appendText("@" + entity.tagName + " ");
+    this.textOrPlaceholder(entity.text, "<description>");
     this.spacer.endOfLine();
   }
 

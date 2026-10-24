@@ -3,6 +3,7 @@ import type { BlockParameterNode, DefNode, HashNode, KeywordRestParameterNode, N
   from "@ruby/prism" with { "resolution-mode": "import" };
 import type { ParseError } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
 import { isNode, nodeType } from "../../ast/prism";
+import { AbstractTag } from "../../tags/abstract";
 import { DescriptionTag } from "../../tags/description";
 import { OptionTag } from "../../tags/option";
 import { ParamTag } from "../../tags/param";
@@ -43,6 +44,7 @@ export default class MethodDef implements IBaseParser {
   public parse(context: IParseContext = {}): IEntity[] {
     return [
       this.buildDescription(),
+      this.buildAbstract(),
       ...this.buildParams(context),
       this.buildYield(context),
       ...this.buildRaises(context),
@@ -61,9 +63,10 @@ export default class MethodDef implements IBaseParser {
       error.location.startOffset >= def.location.startOffset && error.location.startOffset <= end);
   }
 
-  // Classes of exceptions raised in the method body
+  // Classes of exceptions raised in the method body, NotImplementedError of an abstract method isn't listed
   public raises(): string[] {
-    return (new RaiseUsage(this.def.body)).detect();
+    const usage = new RaiseUsage(this.def.body);
+    return usage.isAbstract() ? [] : usage.detect();
   }
 
   // Method definition node
@@ -74,6 +77,12 @@ export default class MethodDef implements IBaseParser {
   // Build description section
   private buildDescription(): IEntity {
     return new DescriptionTag();
+  }
+
+  // Build abstract tag if the method only raises NotImplementedError
+  private buildAbstract(): IEntity | undefined {
+    if (!(new RaiseUsage(this.def.body)).isAbstract()) { return; }
+    return new AbstractTag();
   }
 
   // Build params section, block param is documented with a yield section if blocks are documented

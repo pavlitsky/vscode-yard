@@ -182,6 +182,11 @@ suite("Default Documenter Tests", () => {
     "method/raise/update",
     "method/raise/update_missing",
     "method/raise/up_to_date",
+    "method/abstract/abstract",
+    "method/abstract/endless",
+    "method/abstract/not_abstract",
+    "method/abstract/update",
+    "method/abstract/up_to_date",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -239,6 +244,7 @@ suite("Curt Documenter Tests", () => {
     "curt/options_keys",
     "curt/update",
     "curt/raise",
+    "curt/abstract",
     "curt/constant",
     "curt/attribute",
   ];
@@ -412,6 +418,14 @@ suite("Tags Completion Tests", () => {
     assert.equal((param.insertText as SnippetString).value,
       "@param [${1:<Type>}] opts ${2:<description>}\n# @option opts [${3:<Type>}] :timeout (5) ${4:<description>}");
     assert.ok(items.some((item) => item.label === "@note" && item.kind === CompletionItemKind.Keyword));
+  });
+
+  test("complete abstract tag of a method raising NotImplementedError", async () => {
+    const items = await yardCompletions("completion/abstract", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@abstract", "@param request", "@return"]);
+    const abstract = items.find((item) => item.label === "@abstract");
+    assert.ok(abstract);
+    assert.equal((abstract.insertText as SnippetString).value, "@abstract ${1:<description>}");
   });
 
   test("complete parts missing in documented sections", async () => {

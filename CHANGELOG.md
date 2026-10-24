@@ -22,6 +22,7 @@
   `yard.completion.enabled` setting.
 - Document exceptions raised in methods with `@raise` tags, configurable with `yard.tags.raise` setting.
   Updating documentation adds tags of undocumented exceptions.
+- Document methods which only raise `NotImplementedError` with `@abstract` tag.
 
 ## [0.4.0] - 2020-03-23
 

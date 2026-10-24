@@ -17,6 +17,7 @@ It's able to document:
 * Methods: instance methods, initializers, class methods.
 * Blocks accepted by methods (optional, see `yard.tags.yield` setting).
 * Exceptions raised in methods (optional, see `yard.tags.raise` setting).
+* Abstract methods raising `NotImplementedError`.
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
@@ -77,7 +78,8 @@ as they're written, missing tags are added as placeholders:
 
 * Params are reordered to match the method signature. A param which no longer exists is
   renamed if a new param takes its place, otherwise it's removed.
-* Missing `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn`, `@raise` and `@return` tags are added.
+* Missing `@abstract`, `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn`, `@raise` and `@return` tags
+  are added.
   Documented exceptions are kept even if a method doesn't raise them.
 * New tags follow the params style of the existing documentation.
 
@@ -192,7 +194,7 @@ Source code is parsed with [Prism](https://github.com/ruby/prism), the Ruby's ow
 so definitions spanning multiple lines and any Ruby syntax are supported.
 Requires VS Code 1.90 or newer.
 
-List of generated tags: `@author`, `@option`, `@param`, `@raise`, `@return`, `@yield`,
+List of generated tags: `@abstract`, `@author`, `@option`, `@param`, `@raise`, `@return`, `@yield`,
 `@yieldparam`, `@yieldreturn`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
@@ -272,6 +274,24 @@ def fetch(url)
   fail "empty url" if url.empty?
 rescue IOError
   raise
+end
+```
+
+A method whose body only raises `NotImplementedError` is documented as abstract with
+an `@abstract` tag, `NotImplementedError` isn't listed with `@raise` then:
+
+```ruby
+#
+# <Description>
+#
+# @abstract <description>
+#
+# @param request [<Type>] <description>
+#
+# @return [<Type>] <description>
+#
+def call(request)
+  raise NotImplementedError, "#{self.class} must implement #{__method__}"
 end
 ```
 

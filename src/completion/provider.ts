@@ -82,6 +82,7 @@ export class TagCompletionProvider implements CompletionItemProvider {
     const add = (label: string, detail: string, entity: IEntity) =>
       items.push(this.item(label, detail, this.snippet(context, entity), range, "0" + this.pad(items.length)));
 
+    if (gaps.abstractTag) { add("@abstract", "Abstract method", gaps.abstractTag); }
     gaps.params.forEach((param) =>
       add("@param " + param.name, param.options.length ? "Param with options" : "Param", param));
     gaps.options.forEach((option) =>
