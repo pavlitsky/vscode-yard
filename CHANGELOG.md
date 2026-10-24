@@ -29,6 +29,8 @@
   literal values.
 - Fill in types declared by Sorbet signatures (`sig { params(...).returns(...) }`) and rbs-inline annotations
   (`#: (String) -> bool`, `# @rbs name: String`). Documentation is placed above `sig` and above `#:` annotations.
+- Document methods and attributes of `ActiveSupport::Concern` blocks (`included do`, `class_methods do`)
+  with directives above a block, YARD doesn't look into blocks.
 - Document Rails class attributes (`class_attribute`, `cattr_*`, `mattr_*`) with `@!attribute [rw] self.name`
   directives. A plain `@return` comment made YARD document them as instance readers.
 - Document methods overloaded by several rbs-inline method types with `@overload` tags, enabled with

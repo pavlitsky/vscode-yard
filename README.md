@@ -26,7 +26,8 @@ It's able to document:
 * Struct and Data classes (`Point = Struct.new(:x, :y)`, `Point = Data.define(:x, :y)`).
 * Methods and attributes YARD doesn't see, with `@!method` and `@!attribute` directives:
   `define_method`, delegated methods (`delegate`, `def_delegators`), Rails scopes, associations and
-  class attributes (`class_attribute`, `cattr_accessor`, `mattr_reader`).
+  class attributes (`class_attribute`, `cattr_accessor`, `mattr_reader`), methods of
+  `ActiveSupport::Concern` blocks (`included do`, `class_methods do`).
 
 Methods named in ASCII and Japanese are supported.
 
@@ -444,6 +445,28 @@ end
 * Rails class attributes defined with `class_attribute`, `cattr_*` and `mattr_*` get an
   `@!attribute` directive each, named with `self.` the way YARD tells class attributes:
   `cattr_accessor :host` is documented with `@!attribute [rw] self.host`.
+* YARD doesn't look into `included do`, `prepended do` and `class_methods do` blocks of
+  `ActiveSupport::Concern`, even comments within them are lost. Documenting the block puts
+  directives above it: `@!method` for each method, methods of `class_methods` are class methods,
+  `@!attribute` for each attribute, and directives of scopes, associations and delegated methods.
+  Methods following `private` or `protected` aren't documented.
+
+  ```ruby
+  # @!attribute [rw] comments
+  #   <Description>
+  #   @return [ActiveRecord::Associations::CollectionProxy<Comment>] <description>
+  # @!method publish(at = Time.now)
+  #   <Description>
+  #   @param at [<Type>] <description>
+  #   @return [<Type>] <description>
+  included do
+    has_many :comments
+
+    def publish(at = Time.now)
+    end
+  end
+  ```
+
 
 Struct and Data classes assigned to constants are documented as classes, YARD reads types of their
 members from `@attr` and `@attr_reader` tags. `class Point < Struct.new(:x, :y)` gets `@attr` tags too:
