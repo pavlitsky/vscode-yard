@@ -5,7 +5,7 @@ import { IEntity } from "../../types";
 
 // Helper class to manage empty lines of a snippet
 export class SpacerHelper {
-  private lastTag = undefined;
+  private lastTag: Tag | undefined = undefined;
   private isFirstTag: boolean = false;
   private isFirstTagInGroup: boolean = false;
   private isTag: boolean = false;
@@ -72,10 +72,9 @@ export class SpacerHelper {
     this.isLastEntity = entities.length - 1 === index;
     this.isSingleEntity = entities.length === 1;
 
-    if (this.isTag) {
-      const tag: Tag = entity;
+    if (entity instanceof Tag) {
       if (this.lastTag) {
-        this.isFirstTagInGroup = tag.tagName !== this.lastTag.tagName;
+        this.isFirstTagInGroup = entity.tagName !== this.lastTag.tagName;
       } else {
         this.isFirstTagInGroup = true;
       }

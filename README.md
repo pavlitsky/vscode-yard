@@ -1,8 +1,5 @@
 # YARD Documenter
 
-[![Build Status](https://travis-ci.org/pavlitsky/vscode-yard.svg?branch=master)](https://travis-ci.org/pavlitsky/vscode-yard)
-[![Maintainability](https://api.codeclimate.com/v1/badges/54361b514cbeb2dd279c/maintainability)](https://codeclimate.com/github/pavlitsky/vscode-yard/maintainability)
-
 Extension generates [YARD](https://yardoc.org/) documentation comments for Ruby
 source code.
 
@@ -18,15 +15,18 @@ No need to remember a formatting tags and styling, just type and describe your c
 It's able to document:
 
 * Methods: instance methods, initializers, class methods.
+* Blocks accepted by methods (optional, see `yard.tags.yield` setting).
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
 
 Methods named in ASCII and Japanese are supported.
 
+YARD tags are completed in comments, see [Tags completion](#tags-completion).
+
 ## Usage
 
-Position cursor on a definition you wish to document.
+Position cursor on a first line of a definition you wish to document.
 
 ```ruby
 def foo(bar, baz = false) # <- put cursor at any place of this line
@@ -40,8 +40,8 @@ from the command palette.
   #
   # <Description>
   #
-  # @param [<Type>] bar <description>
-  # @param [<Type>] baz <description>
+  # @param bar [<Type>] <description>
+  # @param baz [<Type>] <description>
   #
   # @return [<Type>] <description>
   #
@@ -57,8 +57,8 @@ Use `Tab` and `Shift+Tab` keys to navigate and fill in placeholders.
   #
   # An example instance method description.
   #
-  # @param [Integer] bar first param used for demonstration
-  # @param [Boolean] baz second param with a default value
+  # @param bar [Integer] first param used for demonstration
+  # @param baz [Boolean] second param with a default value
   #
   # @return [nil] nothing returned so it's always nil
   #
@@ -67,6 +67,72 @@ Use `Tab` and `Shift+Tab` keys to navigate and fill in placeholders.
 ```
 
 Done!
+
+### Updating documentation
+
+Run the same command on a documented method, with cursor on the method definition or
+anywhere within its comment, to sync documentation with the code. Texts and tags are kept
+as they're written, missing tags are added as placeholders:
+
+* Params are reordered to match the method signature. A param which no longer exists is
+  renamed if a new param takes its place, otherwise it's removed.
+* Missing `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn` and `@return` tags are added.
+* New tags follow the params style of the existing documentation.
+
+```ruby
+#
+# Fetch a resource.
+#
+# @param [String] path resource path
+# @param [Integer] retries how many times to retry
+#
+# @note Raises on timeout.
+#
+def fetch(url, timeout, retries = 3)
+end
+```
+
+becomes
+
+```ruby
+#
+# Fetch a resource.
+#
+# @param [String] url resource path
+# @param [<Type>] timeout <description>
+# @param [Integer] retries how many times to retry
+#
+# @return [<Type>] <description>
+#
+# @note Raises on timeout.
+#
+def fetch(url, timeout, retries = 3)
+end
+```
+
+Documentation of classes, modules, constants and attributes isn't updated.
+
+### Tags completion
+
+Type `@` in a comment to complete YARD tags. Tags missing in documentation of a definition
+right below the comment are offered first: undocumented params with their options, block
+tags, return value, exceptions raised in a method body, author of a class. Standard YARD
+tags follow them.
+
+```ruby
+# Fetch a resource.
+#
+# @param [String] url resource path
+# @           <- offers @param retries, @param opts, @yield [response], @return,
+#                @raise [ArgumentError], then standard tags like @note, @example
+def fetch(url, retries = 3, opts = { timeout: 5 })
+  raise ArgumentError, "bad url" unless url
+  yield response
+end
+```
+
+Names are completed after a typed tag: undocumented params after `@param `, block values after
+`@yieldparam `, option keys after `@option ` and exception classes after `@raise `.
 
 Another snippets examples, default spacers setup:
 
@@ -120,7 +186,67 @@ after snippet filled in.
 
 ## Details
 
-List of generated tags: `@author`, `@option`, `@param`, `@return`.
+Source code is parsed with [Prism](https://github.com/ruby/prism), the Ruby's own parser,
+so definitions spanning multiple lines and any Ruby syntax are supported.
+Requires VS Code 1.90 or newer.
+
+List of generated tags: `@author`, `@option`, `@param`, `@return`, `@yield`,
+`@yieldparam`, `@yieldreturn`.
+
+`@author` name and email are taken from git config (`user.name` and `user.email`)
+of the repository the document belongs to, or from global git config if it's outside
+of a repository. Placeholders are inserted when values can't be resolved.
+
+Splat and block params are named without `*`, `**` and `&` the same way YARD names them,
+their types are prefilled with `Array<Object>`, `Hash{Symbol => Object}` and `Proc`. Anonymous
+splats and arguments forwarding (`...`) aren't documented since YARD doesn't list them.
+
+Options hash params, which are params with a hash default value (`opts = {}`) or keyword
+splats (`**opts`), get an `@option` tag for each symbol key found in the default hash or read
+in the method body (`opts[:key]`, `opts.fetch(:key, default)`, `opts[:key] || default` etc.).
+A default value is shown when it's known:
+
+```ruby
+#
+# <Description>
+#
+# @param url [<Type>] <description>
+# @param opts [<Type>] <description>
+# @option opts [<Type>] :timeout (5) <description>
+# @option opts [<Type>] :limit (10) <description>
+#
+# @return [<Type>] <description>
+#
+def fetch(url, opts = { timeout: 5 })
+  limit = opts.fetch(:limit, 10)
+end
+```
+
+Blocks are documented when `yard.tags.yield` setting is enabled. Method body is
+looked through for `yield`, `block_given?` and calls of an explicit `&block` param,
+values passed to the block become `@yieldparam` tags:
+
+```ruby
+#
+# <Description>
+#
+# @param prefix [<Type>] <description>
+#
+# @yield [key, value] <description>
+# @yieldparam key [<Type>] <description>
+# @yieldparam value [<Type>] <description>
+# @yieldreturn [<Type>] <description>
+#
+# @return [<Type>] <description>
+#
+def each_pair(prefix)
+  @items.each { |key, value| yield key, value }
+end
+```
+
+An explicit `&block` param is documented with these tags instead of `@param`.
+When a passed value isn't a plain local variable (for example `yield @items.first`)
+its name is left as a placeholder, filled in once for both `@yield` and `@yieldparam`.
 
 ## Configuration
 
@@ -136,23 +262,19 @@ a curt and verbose documentation styles.
 "yard.spacers.beforeSingleTag" // Prepend an empty line to directives or single tags (for example constants)
 "yard.spacers.afterSingleTag" // Append an empty line to directives or single tags (for example constants)
 "yard.tags.author" // Append @author tag to Class and Module documentation
+"yard.tags.authorFromGit" // Fill @author name and email from git config (user.name and user.email)
+"yard.tags.yield" // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
+"yard.completion.enabled" // Complete YARD tags in comments
 ```
-
-## TODO
-
-* Ability to document blocks: `@yield`, `@yieldparam`, `@yieldreturn`.
-* Support for non-empty options hash parameters.
-* Resolve `@author` information from environment or settings.
-* (killer feature :fire:) Ability to update existing documentation.
-* (maybe) Editor snippets for tags (`@option`, `@param` etc) or tags autocompletion
-* (maybe) A better support for array / keyword args splats, see
-  [comment](https://github.com/lsegal/yard/issues/439#issuecomment-3292412).
 
 ## Troubleshooting
 
 If hotkey isn't working open VS Code Keyboard Shortcuts and check for keybinging
 conflicts.
 
-This also may happen if destination is already documented. In this case extension
-silently does nothing.
+This also may happen if a documented definition isn't a method or its documentation is
+up to date. In this case extension silently does nothing.
+
+Methods with syntax errors in their signature, for example `def foo(bar, baz qux)`, aren't
+documented, a status bar message tells about it. Fix the signature and run the command again.

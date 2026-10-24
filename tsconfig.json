@@ -1,11 +1,19 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "target": "es6",
+        "module": "node16",
+        "target": "ES2022",
         "outDir": "out",
         "lib": [
-            "es6"
+            "ES2022"
         ],
+        "types": [
+            "node",
+            "mocha"
+        ],
+        "esModuleInterop": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "useDefineForClassFields": false,
         "sourceMap": true,
         "rootDir": "src"
     },

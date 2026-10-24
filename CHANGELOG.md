@@ -3,6 +3,23 @@
 ## Unreleased
 
 - Change `yard.tags.paramNameBeforeType` setting to be `true` by default.
+- Resolve `@author` name and email from git config, configurable with `yard.tags.authorFromGit` setting.
+- Document blocks with `@yield`, `@yieldparam` and `@yieldreturn` tags, enabled with `yard.tags.yield` setting.
+- Parse source code with [Prism](https://github.com/ruby/prism) instead of regular expressions. Fixes documenting
+  definitions spanning multiple lines, single line methods with parameters, attributes defined with parentheses
+  and `class << self` blocks.
+- Require VS Code 1.90 or newer.
+- Document keys of options hash params with `@option` tags: keys of a default hash value and keys read
+  in a method body, including keyword splats (`**opts`).
+- Update existing documentation of methods with the same command: sync params with the method signature
+  and add missing tags, keeping written texts and tags. Command also works with cursor within a comment.
+- Don't document or update methods with syntax errors in their signature, a status bar message tells about it
+  ([#3](https://github.com/pavlitsky/vscode-yard/issues/3)). Operator methods like `|` get their params right.
+- Name splat and block params without `*`, `**` and `&` to match YARD, prefill their types and skip anonymous
+  params and arguments forwarding, which YARD warned about. Updating documentation renames such params too.
+- Complete YARD tags in comments, tags missing in documentation of a definition below are offered first.
+  Names are completed after `@param`, `@yieldparam`, `@option` and `@raise` tags. Can be disabled with
+  `yard.completion.enabled` setting.
 
 ## [0.4.0] - 2020-03-23
 

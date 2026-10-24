@@ -1,33 +1,47 @@
 "use strict";
 import { SnippetString, workspace, WorkspaceConfiguration } from "vscode";
 import { Author } from "../entities/author";
-import { Directive } from "../entities/directive";
+import { Raw } from "../entities/raw";
 import { TagOption } from "../entities/tag_option";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { TagWithTypes } from "../entities/tag_with_types";
+import { Text } from "../entities/text";
+import { Yield } from "../entities/yield";
 import { IEntity } from "../types";
 import { SpacerHelper } from "./snippet_string/spacer_helper";
-import { Text } from "../entities/text";
+
+// Rendering options overriding settings
+export interface IRenderOptions {
+  // Print param name before its type, 'yard.tags.paramNameBeforeType' setting is used if undefined
+  paramNameBeforeType?: boolean;
+}
 
 // Render documentation tree into a snippet
 export class Renderer {
-  private snippet: SnippetString;
-  private spacer: SpacerHelper;
+  private snippet = new SnippetString();
+  private spacer = new SpacerHelper(this.snippet, this.eol);
   private config: WorkspaceConfiguration;
+  // Number of a next placeholder
+  private tabstop = 1;
+  // Placeholder numbers by link keys
+  private links: { [key: string]: number } = {};
 
-  constructor(private entities: IEntity[], private eol: string) {
+  constructor(private entities: IEntity[], private eol: string, private options: IRenderOptions = {}) {
     this.config = workspace.getConfiguration("yard.tags");
   }
 
-  // Render entities and return documentation snippet
-  public render(): SnippetString {
+  // Render entities and return documentation snippet.
+  // Spacers settings add empty lines around entities unless entities already contain them.
+  public render(useSpacers: boolean = true): SnippetString {
     this.snippet = new SnippetString();
+    this.tabstop = 1;
+    this.links = {};
     this.spacer = new SpacerHelper(this.snippet, this.eol);
     this.entities.forEach((entity, index, entities) => {
       if (!this.shouldRenderEntity(entity)) { return; }
-      this.spacer.beforeEntity(entity, entities, index);
+      if (useSpacers) { this.spacer.beforeEntity(entity, entities, index); }
       this.renderEntity(entity);
-      this.spacer.afterEntity();
+      if (useSpacers) { this.spacer.afterEntity(); }
     });
     return this.decorateSnippet();
   }
@@ -41,27 +55,14 @@ export class Renderer {
   // Render a single entity depending of its type
   private renderEntity(entity: IEntity) {
     switch (entity.type) {
-      case("Directive"): this.directiveEntity(entity); break;
-      case("Author"): this.authorEntity(entity); break;
-      case("TagOption"): this.tagOptionEntity(entity); break;
-      case("TagWithOptions"): this.tagWithOptionsEntity(entity); break;
-      case("TagWithTypes"): this.tagWithTypesEntity(entity); break;
-      case("Text"): this.textEntity(entity); break;
+      case("Raw"): this.rawEntity(entity as Raw); break;
+      case("Author"): this.authorEntity(entity as Author); break;
+      case("TagOption"): this.tagOptionEntity(entity as TagOption); break;
+      case("TagWithOptions"): this.tagWithOptionsEntity(entity as TagWithOptions); break;
+      case("TagWithTypes"): this.tagWithTypesEntity(entity as TagWithTypes); break;
+      case("Text"): this.textEntity(entity as Text); break;
+      case("Yield"): this.yieldEntity(entity as Yield); break;
     }
-  }
-
-  // Render a directive
-  // @!attribute [r] foo_bar
-  //   @return [<Type>] <description>
-  private directiveEntity(entity: Directive) {
-    this.snippet.appendText("@!" + entity.tagName);
-    if (entity.tagTypes) { this.typesList(entity.tagTypes); }
-    this.spacer.spacedText(entity.name);
-    this.spacer.endOfLine();
-    entity.entities.forEach((e) => {
-      this.snippet.appendText("  "); // nested entities get two spaces identation
-      this.renderEntity(e);
-    });
   }
 
   // Render an @author tag line
@@ -76,12 +77,13 @@ export class Renderer {
   }
 
   // Render an @option tag line
-  // @option paramName [types] :<key> <description>
+  // @option paramName [types] :<key> (default) <description>
   private tagOptionEntity(entity: TagOption) {
     this.snippet.appendText("@option " + entity.paramName);
     this.typesList(entity.types);
     this.snippet.appendText(" :");
     this.textOrPlaceholder(entity.key, "<key>");
+    if (entity.defaultValue) { this.snippet.appendText(" (" + entity.defaultValue + ")"); }
     this.snippet.appendText(" ");
     this.textOrPlaceholder(entity.text, "<description>");
     this.spacer.endOfLine();
@@ -99,16 +101,45 @@ export class Renderer {
   // @tagName [types] name <description>
   private tagWithTypesEntity(entity: TagWithTypes) {
     this.snippet.appendText("@" + entity.tagName);
-    if (this.config.get("paramNameBeforeType")) {
-      this.spacer.spacedText(entity.name);
-      this.typesList(entity.types);
+    if (this.paramNameBeforeType()) {
+      this.spacedName(entity);
+      this.typesList(entity.types, entity.typesPlaceholder);
     } else {
-      this.typesList(entity.types);
-      this.spacer.spacedText(entity.name);
+      this.typesList(entity.types, entity.typesPlaceholder);
+      this.spacedName(entity);
     }
     this.snippet.appendText(" ");
     this.textOrPlaceholder(entity.text, "<description>");
     this.spacer.endOfLine();
+  }
+
+  // Render a yield tag line followed by block params and block return value lines
+  // @yield [names] <description>
+  // @yieldparam name [types] <description>
+  // @yieldreturn [types] <description>
+  private yieldEntity(entity: Yield) {
+    this.snippet.appendText("@" + entity.tagName);
+    if (entity.yieldParams.length > 0) {
+      this.snippet.appendText(" [");
+      entity.yieldParams.forEach((param, index) => {
+        if (index > 0) { this.snippet.appendText(", "); }
+        this.nameOrLinkedPlaceholder(param);
+      });
+      this.snippet.appendText("]");
+    }
+    this.snippet.appendText(" ");
+    this.textOrPlaceholder(entity.text, "<description>");
+    this.spacer.endOfLine();
+    entity.yieldParams.forEach((param) => { this.tagWithTypesEntity(param); });
+    if (entity.yieldReturn) { this.tagWithTypesEntity(entity.yieldReturn); }
+  }
+
+  // Render lines of an existing documentation as they're written
+  private rawEntity(entity: Raw) {
+    entity.lines.forEach((line) => {
+      this.snippet.appendText(line);
+      this.spacer.endOfLine();
+    });
   }
 
   // Render a descriptive text line
@@ -123,15 +154,47 @@ export class Renderer {
     if (text) {
       this.snippet.appendText(text);
     } else {
-      this.snippet.appendPlaceholder(placeholder);
+      this.placeholder(placeholder);
+    }
+  }
+
+  // Is param name printed before its type
+  private paramNameBeforeType(): boolean {
+    const option = this.options.paramNameBeforeType;
+    return option !== undefined ? option : !!this.config.get("paramNameBeforeType");
+  }
+
+  // Render a placeholder. Placeholders of the same link key share a number and are filled in together.
+  private placeholder(value: string, link?: string) {
+    let tabstop = link ? this.links[link] : undefined;
+    if (tabstop === undefined) {
+      tabstop = this.tabstop++;
+      if (link) { this.links[link] = tabstop; }
+    }
+    this.snippet.appendPlaceholder(value, tabstop);
+  }
+
+  // Render a spaced entity name if it's known or linked
+  private spacedName(entity: TagWithTypes) {
+    if (!entity.name && !entity.nameLink) { return; }
+    this.snippet.appendText(" ");
+    this.nameOrLinkedPlaceholder(entity);
+  }
+
+  // Render an entity name or a linked placeholder if name is unknown
+  private nameOrLinkedPlaceholder(entity: TagWithTypes) {
+    if (entity.name) {
+      this.snippet.appendText(entity.name);
+    } else {
+      this.placeholder("<name>", entity.nameLink);
     }
   }
 
   // Render entity types list
   // [types]
-  private typesList(types: string) {
+  private typesList(types: string, placeholder?: string) {
     this.snippet.appendText(" [");
-    this.textOrPlaceholder(types, "<Type>");
+    this.textOrPlaceholder(types, placeholder || "<Type>");
     this.snippet.appendText("]");
   }
 
@@ -140,7 +203,8 @@ export class Renderer {
   private decorateSnippet() {
     let lines: string[] = this.snippet.value.split(this.eol);
     lines = lines.filter((element, position, array) => {
-      return (position === 0 || element !== array[position - 1]) && position < array.length - 1;
+      const isRepeatedEmptyLine = position > 0 && element === "" && array[position - 1] === "";
+      return !isRepeatedEmptyLine && position < array.length - 1;
     });
     const decoratedLines: string = lines
       .map((line) => "#" + (line ? " " + line : ""))

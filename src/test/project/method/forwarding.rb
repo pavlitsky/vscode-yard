@@ -1,0 +1,2 @@
+def delegate(...)
+end

@@ -1,35 +1,29 @@
 "use strict";
+import type { Node } from "@ruby/prism" with { "resolution-mode": "import" };
+import { isNode } from "../../ast/prism";
 import { AuthorTag } from "../../tags/author";
 import { DescriptionTag } from "../../tags/description";
+import { IParseContext } from "../../types";
 import { IBaseParser } from "./base_parser";
 
 // Parse class or module definition into documentation entities
 export default class ClassOrModule implements IBaseParser {
-  // Regexp to extract class/module type and its name
-  public readonly regExp = /(class|module)\s+([\w:])?/;
-  // Class/module name and type
-  private parsedType: string = "";
-  private parsedName: string = "";
+  // Author info is used to fill the @author tag
+  public readonly requiresAuthor = true;
 
-  constructor(text: string) {
-    const match: RegExpExecArray = this.regExp.exec(text);
-    if (match) {
-      const [, type, name] = match;
-      this.parsedType = type;
-      this.parsedName = name;
-    }
-  }
+  constructor(private node: Node) {}
 
-  // Is this parser ready to process the text
+  // Is this parser ready to process the node
   public isApplicable(): boolean {
-    return this.parsedType !== "" && this.parsedName !== "";
+    return isNode(this.node, "ClassNode") || isNode(this.node, "ModuleNode");
   }
 
   // Parse documentation tree
-  public parse() {
+  public parse(context: IParseContext = {}) {
+    const { name = "", email = "" } = context.author || {};
     return [
       new DescriptionTag(),
-      new AuthorTag(),
+      new AuthorTag({ authorName: name, authorEmail: email }),
     ];
   }
 }

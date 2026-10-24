@@ -5,9 +5,9 @@
     "version": "0.4.0",
     "publisher": "pavlitsky",
     "engines": {
-        "vscode": "^1.18.0"
+        "vscode": "^1.90.0"
     },
-    "lincense": "SEE LICENSE IN LICENSE.txt",
+    "license": "MIT",
     "keywords": [
         "documentation",
         "ruby",
@@ -37,9 +37,9 @@
     },
     "homepage": "https://github.com/pavlitsky/vscode-yard/blob/master/README.md",
     "activationEvents": [
-        "onCommand:extension.generateYard"
+        "onLanguage:ruby"
     ],
-    "main": "./out/extension",
+    "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
@@ -99,25 +99,50 @@
                     "default": false,
                     "description": "Append @author tag to Class and Module documentation"
                 },
+                "yard.tags.authorFromGit": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Fill @author name and email from git config (user.name and user.email) of the current repository, or global git config outside of a repository"
+                },
+                "yard.tags.yield": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Document blocks of methods with @yield, @yieldparam and @yieldreturn tags"
+                },
+                "yard.completion.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Complete YARD tags in comments, tags missing in documentation of a definition below are offered first"
+                },
                 "yard.tags.paramNameBeforeType": {
-                  "type": "boolean",
-                  "default": true,
-                  "description": "Print param name before its type (for example '@param username [String]')"
-              }
-          }
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Print param name before its type (for example '@param username [String]')"
+                }
+            }
         }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+        "test": "npm run compile && node ./out/test/run_test.js",
+        "lint": "eslint",
+        "package": "vsce package"
     },
     "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
+        "@eslint/js": "^10.0.1",
+        "@types/mocha": "^10.0.10",
+        "@types/node": "^20.19.43",
+        "@types/vscode": "~1.90.0",
+        "@vscode/test-electron": "^3.1.0",
+        "@vscode/vsce": "^4.0.0",
+        "eslint": "^10.13.0",
+        "mocha": "^11.8.0",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.72.0"
+    },
+    "dependencies": {
+        "@ruby/prism": "^2.0.0"
     }
 }

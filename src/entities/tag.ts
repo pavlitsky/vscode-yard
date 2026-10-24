@@ -3,12 +3,12 @@ import { IEntity } from "../types";
 
 // Common Tag entity. Other tags may extend it with their details.
 export class Tag implements IEntity {
-  public tagName?: string;
-  public name?: string;
-  public text?: string;
-  public type?: string;
+  public tagName: string;
+  public name: string;
+  public text: string;
+  public type: string;
 
-  constructor(params: Tag = {} as Tag) {
+  constructor(params: Partial<Tag> = {}) {
     const {
       tagName = "",
       name = "",
