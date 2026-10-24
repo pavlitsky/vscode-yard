@@ -2,7 +2,8 @@
 import type { Node } from "@ruby/prism" with { "resolution-mode": "import" };
 import { isNode } from "../../ast/prism";
 import { ReturnTag } from "../../tags/return";
-import { IEntity } from "../../types";
+import { IEntity, IParseContext } from "../../types";
+import { nodocTags } from "../nodoc";
 import { IBaseParser } from "./base_parser";
 
 // Parse a constant definition into documentation entities
@@ -17,8 +18,8 @@ export default class Constant implements IBaseParser {
     return this.types.some((type) => isNode(this.node, type));
   }
 
-  // Parse documentation tree
-  public parse(): IEntity[] {
-    return [new ReturnTag()];
+  // Parse documentation tree, constant hidden from RDoc with ':nodoc:' is private
+  public parse(context: IParseContext = {}): IEntity[] {
+    return [new ReturnTag(), ...nodocTags(this.node, context)];
   }
 }

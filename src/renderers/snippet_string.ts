@@ -82,11 +82,14 @@ export class Renderer {
     this.spacer.endOfLine();
   }
 
-  // Render a tag line with a text only
+  // Render a tag line with a text only or a tag without a text
   // @tagName <description>
   private tagEntity(entity: Tag) {
-    this.snippet.appendText("@" + entity.tagName + " ");
-    this.textOrPlaceholder(entity.text, "<description>");
+    this.snippet.appendText("@" + entity.tagName);
+    if (entity.hasText) {
+      this.snippet.appendText(" ");
+      this.textOrPlaceholder(entity.text, "<description>");
+    }
     this.spacer.endOfLine();
   }
 

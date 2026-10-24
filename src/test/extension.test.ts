@@ -224,6 +224,12 @@ suite("Default Documenter Tests", () => {
     "method/rbs/rbs_params",
     "method/rbs/overloads",
     "method/rbs/malformed",
+    "method/nodoc/method",
+    "method/nodoc/update",
+    "method/nodoc/up_to_date",
+    "method/nodoc/class",
+    "method/nodoc/constant",
+    "method/nodoc/not_nodoc",
     "directive/define_method",
     "directive/concern_included",
     "directive/concern_class_methods",
@@ -545,6 +551,12 @@ suite("Tags Completion Tests", () => {
     const abstract = items.find((item) => item.label === "@abstract");
     assert.ok(abstract);
     assert.equal((abstract.insertText as SnippetString).value, "@abstract ${1:<description>}");
+  });
+
+  test("complete private tag of a method hidden with nodoc", async () => {
+    const items = await yardCompletions("completion/nodoc", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@private", "@return"]);
+    assert.equal((items[0].insertText as SnippetString).value, "@private");
   });
 
   test("complete deprecated tag of a method warning about deprecation", async () => {

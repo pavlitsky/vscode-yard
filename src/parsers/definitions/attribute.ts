@@ -4,7 +4,8 @@ import { isNode } from "../../ast/prism";
 import { Directive } from "../../entities/directive";
 import { DescriptionTag } from "../../tags/description";
 import { ReturnTag } from "../../tags/return";
-import { IEntity } from "../../types";
+import { IEntity, IParseContext } from "../../types";
+import { nodocTags } from "../nodoc";
 import { literalName, positionalArguments } from "../call_arguments";
 import { isSig, SorbetSignature } from "../signatures/sorbet";
 import { IBaseParser, IDefinitionSite } from "./base_parser";
@@ -29,14 +30,15 @@ export default class Attribute implements IBaseParser {
   }
 
   // Parse documentation tree, attribute type is taken from Sorbet sig.
-  // Each class attribute is documented with a directive: @!attribute [rw] self.name
-  public parse(): IEntity[] {
-    if (this.classRegExp.test((this.node as CallNode).name)) { return this.directives(); }
-    return [new ReturnTag({ types: this.types() })];
+  // Each class attribute is documented with a directive: @!attribute [rw] self.name.
+  // Attribute hidden from RDoc with ':nodoc:' is private.
+  public parse(context: IParseContext = {}): IEntity[] {
+    if (this.classRegExp.test((this.node as CallNode).name)) { return this.directives(context); }
+    return [new ReturnTag({ types: this.types() }), ...nodocTags(this.node, context)];
   }
 
   // Directive for each attribute: @!attribute [rw] name, class attributes are named with 'self.'
-  public directives(): Directive[] {
+  public directives(context: IParseContext = {}): Directive[] {
     const name = (this.node as CallNode).name;
     const access = this.access[/_(reader|writer|accessor)$/.exec(name)?.[1] ?? "accessor"];
     const prefix = this.classRegExp.test(name) ? "self." : "";
@@ -44,7 +46,7 @@ export default class Attribute implements IBaseParser {
       .filter((arg) => isNode(arg, "SymbolNode"))
       .map((arg) => new Directive({
         directiveName: "attribute",
-        entities: [new DescriptionTag(), new ReturnTag({ types: this.types() })],
+        entities: [new DescriptionTag(), new ReturnTag({ types: this.types() }), ...nodocTags(this.node, context)],
         signature: "[" + access + "] " + prefix + literalName(arg),
       }));
   }

@@ -20,6 +20,7 @@ It's able to document:
 * Methods overloaded by rbs-inline annotations (optional, see `yard.tags.overload` setting).
 * Abstract methods raising `NotImplementedError`.
 * Deprecated methods warning about their deprecation.
+* Definitions hidden from RDoc with `# :nodoc:`, with `@private` tag.
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
@@ -85,8 +86,8 @@ as they're written, missing tags are added as placeholders:
 
 * Params are reordered to match the method signature. A param which no longer exists is
   renamed if a new param takes its place, otherwise it's removed.
-* Missing `@abstract`, `@deprecated`, `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn`, `@raise`
-  and `@return` tags are added.
+* Missing `@abstract`, `@deprecated`, `@private`, `@param`, `@option`, `@overload`, `@yield`, `@yieldparam`,
+  `@yieldreturn`, `@raise` and `@return` tags are added.
   Documented exceptions are kept even if a method doesn't raise them.
 * New tags follow the params style of the existing documentation.
 
@@ -202,7 +203,7 @@ so definitions spanning multiple lines and any Ruby syntax are supported.
 Requires VS Code 1.90 or newer.
 
 List of generated tags: `@abstract`, `@attr`, `@attr_reader`, `@author`, `@deprecated`, `@option`,
-`@param`, `@raise`, `@return`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
+`@overload`, `@param`, `@private`, `@raise`, `@return`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
 `@!attribute`, `@!method`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
@@ -383,6 +384,22 @@ calls of deprecators like `ActiveSupport::Deprecation.warn` or `MyGem.deprecator
 def old_fetch(url)
   warn "old_fetch is deprecated, use fetch instead"
   fetch(url)
+end
+```
+
+A method, a class, a module, a constant or an attribute hidden from RDoc with a `# :nodoc:` comment
+trailing its first line is documented with a `@private` tag, YARD doesn't read RDoc's directive.
+It's hidden from YARD documentation generated with `--no-private` option:
+
+```ruby
+#
+# <Description>
+#
+# @private
+#
+# @return [<Type>] <description>
+#
+def internal_state # :nodoc:
 end
 ```
 

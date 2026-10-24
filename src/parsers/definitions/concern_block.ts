@@ -53,7 +53,7 @@ export default class ConcernBlock implements IBaseParser {
     const blockContext = { ...context, comments: [], overloads: false };
     return this.definitions().flatMap(({ parser, statement }) => {
       if (isNode<DefNode>(statement, "DefNode")) { return [this.methodDirective(statement, parser.parse(blockContext))]; }
-      if (parser instanceof Attribute) { return parser.directives(); }
+      if (parser instanceof Attribute) { return parser.directives(blockContext); }
       return parser.parse(blockContext).filter((entity) => entity.type === "Directive");
     });
   }

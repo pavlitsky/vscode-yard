@@ -14,11 +14,11 @@ export interface IMergeSpacers {
   separateTags: boolean;
 }
 
-// Order of tags: abstract and deprecated tags, then params with options or overloads, then yield section,
+// Order of tags: abstract, deprecated and private tags, then params with options or overloads, then yield section,
 // then raised exceptions, then return value. Other tags aren't ranked.
 const tagRanks: { [tag: string]: number } = {
-  abstract: 0, deprecated: 0, option: 1, overload: 1, param: 1, raise: 3, return: 4, yield: 2, yieldparam: 2,
-  yieldreturn: 2,
+  abstract: 0, deprecated: 0, option: 1, overload: 1, param: 1, private: 0, raise: 3, return: 4, yield: 2,
+  yieldparam: 2, yieldreturn: 2,
 };
 
 // Part of a merged docstring: an existing item or a new entity
@@ -59,6 +59,7 @@ export class DocstringMerger {
     let segments = this.mergeOverloads(tags);
     segments = this.mergeTextTag(segments, "abstract");
     segments = this.mergeTextTag(segments, "deprecated");
+    segments = this.mergeTextTag(segments, "private");
     segments = this.mergeYield(segments);
     segments = this.mergeRaises(segments);
     segments = this.mergeReturn(segments);
@@ -127,7 +128,7 @@ export class DocstringMerger {
     return segments;
   }
 
-  // Add a text only tag if it's missing: @abstract, @deprecated
+  // Add a text only tag or a tag without a text if it's missing: @abstract, @deprecated, @private
   private mergeTextTag(segments: ISegment[], tagName: string): ISegment[] {
     const generated = generatedTextTag(this.entities, tagName);
     if (!generated || segments.some((s) => s.item?.tag === tagName)) { return segments; }

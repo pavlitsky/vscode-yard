@@ -4,6 +4,7 @@ import { isNode } from "../../ast/prism";
 import { AuthorTag } from "../../tags/author";
 import { DescriptionTag } from "../../tags/description";
 import { IParseContext } from "../../types";
+import { nodocTags } from "../nodoc";
 import { IBaseParser } from "./base_parser";
 import { structMembers } from "./struct";
 
@@ -20,7 +21,7 @@ export default class ClassOrModule implements IBaseParser {
   }
 
   // Parse documentation tree, members of a Struct superclass are documented the way YARD reads them:
-  // class Point < Struct.new(:x, :y)
+  // class Point < Struct.new(:x, :y). Class hidden from RDoc with ':nodoc:' is private.
   public parse(context: IParseContext = {}) {
     const { name = "", email = "" } = context.author || {};
     const superclass = isNode<ClassNode>(this.node, "ClassNode") ? this.node.superclass : null;
@@ -28,6 +29,7 @@ export default class ClassOrModule implements IBaseParser {
     return [
       new DescriptionTag(),
       ...members,
+      ...nodocTags(this.node, context),
       new AuthorTag({ authorName: name, authorEmail: email }),
     ];
   }

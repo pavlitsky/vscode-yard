@@ -29,6 +29,7 @@
   literal values.
 - Fill in types declared by Sorbet signatures (`sig { params(...).returns(...) }`) and rbs-inline annotations
   (`#: (String) -> bool`, `# @rbs name: String`). Documentation is placed above `sig` and above `#:` annotations.
+- Document definitions hidden from RDoc with `# :nodoc:` with `@private` tag, YARD doesn't read RDoc's directive.
 - Document methods and attributes of `ActiveSupport::Concern` blocks (`included do`, `class_methods do`)
   with directives above a block, YARD doesn't look into blocks.
 - Document Rails class attributes (`class_attribute`, `cattr_*`, `mattr_*`) with `@!attribute [rw] self.name`

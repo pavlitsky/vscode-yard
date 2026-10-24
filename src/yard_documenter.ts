@@ -39,7 +39,7 @@ export default class YardDocumenter {
     const docLinesCount = block ? block.lines.length - annotationLinesCount(block.lines) : 0;
     const existing = block && docLinesCount > 0 ? { ...block, lines: block.lines.slice(0, docLinesCount) } : undefined;
     if (existing && !builder.supportsUpdate()) { return; }
-    const context = await this.parseContext(builder, document, block ? block.lines : []);
+    const context = await this.parseContext(builder, document, block ? block.lines : [], comments);
     const below = block ? document.lineAt(block.startLine - 1 + docLinesCount) : line;
 
     // Update existing documentation or insert a new one
@@ -54,10 +54,12 @@ export default class YardDocumenter {
   }
 
   // Collect environment-dependent details for the builder
-  private async parseContext(builder: Builder, document: TextDocument, comments: string[]): Promise<IParseContext> {
+  private async parseContext(builder: Builder, document: TextDocument, comments: string[], blocks: CommentBlocks):
+    Promise<IParseContext> {
     const config = workspace.getConfiguration("yard.tags");
     const context: IParseContext = {
       blocks: !!config.get("yield"), comments, overloads: !!config.get("overload"), raises: !!config.get("raise"),
+      trailingComment: (line) => blocks.trailing(line),
     };
     if (builder.requiresAuthor() && config.get("author") && config.get("authorFromGit")) {
       context.author = await (new GitAuthorResolver(document)).resolve();

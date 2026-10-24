@@ -21,6 +21,7 @@ import { defaultTypes } from "../literal_types";
 import { OptionsUsage } from "../options_usage";
 import { RaiseUsage } from "../raise_usage";
 import { ReturnUsage } from "../return_usage";
+import { nodocTags } from "../nodoc";
 import { methodSignature, rbsOverloads } from "../signatures/method_signature";
 import { IOverloadParam, overloadParams } from "../signatures/overload";
 import { IRbsMethodType } from "../signatures/rbs";
@@ -91,6 +92,7 @@ export default class MethodDef implements IBaseParser {
 
   // Parse documentation tree. Types are taken from a Sorbet or an rbs-inline signature if there's one.
   // Method overloaded by rbs-inline annotations is documented with @overload tags if it's enabled.
+  // Method hidden from RDoc with ':nodoc:' is private.
   public parse(context: IParseContext = {}): IEntity[] {
     const overloads = context.overloads ? rbsOverloads(this.site.previous ?? null, context.comments || []) : undefined;
     if (overloads) {
@@ -98,6 +100,7 @@ export default class MethodDef implements IBaseParser {
         this.buildDescription(),
         this.buildAbstract(),
         this.buildDeprecated(),
+        ...nodocTags(this.node, context),
         ...overloads.map((overload, index) => this.buildOverload(context, overload, index)),
         ...this.buildRaises(context),
       ].filter((element): element is IEntity => element !== undefined);
@@ -107,6 +110,7 @@ export default class MethodDef implements IBaseParser {
       this.buildDescription(),
       this.buildAbstract(signature),
       this.buildDeprecated(),
+      ...nodocTags(this.node, context),
       ...this.buildParams(context, signature),
       this.buildYield(context, signature),
       ...this.buildRaises(context),

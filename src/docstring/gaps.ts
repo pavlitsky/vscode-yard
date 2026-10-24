@@ -15,6 +15,8 @@ export interface IDocGaps {
   abstractTag?: Tag;
   // Undocumented deprecated method
   deprecatedTag?: Tag;
+  // Undocumented private object hidden with ':nodoc:'
+  privateTag?: Tag;
   // Undocumented params with their options
   params: TagWithOptions[];
   // Undocumented options of documented params
@@ -46,7 +48,7 @@ export function generatedOverloads(entities: IEntity[]): Overload[] {
   return entities.filter((entity) => entity.type === "Overload") as Overload[];
 }
 
-// Generated tag of a text only: @abstract, @deprecated
+// Generated tag of a text only or without a text: @abstract, @deprecated, @private
 export function generatedTextTag(entities: IEntity[], tagName: string): Tag | undefined {
   return entities.find((entity) => entity.type === "Tag" && (entity as Tag).tagName === tagName) as Tag | undefined;
 }
@@ -97,6 +99,8 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
   if (abstractTag && tagged("abstract").length === 0) { gaps.abstractTag = abstractTag; }
   const deprecatedTag = generatedTextTag(entities, "deprecated");
   if (deprecatedTag && tagged("deprecated").length === 0) { gaps.deprecatedTag = deprecatedTag; }
+  const privateTag = generatedTextTag(entities, "private");
+  if (privateTag && tagged("private").length === 0) { gaps.privateTag = privateTag; }
 
   const returnTag = generatedReturn(entities);
   if (returnTag && tagged("return").length === 0) { gaps.returnTag = returnTag; }

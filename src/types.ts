@@ -21,4 +21,6 @@ export interface IParseContext {
   overloads?: boolean;
   // Comments above a definition, rbs-inline annotations are read from them
   comments?: string[];
+  // Comment trailing code on a line, RDoc's ':nodoc:' is read from it
+  trailingComment?: (line: number) => string | undefined;
 }
