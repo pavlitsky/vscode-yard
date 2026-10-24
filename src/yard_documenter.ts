@@ -29,7 +29,11 @@ export default class YardDocumenter {
     }
 
     // Resolve documenter by a definition starting on the line
-    const builder = new Builder(tree.value, this.line.lineNumber + 1, this.eol);
+    const builder = new Builder(tree, this.line.lineNumber + 1, this.eol);
+    if (builder.isMalformed()) {
+      window.setStatusBarMessage("YARD: method signature has syntax errors", 5000);
+      return;
+    }
     const existing = comments.above(this.line.lineNumber + 1);
     if (existing && !builder.supportsUpdate()) { return; }
     const context = await this.parseContext(builder);

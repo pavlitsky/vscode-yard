@@ -13,6 +13,8 @@
   in a method body, including keyword splats (`**opts`).
 - Update existing documentation of methods with the same command: sync params with the method signature
   and add missing tags, keeping written texts and tags. Command also works with cursor within a comment.
+- Don't document or update methods with syntax errors in their signature, a status bar message tells about it
+  ([#3](https://github.com/pavlitsky/vscode-yard/issues/3)). Operator methods like `|` get their params right.
 - Name splat and block params without `*`, `**` and `&` to match YARD, prefill their types and skip anonymous
   params and arguments forwarding, which YARD warned about. Updating documentation renames such params too.
 - Complete YARD tags in comments, tags missing in documentation of a definition below are offered first.

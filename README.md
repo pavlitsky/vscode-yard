@@ -275,3 +275,6 @@ conflicts.
 
 This also may happen if a documented definition isn't a method or its documentation is
 up to date. In this case extension silently does nothing.
+
+Methods with syntax errors in their signature, for example `def foo(bar, baz qux)`, aren't
+documented, a status bar message tells about it. Fix the signature and run the command again.

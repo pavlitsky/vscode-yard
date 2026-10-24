@@ -1,5 +1,5 @@
 "use strict";
-import type { Node } from "@ruby/prism" with { "resolution-mode": "import" };
+import type { ParseResult } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
 import { SnippetString, workspace } from "vscode";
 import { DocstringMerger } from "./docstring/merger";
 import { DocstringParser } from "./docstring/parser";
@@ -12,8 +12,13 @@ import { IParseContext } from "./types";
 export class Builder {
   private parser: IBaseParser;
 
-  constructor(root: Node, line: number, private eol: string) {
-    this.parser = (new ParserResolver(root, line)).resolve();
+  constructor(tree: ParseResult, line: number, private eol: string) {
+    this.parser = (new ParserResolver(tree.value, line, tree.errors)).resolve();
+  }
+
+  // Does definition have syntax errors preventing to document it
+  public isMalformed(): boolean {
+    return !!this.parser && !!this.parser.isMalformed && this.parser.isMalformed();
   }
 
   // Is author info used to build the snippet

@@ -1,6 +1,7 @@
 "use strict";
 import type { BlockParameterNode, DefNode, HashNode, KeywordRestParameterNode, Node }
   from "@ruby/prism" with { "resolution-mode": "import" };
+import type { ParseError } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
 import { isNode, nodeType } from "../../ast/prism";
 import { DescriptionTag } from "../../tags/description";
 import { OptionTag } from "../../tags/option";
@@ -30,7 +31,7 @@ export default class MethodDef implements IBaseParser {
   // Existing method documentation is synced with the method
   public readonly supportsUpdate = true;
 
-  constructor(private node: Node) {}
+  constructor(private node: Node, private errors: ParseError[] = []) {}
 
   // Is this parser ready to process the node
   public isApplicable(): boolean {
@@ -45,6 +46,17 @@ export default class MethodDef implements IBaseParser {
       .concat(this.buildYield(context))
       .concat(this.buildReturn())
       .filter((element) => element !== undefined);
+  }
+
+  // Is method signature malformed: params parentheses aren't closed or there's a syntax error within the signature.
+  // Params recovered from a malformed signature are a guess, errors in a method body don't matter.
+  public isMalformed(): boolean {
+    const def = this.def;
+    if (def.lparenLoc && !def.rparenLoc) { return true; }
+    const end = def.rparenLoc ? def.rparenLoc.endOffset() :
+      def.parameters ? def.parameters.location.endOffset() : def.nameLoc.endOffset();
+    return this.errors.some((error) =>
+      error.location.startOffset >= def.location.startOffset && error.location.startOffset <= end);
   }
 
   // Classes of exceptions raised in the method body

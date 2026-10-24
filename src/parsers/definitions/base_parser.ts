@@ -9,5 +9,7 @@ export interface IBaseParser {
   isApplicable(): boolean;
   // Classes of exceptions raised by a definition
   raises?(): string[];
+  // Does definition have syntax errors preventing to document it
+  isMalformed?(): boolean;
   parse(context?: IParseContext): IEntity[];
 }

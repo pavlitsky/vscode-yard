@@ -60,7 +60,9 @@ export class TagCompletionProvider implements CompletionItemProvider {
     const comments = new CommentBlocks(tree, (line) => document.lineAt(line - 1).firstNonWhitespaceCharacterIndex);
     const block = comments.at(position.line + 1);
     if (!block) { return; }
-    const parser = (new ParserResolver(tree.value, block.endLine + 1)).resolve();
+    // Only standard tags are offered for a malformed definition, its params are a guess
+    let parser = (new ParserResolver(tree.value, block.endLine + 1, tree.errors)).resolve();
+    if (parser && parser.isMalformed && parser.isMalformed()) { parser = undefined; }
     const items = (new DocstringParser(block.lines)).parse();
     const eol = document.eol === EndOfLine.CRLF ? "\r\n" : "\n";
     let entities: IEntity[] = [];

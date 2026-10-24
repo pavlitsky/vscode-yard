@@ -126,6 +126,10 @@ suite("Default Documenter Tests", () => {
     "method/naming/unary",
     "method/naming/japanese_hello",
     "method/naming/leet",
+    "method/naming/pipe",
+    "method/single_line_spaced",
+    "method/malformed_params",
+    "method/malformed_default",
     "class_or_module/class",
     "class_or_module/module",
     "class_or_module/namespaced",
@@ -147,6 +151,7 @@ suite("Default Documenter Tests", () => {
     "method/update/up_to_date",
     "method/update/class_documented",
     "method/update/splat_names",
+    "method/update/malformed",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -444,6 +449,12 @@ suite("Tags Completion Tests", () => {
 
   test("complete only standard tags in a comment not documenting a definition", async () => {
     const items = await yardCompletions("completion/not_comment", 0, 3);
+    assert.deepEqual(missingTagLabels(items), []);
+    assert.ok(items.length > 0);
+  });
+
+  test("complete only standard tags above a method with malformed params", async () => {
+    const items = await yardCompletions("completion/malformed", 0, 3);
     assert.deepEqual(missingTagLabels(items), []);
     assert.ok(items.length > 0);
   });
