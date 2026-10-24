@@ -121,13 +121,15 @@
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "test": "npm run compile && node ./out/test/run_test.js"
+        "test": "npm run compile && node ./out/test/run_test.js",
+        "package": "vsce package"
     },
     "devDependencies": {
         "@types/mocha": "^10.0.10",
         "@types/node": "^22.20.5",
         "@types/vscode": "~1.90.0",
         "@vscode/test-electron": "^3.1.0",
+        "@vscode/vsce": "^4.0.0",
         "mocha": "^11.8.0",
         "typescript": "^7.0.2"
     },

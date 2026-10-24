@@ -8,3 +8,4 @@ tsconfig.json
 node_modules/**/*.d.ts
 node_modules/@ruby/prism/example.html
 node_modules/@ruby/prism/test.js
+.github/**
