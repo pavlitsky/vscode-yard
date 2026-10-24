@@ -59,7 +59,8 @@ export default class YardDocumenter {
     const config = workspace.getConfiguration("yard.tags");
     const context: IParseContext = {
       blocks: !!config.get("yield"), comments, overloads: !!config.get("overload"), raises: !!config.get("raise"),
-      trailingComment: (line) => blocks.trailing(line),
+      commentsWithin: (startLine, endLine) => blocks.within(startLine, endLine),
+      todos: !!config.get("todo"), trailingComment: (line) => blocks.trailing(line),
     };
     if (builder.requiresAuthor() && config.get("author") && config.get("authorFromGit")) {
       context.author = await (new GitAuthorResolver(document)).resolve();

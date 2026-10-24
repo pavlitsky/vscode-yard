@@ -119,6 +119,11 @@
                     "default": false,
                     "description": "Document methods overloaded by several rbs-inline method type annotations with @overload tags"
                 },
+                "yard.tags.todo": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Document TODO, FIXME, XXX, HACK and OPTIMIZE notes written in method bodies with @todo tags"
+                },
                 "yard.completion.enabled": {
                     "type": "boolean",
                     "default": true,

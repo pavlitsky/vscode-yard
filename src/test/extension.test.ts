@@ -224,6 +224,7 @@ suite("Default Documenter Tests", () => {
     "method/rbs/rbs_params",
     "method/rbs/overloads",
     "method/rbs/malformed",
+    "method/todo/disabled",
     "method/nodoc/method",
     "method/nodoc/update",
     "method/nodoc/up_to_date",
@@ -412,6 +413,35 @@ suite("Overloads Documenter Tests", () => {
     assert.deepEqual(missingTagLabels(items), ["@overload convert(value)", "@overload convert(value)"]);
     assert.equal((items[0].insertText as SnippetString).value,
       "@overload convert(value)\n#   @param [Integer] value ${1:<description>}\n#   @return [String] ${2:<description>}");
+  });
+});
+
+suite("TODO Notes Documenter Tests", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: false,
+      raise: true,
+      todo: true, // Non default
+      yield: false,
+    },
+  };
+
+  const testCases = [
+    "method/todo/notes",
+    "method/todo/update",
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  suiteTeardown(async () => { await updateConfig({ tags: { todo: undefined } }); });
+  expectDocumented(testCases);
+
+  test("complete TODO notes missing in method documentation", async () => {
+    const items = await yardCompletions("completion/todo", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@return", "@todo bypass cache"]);
+    assert.equal((items[1].insertText as SnippetString).value, "@todo bypass cache");
   });
 });
 

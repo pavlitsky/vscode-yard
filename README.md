@@ -21,6 +21,7 @@ It's able to document:
 * Abstract methods raising `NotImplementedError`.
 * Deprecated methods warning about their deprecation.
 * Definitions hidden from RDoc with `# :nodoc:`, with `@private` tag.
+* TODO notes written in methods, with `@todo` tags (optional, see `yard.tags.todo` setting).
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
@@ -87,7 +88,7 @@ as they're written, missing tags are added as placeholders:
 * Params are reordered to match the method signature. A param which no longer exists is
   renamed if a new param takes its place, otherwise it's removed.
 * Missing `@abstract`, `@deprecated`, `@private`, `@param`, `@option`, `@overload`, `@yield`, `@yieldparam`,
-  `@yieldreturn`, `@raise` and `@return` tags are added.
+  `@yieldreturn`, `@raise`, `@return` and `@todo` tags are added.
   Documented exceptions are kept even if a method doesn't raise them.
 * New tags follow the params style of the existing documentation.
 
@@ -203,7 +204,7 @@ so definitions spanning multiple lines and any Ruby syntax are supported.
 Requires VS Code 1.90 or newer.
 
 List of generated tags: `@abstract`, `@attr`, `@attr_reader`, `@author`, `@deprecated`, `@option`,
-`@overload`, `@param`, `@private`, `@raise`, `@return`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
+`@overload`, `@param`, `@private`, `@raise`, `@return`, `@todo`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
 `@!attribute`, `@!method`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
@@ -403,6 +404,28 @@ def internal_state # :nodoc:
 end
 ```
 
+TODO notes written in comments within a method get a `@todo` tag each, when `yard.tags.todo`
+setting is enabled. Notes are comments starting with `TODO`, `FIXME`, `XXX`, `HACK` or `OPTIMIZE`,
+written on their own lines or trailing code. Updating documentation adds tags of undocumented notes,
+documented notes are kept:
+
+```ruby
+#
+# <Description>
+#
+# @param url [<Type>] <description>
+#
+# @return [<Type>] <description>
+#
+# @todo retry on timeout
+# @todo handle redirects
+#
+def fetch(url)
+  # TODO: retry on timeout
+  get(url) # FIXME handle redirects
+end
+```
+
 ### Overloads
 
 A method with several rbs-inline method types, written as several `#:` annotations or as
@@ -516,6 +539,7 @@ a curt and verbose documentation styles.
 "yard.tags.yield" // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
 "yard.tags.raise" // Document exceptions raised in methods with @raise tags
 "yard.tags.overload" // Document methods overloaded by rbs-inline annotations with @overload tags
+"yard.tags.todo" // Document TODO, FIXME, XXX, HACK and OPTIMIZE notes written in method bodies with @todo tags
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 "yard.completion.enabled" // Complete YARD tags in comments
 ```

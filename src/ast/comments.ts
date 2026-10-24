@@ -44,6 +44,16 @@ export class CommentBlocks {
     return this.trailingComments.get(line);
   }
 
+  // Whole line and trailing comments within lines, in order of lines
+  public within(startLine: number, endLine: number): string[] {
+    const comments: string[] = [];
+    for (let line = startLine; line <= endLine; line++) {
+      const comment = this.comments.get(line) ?? this.trailingComments.get(line);
+      if (comment !== undefined) { comments.push(comment); }
+    }
+    return comments;
+  }
+
   // Block ending right above a line
   public above(line: number): ICommentBlock | undefined {
     return this.blockEndingAt(line - 1);

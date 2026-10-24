@@ -23,4 +23,8 @@ export interface IParseContext {
   comments?: string[];
   // Comment trailing code on a line, RDoc's ':nodoc:' is read from it
   trailingComment?: (line: number) => string | undefined;
+  // Comments within lines of a definition, TODO notes are read from them
+  commentsWithin?: (startLine: number, endLine: number) => string[];
+  // Is documenting of TODO notes with @todo tags enabled
+  todos?: boolean;
 }

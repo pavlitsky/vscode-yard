@@ -31,6 +31,8 @@ export interface IDocGaps {
   returnTag?: TagWithTypes;
   // Overloads of a method documented without @overload tags
   overloads: Overload[];
+  // Undocumented TODO notes
+  todos: Tag[];
 }
 
 // Tags documenting a method signature without overloads
@@ -41,6 +43,16 @@ const signatureTags = ["option", "param", "return", "yield", "yieldparam", "yiel
 export function isOverloadable(items: IDocItem[]): boolean {
   const tags = items.map((item) => item.tag);
   return tags.indexOf("overload") >= 0 || !tags.some((tag) => signatureTags.indexOf(tag) >= 0);
+}
+
+// Generated tags of TODO notes
+export function generatedTodos(entities: IEntity[]): Tag[] {
+  return entities.filter((entity) => entity.type === "Tag" && (entity as Tag).tagName === "todo") as Tag[];
+}
+
+// Is a TODO note documented with a @todo tag of the same text
+export function isTodoDocumented(items: IDocItem[], text: string): boolean {
+  return items.some((item) => item.tag === "todo" && item.lines[0].replace(/^@todo\s*/, "").trim() === text);
 }
 
 // Generated overloads
@@ -80,6 +92,7 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
       option.key && !tagged("option").some((item) => sameName(item.name, param.name) && item.key === option.key))),
     overloads: tagged("overload").length === 0 ? generatedOverloads(entities) : [],
     params: params.filter((param) => !isDocumented(param)),
+    todos: generatedTodos(entities).filter((todo) => !isTodoDocumented(items, todo.text)),
     yieldParams: [],
   };
 

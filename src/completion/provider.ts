@@ -73,7 +73,11 @@ export class TagCompletionProvider implements CompletionItemProvider {
       const author = authorFromGit ? await (new GitAuthorResolver(document)).resolve() : undefined;
       const overloads = !!workspace.getConfiguration("yard.tags").get("overload") && isOverloadable(items);
       const trailingComment = (line: number) => comments.trailing(line);
-      entities = parser.parse({ author, blocks: true, comments: block.lines, overloads, trailingComment });
+      const commentsWithin = (startLine: number, endLine: number) => comments.within(startLine, endLine);
+      const todos = !!workspace.getConfiguration("yard.tags").get("todo");
+      entities = parser.parse({
+        author, blocks: true, comments: block.lines, commentsWithin, overloads, todos, trailingComment,
+      });
     }
     return { entities, eol, items, paramNameBeforeType: paramNameBeforeType(items), parser };
   }
@@ -100,6 +104,7 @@ export class TagCompletionProvider implements CompletionItemProvider {
     gaps.yieldParams.forEach((param) => add("@yieldparam " + param.name, "Block param", param));
     if (gaps.yieldReturn) { add("@yieldreturn", "Block return value", gaps.yieldReturn); }
     if (gaps.returnTag) { add("@return", "Return value", gaps.returnTag); }
+    gaps.todos.forEach((todo) => add("@todo " + todo.text, "TODO note", todo));
     this.raises(context).forEach((exception) =>
       add("@raise [" + exception + "]", "Raised exception", new RaiseTag({ types: exception })));
     const author = context.entities.find((entity) => entity.type === "Author") as Author;
