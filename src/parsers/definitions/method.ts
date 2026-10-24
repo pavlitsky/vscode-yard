@@ -6,6 +6,7 @@ import { isNode, nodeType } from "../../ast/prism";
 import { DescriptionTag } from "../../tags/description";
 import { OptionTag } from "../../tags/option";
 import { ParamTag } from "../../tags/param";
+import { RaiseTag } from "../../tags/raise";
 import { ReturnTag } from "../../tags/return";
 import { YieldTag } from "../../tags/yield";
 import { YieldParamTag } from "../../tags/yield_param";
@@ -44,6 +45,7 @@ export default class MethodDef implements IBaseParser {
       this.buildDescription(),
       ...this.buildParams(context),
       this.buildYield(context),
+      ...this.buildRaises(context),
       this.buildReturn(),
     ].filter((element): element is IEntity => element !== undefined);
   }
@@ -104,6 +106,12 @@ export default class MethodDef implements IBaseParser {
     const yieldParams = usage.params.map((name, index) =>
       new YieldParamTag({ name, nameLink: name ? "" : "yieldparam" + index }));
     return new YieldTag({ yieldParams, yieldReturn: new YieldReturnTag() });
+  }
+
+  // Build raise section of exceptions raised in the method body if documenting of exceptions is enabled
+  private buildRaises(context: IParseContext): IEntity[] {
+    if (!context.raises) { return []; }
+    return this.raises().map((exception) => new RaiseTag({ types: exception }));
   }
 
   // Build return section

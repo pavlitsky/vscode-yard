@@ -106,6 +106,7 @@ suite("Default Documenter Tests", () => {
       author: true,
       authorFromGit: false,
       paramNameBeforeType: false,
+      raise: true,
       yield: false,
     },
   };
@@ -176,6 +177,11 @@ suite("Default Documenter Tests", () => {
     "method/update/class_documented",
     "method/update/splat_names",
     "method/update/malformed",
+    "method/raise/raises",
+    "method/raise/initializer",
+    "method/raise/update",
+    "method/raise/update_missing",
+    "method/raise/up_to_date",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -197,6 +203,7 @@ suite("Verbose Documenter Tests", () => {
       author: true,
       authorFromGit: false,
       paramNameBeforeType: false,
+      raise: true,
       yield: false,
     },
   };
@@ -220,6 +227,7 @@ suite("Curt Documenter Tests", () => {
       author: false,
       authorFromGit: false,
       paramNameBeforeType: false,
+      raise: true,
       yield: false,
     },
   };
@@ -230,6 +238,7 @@ suite("Curt Documenter Tests", () => {
     "curt/options_hash_param",
     "curt/options_keys",
     "curt/update",
+    "curt/raise",
     "curt/constant",
     "curt/attribute",
   ];
@@ -245,12 +254,33 @@ suite("Special options", () => {
       author: true,
       authorFromGit: false,
       paramNameBeforeType: true, // Non default
+      raise: true,
       yield: false,
     },
   };
 
   const testCases = [
     "special/param_name_before_types"
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  expectDocumented(testCases);
+});
+
+suite("Raise disabled", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: false,
+      raise: false, // Non default
+      yield: false,
+    },
+  };
+
+  const testCases = [
+    "method/raise/disabled",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -264,6 +294,7 @@ suite("Author from git", () => {
       author: true,
       authorFromGit: true,
       paramNameBeforeType: true,
+      raise: true,
       yield: false,
     },
   };
@@ -290,6 +321,7 @@ suite("Blocks Documenter Tests", () => {
       author: false,
       authorFromGit: false,
       paramNameBeforeType: true,
+      raise: true,
       yield: true,
     },
   };
@@ -311,6 +343,7 @@ suite("Blocks Documenter Tests", () => {
     "method/yield/multiline_params",
     "method/yield/update",
     "method/yield/update_partial",
+    "method/yield/raise",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -333,6 +366,7 @@ suite("Curt Blocks Documenter Tests", () => {
       author: false,
       authorFromGit: false,
       paramNameBeforeType: true,
+      raise: true,
       yield: true,
     },
   };
@@ -355,6 +389,7 @@ suite("Tags Completion Tests", () => {
       author: true,
       authorFromGit: true,
       paramNameBeforeType: false,
+      raise: true,
       yield: false,
     },
   };

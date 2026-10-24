@@ -109,6 +109,11 @@
                     "default": false,
                     "description": "Document blocks of methods with @yield, @yieldparam and @yieldreturn tags"
                 },
+                "yard.tags.raise": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Document exceptions raised in methods with @raise tags"
+                },
                 "yard.completion.enabled": {
                     "type": "boolean",
                     "default": true,

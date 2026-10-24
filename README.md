@@ -16,6 +16,7 @@ It's able to document:
 
 * Methods: instance methods, initializers, class methods.
 * Blocks accepted by methods (optional, see `yard.tags.yield` setting).
+* Exceptions raised in methods (optional, see `yard.tags.raise` setting).
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
@@ -76,7 +77,8 @@ as they're written, missing tags are added as placeholders:
 
 * Params are reordered to match the method signature. A param which no longer exists is
   renamed if a new param takes its place, otherwise it's removed.
-* Missing `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn` and `@return` tags are added.
+* Missing `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn`, `@raise` and `@return` tags are added.
+  Documented exceptions are kept even if a method doesn't raise them.
 * New tags follow the params style of the existing documentation.
 
 ```ruby
@@ -190,7 +192,7 @@ Source code is parsed with [Prism](https://github.com/ruby/prism), the Ruby's ow
 so definitions spanning multiple lines and any Ruby syntax are supported.
 Requires VS Code 1.90 or newer.
 
-List of generated tags: `@author`, `@option`, `@param`, `@return`, `@yield`,
+List of generated tags: `@author`, `@option`, `@param`, `@raise`, `@return`, `@yield`,
 `@yieldparam`, `@yieldreturn`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
@@ -248,6 +250,31 @@ An explicit `&block` param is documented with these tags instead of `@param`.
 When a passed value isn't a plain local variable (for example `yield @items.first`)
 its name is left as a placeholder, filled in once for both `@yield` and `@yieldparam`.
 
+Exceptions raised in a method body get a `@raise` tag each, when `yard.tags.raise` setting is
+enabled (it's on by default). Exceptions are detected in `raise` and `fail` calls with a class
+(`raise ArgumentError`, `raise ArgumentError, "message"`, `raise Net::ReadTimeout.new(...)`),
+raising a message is documented as `RuntimeError`. A bare re-raise and exceptions raised in nested
+method definitions are skipped:
+
+```ruby
+#
+# <Description>
+#
+# @param url [<Type>] <description>
+#
+# @raise [ArgumentError] <description>
+# @raise [RuntimeError] <description>
+#
+# @return [<Type>] <description>
+#
+def fetch(url)
+  raise ArgumentError, "bad url" unless url
+  fail "empty url" if url.empty?
+rescue IOError
+  raise
+end
+```
+
 ## Configuration
 
 Insertion of empty lines are configurable to make it able to tune between
@@ -264,6 +291,7 @@ a curt and verbose documentation styles.
 "yard.tags.author" // Append @author tag to Class and Module documentation
 "yard.tags.authorFromGit" // Fill @author name and email from git config (user.name and user.email)
 "yard.tags.yield" // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
+"yard.tags.raise" // Document exceptions raised in methods with @raise tags
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 "yard.completion.enabled" // Complete YARD tags in comments
 ```

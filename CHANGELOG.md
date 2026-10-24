@@ -20,6 +20,8 @@
 - Complete YARD tags in comments, tags missing in documentation of a definition below are offered first.
   Names are completed after `@param`, `@yieldparam`, `@option` and `@raise` tags. Can be disabled with
   `yard.completion.enabled` setting.
+- Document exceptions raised in methods with `@raise` tags, configurable with `yard.tags.raise` setting.
+  Updating documentation adds tags of undocumented exceptions.
 
 ## [0.4.0] - 2020-03-23
 

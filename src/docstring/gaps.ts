@@ -34,6 +34,12 @@ export function generatedReturn(entities: IEntity[]): TagWithTypes | undefined {
     entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "return") as TagWithTypes | undefined;
 }
 
+// Generated tags of raised exceptions
+export function generatedRaises(entities: IEntity[]): TagWithTypes[] {
+  return entities.filter((entity) =>
+    entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "raise") as TagWithTypes[];
+}
+
 // Find generated documentation entities a docstring is missing
 export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
   const tagged = (tag: string) => items.filter((item) => item.tag === tag);
