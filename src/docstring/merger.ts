@@ -2,7 +2,7 @@
 import { Raw } from "../entities/raw";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { IEntity } from "../types";
-import { generatedAbstract, generatedRaises, generatedReturn, generatedYield, isRaiseDocumented } from "./gaps";
+import { generatedRaises, generatedReturn, generatedTextTag, generatedYield, isRaiseDocumented } from "./gaps";
 import { bareName, paramNameBeforeType, sameName } from "./names";
 import { IDocItem } from "./parser";
 
@@ -12,10 +12,10 @@ export interface IMergeSpacers {
   separateTags: boolean;
 }
 
-// Order of tags: abstract tag, then params with options, then yield section, then raised exceptions,
+// Order of tags: abstract and deprecated tags, then params with options, then yield section, then raised exceptions,
 // then return value. Other tags aren't ranked.
 const tagRanks: { [tag: string]: number } = {
-  abstract: 0, option: 1, param: 1, raise: 3, return: 4, yield: 2, yieldparam: 2, yieldreturn: 2,
+  abstract: 0, deprecated: 0, option: 1, param: 1, raise: 3, return: 4, yield: 2, yieldparam: 2, yieldreturn: 2,
 };
 
 // Part of a merged docstring: an existing item or a new entity
@@ -53,7 +53,8 @@ export class DocstringMerger {
     this.descriptionEndsWithText = description.length > 0 && !this.isBlank(description[description.length - 1]);
 
     let segments = this.mergeParams(tags);
-    segments = this.mergeAbstract(segments);
+    segments = this.mergeTextTag(segments, "abstract");
+    segments = this.mergeTextTag(segments, "deprecated");
     segments = this.mergeYield(segments);
     segments = this.mergeRaises(segments);
     segments = this.mergeReturn(segments);
@@ -112,10 +113,10 @@ export class DocstringMerger {
     return segments;
   }
 
-  // Add abstract tag if it's missing
-  private mergeAbstract(segments: ISegment[]): ISegment[] {
-    const generated = generatedAbstract(this.entities);
-    if (!generated || segments.some((s) => s.item?.tag === "abstract")) { return segments; }
+  // Add a text only tag if it's missing: @abstract, @deprecated
+  private mergeTextTag(segments: ISegment[], tagName: string): ISegment[] {
+    const generated = generatedTextTag(this.entities, tagName);
+    if (!generated || segments.some((s) => s.item?.tag === tagName)) { return segments; }
     return this.insertGroup(segments, [{ entity: generated, rank: 0 }], 0);
   }
 

@@ -12,6 +12,8 @@ import { IDocItem } from "./parser";
 export interface IDocGaps {
   // Undocumented abstract method
   abstractTag?: Tag;
+  // Undocumented deprecated method
+  deprecatedTag?: Tag;
   // Undocumented params with their options
   params: TagWithOptions[];
   // Undocumented options of documented params
@@ -26,9 +28,9 @@ export interface IDocGaps {
   returnTag?: TagWithTypes;
 }
 
-// Generated abstract tag
-export function generatedAbstract(entities: IEntity[]): Tag | undefined {
-  return entities.find((entity) => entity.type === "Tag" && (entity as Tag).tagName === "abstract") as Tag | undefined;
+// Generated tag of a text only: @abstract, @deprecated
+export function generatedTextTag(entities: IEntity[], tagName: string): Tag | undefined {
+  return entities.find((entity) => entity.type === "Tag" && (entity as Tag).tagName === tagName) as Tag | undefined;
 }
 
 // Generated yield section
@@ -72,8 +74,10 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
     }
   }
 
-  const abstractTag = generatedAbstract(entities);
+  const abstractTag = generatedTextTag(entities, "abstract");
   if (abstractTag && tagged("abstract").length === 0) { gaps.abstractTag = abstractTag; }
+  const deprecatedTag = generatedTextTag(entities, "deprecated");
+  if (deprecatedTag && tagged("deprecated").length === 0) { gaps.deprecatedTag = deprecatedTag; }
 
   const returnTag = generatedReturn(entities);
   if (returnTag && tagged("return").length === 0) { gaps.returnTag = returnTag; }

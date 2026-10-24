@@ -187,6 +187,13 @@ suite("Default Documenter Tests", () => {
     "method/abstract/not_abstract",
     "method/abstract/update",
     "method/abstract/up_to_date",
+    "method/deprecated/warn",
+    "method/deprecated/category",
+    "method/deprecated/deprecator",
+    "method/deprecated/active_support",
+    "method/deprecated/not_deprecated",
+    "method/deprecated/update",
+    "method/deprecated/update_abstract",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -245,6 +252,7 @@ suite("Curt Documenter Tests", () => {
     "curt/update",
     "curt/raise",
     "curt/abstract",
+    "curt/deprecated",
     "curt/constant",
     "curt/attribute",
   ];
@@ -426,6 +434,11 @@ suite("Tags Completion Tests", () => {
     const abstract = items.find((item) => item.label === "@abstract");
     assert.ok(abstract);
     assert.equal((abstract.insertText as SnippetString).value, "@abstract ${1:<description>}");
+  });
+
+  test("complete deprecated tag of a method warning about deprecation", async () => {
+    const items = await yardCompletions("completion/deprecated", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@deprecated", "@return"]);
   });
 
   test("complete parts missing in documented sections", async () => {

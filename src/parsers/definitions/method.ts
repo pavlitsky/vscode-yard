@@ -4,6 +4,7 @@ import type { BlockParameterNode, DefNode, HashNode, KeywordRestParameterNode, N
 import type { ParseError } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
 import { isNode, nodeType } from "../../ast/prism";
 import { AbstractTag } from "../../tags/abstract";
+import { DeprecatedTag } from "../../tags/deprecated";
 import { DescriptionTag } from "../../tags/description";
 import { OptionTag } from "../../tags/option";
 import { ParamTag } from "../../tags/param";
@@ -14,6 +15,7 @@ import { YieldParamTag } from "../../tags/yield_param";
 import { YieldReturnTag } from "../../tags/yield_return";
 import { IEntity, IParseContext } from "../../types";
 import { BlockUsage } from "../block_usage";
+import { DeprecationUsage } from "../deprecation_usage";
 import { OptionsUsage } from "../options_usage";
 import { RaiseUsage } from "../raise_usage";
 import { IBaseParser } from "./base_parser";
@@ -45,6 +47,7 @@ export default class MethodDef implements IBaseParser {
     return [
       this.buildDescription(),
       this.buildAbstract(),
+      this.buildDeprecated(),
       ...this.buildParams(context),
       this.buildYield(context),
       ...this.buildRaises(context),
@@ -83,6 +86,12 @@ export default class MethodDef implements IBaseParser {
   private buildAbstract(): IEntity | undefined {
     if (!(new RaiseUsage(this.def.body)).isAbstract()) { return; }
     return new AbstractTag();
+  }
+
+  // Build deprecated tag if the method warns about its deprecation
+  private buildDeprecated(): IEntity | undefined {
+    if (!(new DeprecationUsage(this.def.body)).detect()) { return; }
+    return new DeprecatedTag();
   }
 
   // Build params section, block param is documented with a yield section if blocks are documented

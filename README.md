@@ -18,6 +18,7 @@ It's able to document:
 * Blocks accepted by methods (optional, see `yard.tags.yield` setting).
 * Exceptions raised in methods (optional, see `yard.tags.raise` setting).
 * Abstract methods raising `NotImplementedError`.
+* Deprecated methods warning about their deprecation.
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
@@ -78,8 +79,8 @@ as they're written, missing tags are added as placeholders:
 
 * Params are reordered to match the method signature. A param which no longer exists is
   renamed if a new param takes its place, otherwise it's removed.
-* Missing `@abstract`, `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn`, `@raise` and `@return` tags
-  are added.
+* Missing `@abstract`, `@deprecated`, `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn`, `@raise`
+  and `@return` tags are added.
   Documented exceptions are kept even if a method doesn't raise them.
 * New tags follow the params style of the existing documentation.
 
@@ -194,7 +195,7 @@ Source code is parsed with [Prism](https://github.com/ruby/prism), the Ruby's ow
 so definitions spanning multiple lines and any Ruby syntax are supported.
 Requires VS Code 1.90 or newer.
 
-List of generated tags: `@abstract`, `@author`, `@option`, `@param`, `@raise`, `@return`, `@yield`,
+List of generated tags: `@abstract`, `@author`, `@deprecated`, `@option`, `@param`, `@raise`, `@return`, `@yield`,
 `@yieldparam`, `@yieldreturn`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
@@ -292,6 +293,26 @@ an `@abstract` tag, `NotImplementedError` isn't listed with `@raise` then:
 #
 def call(request)
   raise NotImplementedError, "#{self.class} must implement #{__method__}"
+end
+```
+
+A method warning about its deprecation is documented with a `@deprecated` tag. Deprecation warnings
+are `warn` calls with a message mentioning a deprecation or with `category: :deprecated`, and `warn`
+calls of deprecators like `ActiveSupport::Deprecation.warn` or `MyGem.deprecator.warn`:
+
+```ruby
+#
+# <Description>
+#
+# @deprecated <description>
+#
+# @param url [<Type>] <description>
+#
+# @return [<Type>] <description>
+#
+def old_fetch(url)
+  warn "old_fetch is deprecated, use fetch instead"
+  fetch(url)
 end
 ```
 
