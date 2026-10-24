@@ -1,5 +1,5 @@
 "use strict";
-import type { BlockParameterNode, DefNode, HashNode, KeywordRestParameterNode, Node }
+import type { BlockParameterNode, DefNode, HashNode, KeywordRestParameterNode, Node, ParametersNode }
   from "@ruby/prism" with { "resolution-mode": "import" };
 import { isNode, nodeType } from "../../ast/prism";
 import { AbstractTag } from "../../tags/abstract";
@@ -68,9 +68,9 @@ export default class MethodDef implements IBaseParser {
   private readonly anonymousTypes = ["BlockParameterNode", "KeywordRestParameterNode", "RestParameterNode"];
 
   // Existing method documentation is synced with the method
-  public readonly supportsUpdate = true;
+  public readonly supportsUpdate: boolean = true;
 
-  constructor(private node: Node, private site: IDefinitionSite = {}) {}
+  constructor(protected node: Node, protected site: IDefinitionSite = {}) {}
 
   // Is this parser ready to process the node
   public isApplicable(): boolean {
@@ -79,7 +79,7 @@ export default class MethodDef implements IBaseParser {
 
   // Parse documentation tree. Types are taken from a Sorbet or an rbs-inline signature if there's one.
   public parse(context: IParseContext = {}): IEntity[] {
-    const signature = methodSignature(this.def, this.site.previous ?? null, context.comments || []);
+    const signature = methodSignature(this.parameters, this.site.previous ?? null, context.comments || []);
     return [
       this.buildDescription(),
       this.buildAbstract(signature),
@@ -110,13 +110,28 @@ export default class MethodDef implements IBaseParser {
 
   // Classes of exceptions raised in the method body, NotImplementedError of an abstract method isn't listed
   public raises(): string[] {
-    const usage = new RaiseUsage(this.def.body);
+    const usage = new RaiseUsage(this.body);
     return usage.isAbstract() ? [] : usage.detect();
   }
 
   // Method definition node
   private get def(): DefNode {
     return this.node as DefNode;
+  }
+
+  // Params of the method
+  protected get parameters(): ParametersNode | null {
+    return this.def.parameters;
+  }
+
+  // Body of the method
+  protected get body(): Node | null {
+    return this.def.body;
+  }
+
+  // Name of the method
+  protected get methodName(): string {
+    return this.def.name;
   }
 
   // Build description section
@@ -126,13 +141,13 @@ export default class MethodDef implements IBaseParser {
 
   // Build abstract tag if the method only raises NotImplementedError or it's declared abstract by its signature
   private buildAbstract(signature?: ISignature): IEntity | undefined {
-    if (!signature?.abstract && !(new RaiseUsage(this.def.body)).isAbstract()) { return; }
+    if (!signature?.abstract && !(new RaiseUsage(this.body)).isAbstract()) { return; }
     return new AbstractTag();
   }
 
   // Build deprecated tag if the method warns about its deprecation
   private buildDeprecated(): IEntity | undefined {
-    if (!(new DeprecationUsage(this.def.body)).detect()) { return; }
+    if (!(new DeprecationUsage(this.body)).detect()) { return; }
     return new DeprecatedTag();
   }
 
@@ -170,7 +185,7 @@ export default class MethodDef implements IBaseParser {
     if (!context.blocks) { return; }
     const blockParam = this.params().find((param) => isNode(param, "BlockParameterNode")) as BlockParameterNode;
     const blockName = blockParam ? blockParam.name || undefined : undefined;
-    const usage = (new BlockUsage(this.def.body, blockParam !== undefined, blockName)).detect();
+    const usage = (new BlockUsage(this.body, blockParam !== undefined, blockName)).detect();
     if (!usage.usesBlock) { return; }
     const block = signature?.block;
     const yieldParams = usage.params.map((name, index) => new YieldParamTag({
@@ -187,14 +202,18 @@ export default class MethodDef implements IBaseParser {
 
   // Build return section
   private buildReturn(signature?: ISignature): IEntity | undefined {
-    if (this.def.name === "initialize") { return; }
-    const typesPlaceholder = (new ReturnUsage(this.def.body)).detect() || this.returnTypesPlaceholder();
-    return new ReturnTag({ types: signature?.returns ?? "", typesPlaceholder });
+    if (this.methodName === "initialize") { return; }
+    return new ReturnTag({ types: signature?.returns ?? "", typesPlaceholder: this.returnTypesPlaceholder() });
   }
 
-  // Return types placeholder of a conventional method, empty if return type is unknown
-  private returnTypesPlaceholder(): string {
-    const name = this.def.name;
+  // Return types placeholder: types of returned literals or types of a conventional method, empty if it's unknown
+  protected returnTypesPlaceholder(): string {
+    return (new ReturnUsage(this.body)).detect() || this.conventionalReturnTypes();
+  }
+
+  // Return types of a conventional method, empty if return type is unknown
+  private conventionalReturnTypes(): string {
+    const name = this.methodName;
     if (Object.prototype.hasOwnProperty.call(this.returnTypesPlaceholders, name)) {
       return this.returnTypesPlaceholders[name];
     }
@@ -208,7 +227,7 @@ export default class MethodDef implements IBaseParser {
     const isKeywordRest = isNode<KeywordRestParameterNode>(param, "KeywordRestParameterNode") && !!param.name;
     if (!isHash && !isKeywordRest) { return []; }
     const paramName = String((param as KeywordRestParameterNode).name);
-    const options = (new OptionsUsage(paramName, value, this.def.body)).detect()
+    const options = (new OptionsUsage(paramName, value, this.body)).detect()
       .map(({ key, defaultValue, types }) => new OptionTag({ paramName, key, defaultValue, typesPlaceholder: types }));
     if (options.length === 0 && isHash && value.elements.length === 0) {
       return this.seedOptions(paramName);
@@ -223,7 +242,7 @@ export default class MethodDef implements IBaseParser {
 
   // List method params in order of appearance
   private params(): Node[] {
-    const params = this.def.parameters;
+    const params = this.parameters;
     if (!params) { return []; }
     return [
       ...params.requireds, ...params.optionals, params.rest, ...params.posts,

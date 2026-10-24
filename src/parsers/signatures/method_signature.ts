@@ -1,5 +1,5 @@
 "use strict";
-import type { DefNode, Node } from "@ruby/prism" with { "resolution-mode": "import" };
+import type { Node, ParametersNode } from "@ruby/prism" with { "resolution-mode": "import" };
 import { nodeType } from "../../ast/prism";
 import { RbsParser } from "./rbs";
 import { ISignature, joinTypes } from "./signature";
@@ -21,14 +21,15 @@ export function annotationLinesCount(comments: string[]): number {
 
 // Signature of a method: Sorbet sig preceding the method, or rbs-inline annotations in comments above it.
 // Types of splat params are types of their elements.
-export function methodSignature(def: DefNode, previous: Node | null, comments: string[]): ISignature | undefined {
+export function methodSignature(params: ParametersNode | null, previous: Node | null, comments: string[]):
+  ISignature | undefined {
   if (isSig(previous)) { return (new SorbetSignature(previous)).parse(); }
-  const signature = rbsMethodSignature(def, comments);
+  const signature = rbsMethodSignature(params, comments);
   return rbsParamsSignature(comments, signature);
 }
 
 // Signature of a single rbs-inline method type annotation, overloads aren't read
-function rbsMethodSignature(def: DefNode, comments: string[]): ISignature | undefined {
+function rbsMethodSignature(params: ParametersNode | null, comments: string[]): ISignature | undefined {
   const annotations = comments.slice(comments.length - annotationLinesCount(comments));
   const methodTypes = annotations.map((line) => (ANNOTATION_PATTERN.exec(line) as RegExpExecArray)[1])
     .concat(comments.flatMap((line) => {
@@ -40,7 +41,6 @@ function rbsMethodSignature(def: DefNode, comments: string[]): ISignature | unde
   if (!methodType) { return; }
 
   const signature: ISignature = { params: {}, returns: methodType.returns };
-  const params = def.parameters;
   if (params) {
     // Leading required positionals are requireds, trailing ones after optionals or splat are posts
     const firstOther = methodType.positionals.findIndex((param) => param.kind !== "required");

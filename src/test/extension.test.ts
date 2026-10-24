@@ -223,6 +223,26 @@ suite("Default Documenter Tests", () => {
     "method/rbs/rbs_params",
     "method/rbs/overloads",
     "method/rbs/malformed",
+    "directive/define_method",
+    "directive/define_singleton_method",
+    "directive/define_method_no_block",
+    "directive/delegate",
+    "directive/delegate_prefix",
+    "directive/def_delegators",
+    "directive/def_delegator",
+    "directive/scope",
+    "directive/scope_lambda",
+    "directive/has_many",
+    "directive/has_many_irregular",
+    "directive/belongs_to",
+    "directive/has_one",
+    "directive/polymorphic",
+    "directive/struct",
+    "directive/data",
+    "directive/struct_superclass",
+    "directive/data_superclass",
+    "directive/documented",
+    "directive/not_a_delegate",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -294,6 +314,7 @@ suite("Curt Documenter Tests", () => {
     "curt/raise",
     "curt/abstract",
     "curt/deprecated",
+    "curt/struct",
     "curt/constant",
     "curt/attribute",
   ];
@@ -401,6 +422,7 @@ suite("Blocks Documenter Tests", () => {
     "method/yield/raise",
     "method/yield/sorbet",
     "method/yield/rbs",
+    "method/yield/define_method",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });

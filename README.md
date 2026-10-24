@@ -22,6 +22,9 @@ It's able to document:
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
+* Struct and Data classes (`Point = Struct.new(:x, :y)`, `Point = Data.define(:x, :y)`).
+* Methods and attributes YARD doesn't see, with `@!method` and `@!attribute` directives:
+  `define_method`, delegated methods (`delegate`, `def_delegators`), Rails scopes and associations.
 
 Methods named in ASCII and Japanese are supported.
 
@@ -115,7 +118,7 @@ def fetch(url, timeout, retries = 3)
 end
 ```
 
-Documentation of classes, modules, constants and attributes isn't updated.
+Documentation of classes, modules, constants, attributes and directives isn't updated.
 
 ### Tags completion
 
@@ -195,8 +198,9 @@ Source code is parsed with [Prism](https://github.com/ruby/prism), the Ruby's ow
 so definitions spanning multiple lines and any Ruby syntax are supported.
 Requires VS Code 1.90 or newer.
 
-List of generated tags: `@abstract`, `@author`, `@deprecated`, `@option`, `@param`, `@raise`, `@return`, `@yield`,
-`@yieldparam`, `@yieldreturn`.
+List of generated tags: `@abstract`, `@attr`, `@attr_reader`, `@author`, `@deprecated`, `@option`,
+`@param`, `@raise`, `@return`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
+`@!attribute`, `@!method`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
 of the repository the document belongs to, or from global git config if it's outside
@@ -377,6 +381,45 @@ def old_fetch(url)
   warn "old_fetch is deprecated, use fetch instead"
   fetch(url)
 end
+```
+
+### Directives
+
+Methods and attributes defined by calls aren't seen by YARD unless they're documented with
+`@!method` and `@!attribute` directives, their documentation is nested in a directive:
+
+```ruby
+# @!method greet(name, greeting = "Hello")
+#   <Description>
+#   @param name [<Type>] <description>
+#   @param greeting [String] <description>
+#   @return [String] <description>
+define_method(:greet) do |name, greeting = "Hello"|
+  "#{greeting}, #{name}"
+end
+```
+
+* `define_method` and `define_singleton_method` with a block or a lambda are documented the same way
+  methods are.
+* Each method delegated with Rails `delegate` (including its `prefix:` option) and Forwardable's
+  `def_delegators` and `def_delegator` gets its own `@!method` directive.
+* Rails `scope` is documented as a class method returning `ActiveRecord::Relation`.
+* Rails `has_many`, `has_one`, `belongs_to` and `has_and_belongs_to_many` are documented with
+  `@!attribute [rw]` directives. Their types are guessed from association names or `class_name:`
+  options: `has_many :categories` returns `ActiveRecord::Associations::CollectionProxy<Category>`,
+  `belongs_to :author, class_name: "User", optional: true` returns `User, nil`.
+
+Struct and Data classes assigned to constants are documented as classes, YARD reads types of their
+members from `@attr` and `@attr_reader` tags. `class Point < Struct.new(:x, :y)` gets `@attr` tags too:
+
+```ruby
+#
+# <Description>
+#
+# @attr x [<Type>] <description>
+# @attr y [<Type>] <description>
+#
+Point = Struct.new(:x, :y)
 ```
 
 ## Configuration

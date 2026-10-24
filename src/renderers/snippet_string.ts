@@ -1,6 +1,7 @@
 "use strict";
 import { SnippetString, workspace, WorkspaceConfiguration } from "vscode";
 import { Author } from "../entities/author";
+import { Directive } from "../entities/directive";
 import { Raw } from "../entities/raw";
 import { Tag } from "../entities/tag";
 import { TagOption } from "../entities/tag_option";
@@ -59,6 +60,7 @@ export class Renderer {
       case("Raw"): this.rawEntity(entity as Raw); break;
       case("Tag"): this.tagEntity(entity as Tag); break;
       case("Author"): this.authorEntity(entity as Author); break;
+      case("Directive"): this.directiveEntity(entity as Directive); break;
       case("TagOption"): this.tagOptionEntity(entity as TagOption); break;
       case("TagWithOptions"): this.tagWithOptionsEntity(entity as TagWithOptions); break;
       case("TagWithTypes"): this.tagWithTypesEntity(entity as TagWithTypes); break;
@@ -84,6 +86,19 @@ export class Renderer {
     this.snippet.appendText("@" + entity.tagName + " ");
     this.textOrPlaceholder(entity.text, "<description>");
     this.spacer.endOfLine();
+  }
+
+  // Render a directive line followed by its nested documentation indented without spacers
+  // @!directiveName signature
+  //   <Description>
+  private directiveEntity(entity: Directive) {
+    this.snippet.appendText("@!" + entity.directiveName + " " + entity.signature);
+    this.spacer.endOfLine();
+    const start = this.snippet.value.length;
+    entity.entities.forEach((nested) => { if (this.shouldRenderEntity(nested)) { this.renderEntity(nested); } });
+    const nested = this.snippet.value.slice(start).split(this.eol)
+      .map((line) => line ? "  " + line : line).join(this.eol);
+    this.snippet.value = this.snippet.value.slice(0, start) + nested;
   }
 
   // Render an @option tag line

@@ -29,6 +29,9 @@
   literal values.
 - Fill in types declared by Sorbet signatures (`sig { params(...).returns(...) }`) and rbs-inline annotations
   (`#: (String) -> bool`, `# @rbs name: String`). Documentation is placed above `sig` and above `#:` annotations.
+- Document methods and attributes YARD doesn't see with `@!method` and `@!attribute` directives: `define_method`,
+  `delegate`, `def_delegators`, Rails scopes and associations.
+- Document members of Struct and Data classes with `@attr` and `@attr_reader` tags.
 
 ## [0.4.0] - 2020-03-23
 
