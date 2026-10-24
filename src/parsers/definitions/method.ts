@@ -12,6 +12,7 @@ import { YieldReturnTag } from "../../tags/yield_return";
 import { IEntity, IParseContext } from "../../types";
 import { BlockUsage } from "../block_usage";
 import { OptionsUsage } from "../options_usage";
+import { RaiseUsage } from "../raise_usage";
 import { IBaseParser } from "./base_parser";
 
 // Parse a class or an instance method definition into documentation entities
@@ -41,6 +42,11 @@ export default class MethodDef implements IBaseParser {
       .concat(this.buildYield(context))
       .concat(this.buildReturn())
       .filter((element) => element !== undefined);
+  }
+
+  // Classes of exceptions raised in the method body
+  public raises(): string[] {
+    return (new RaiseUsage(this.def.body)).detect();
   }
 
   // Method definition node

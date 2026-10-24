@@ -2,23 +2,38 @@
 import * as assert from "assert";
 import { readFileSync } from "fs";
 import * as path from "path";
-import { commands, ConfigurationTarget, extensions, Selection, TextDocument, TextEditor, Uri, window, workspace,
-  WorkspaceConfiguration } from "vscode";
+import { commands, CompletionItem, CompletionItemKind, CompletionList, ConfigurationTarget, extensions, Position,
+  Selection, SnippetString, TextDocument, TextEditor, Uri, window, workspace, WorkspaceConfiguration } from "vscode";
 
 const extensionID = "pavlitsky.yard";
 const extensionPath = extensions.getExtension(extensionID).extensionPath;
 const projectPath = path.join(extensionPath, "src", "test", "project");
 const workspacePath = path.join(extensionPath, "out", "test");
 
-// Update extension configuration with specified options
+// Update extension configuration with specified options grouped by sections: spacers, tags etc.
 async function updateConfig(options) {
   const config = workspace.getConfiguration("yard");
-  for (const key of Object.keys(options.spacers)) {
-    await config.update("spacers." + key, options.spacers[key]);
+  for (const section of Object.keys(options)) {
+    for (const key of Object.keys(options[section])) {
+      await config.update(section + "." + key, options[section][key]);
+    }
   }
-  for (const key of Object.keys(options.tags)) {
-    await config.update("tags." + key, options.tags[key]);
-  }
+}
+
+// Request completions at a position of a file and return items provided by the extension
+async function yardCompletions(fileName: string, line: number, character: number): Promise<CompletionItem[]> {
+  const uri = Uri.file(path.join(projectPath, fileName + ".rb"));
+  await workspace.openTextDocument(uri);
+  const list = await commands.executeCommand<CompletionList>("vscode.executeCompletionItemProvider", uri,
+    new Position(line, character));
+  return list.items
+    .filter((item) => typeof item.detail === "string" && item.detail.startsWith("YARD"))
+    .sort((a, b) => a.sortText.localeCompare(b.sortText));
+}
+
+// Labels of completion items missing in documentation, they're sorted before standard tags
+function missingTagLabels(items: CompletionItem[]): string[] {
+  return items.filter((item) => item.kind !== CompletionItemKind.Keyword).map((item) => item.label as string);
 }
 
 // Assert that processed file contains the same result as expected file.
@@ -352,6 +367,93 @@ suite("Curt Blocks Documenter Tests", () => {
 
   suiteSetup(async () => { await updateConfig(configOptions); });
   expectDocumented(testCases);
+});
+
+suite("Tags Completion Tests", () => {
+  const configOptions = {
+    completion: {
+      enabled: true,
+    },
+    spacers: {
+      afterDescription: true,
+      afterSingleTag: false,
+      afterTags: true,
+      beforeDescription: true,
+      beforeSingleTag: false,
+      beforeTags: true,
+      separateTags: true,
+    },
+    tags: {
+      author: true,
+      authorFromGit: true,
+      paramNameBeforeType: false,
+      yield: false,
+    },
+  };
+
+  // Git config passed through environment overrides repository, global and system configs
+  const gitEnv = {
+    GIT_CONFIG_COUNT: "2",
+    GIT_CONFIG_KEY_0: "user.name",
+    GIT_CONFIG_KEY_1: "user.email",
+    GIT_CONFIG_VALUE_0: "Test User",
+    GIT_CONFIG_VALUE_1: "test@example.com",
+  };
+
+  suiteSetup(async () => {
+    await updateConfig(configOptions);
+    Object.assign(process.env, gitEnv);
+  });
+  suiteTeardown(() => {
+    Object.keys(gitEnv).forEach((key) => delete process.env[key]);
+  });
+
+  test("complete tags missing in method documentation", async () => {
+    const items = await yardCompletions("completion/method", 3, 3);
+    assert.deepEqual(missingTagLabels(items), [
+      "@param retries", "@param opts", "@yield [response]", "@return", "@raise [ArgumentError]", "@raise [RuntimeError]",
+    ]);
+    const param = items.find((item) => item.label === "@param opts");
+    assert.equal((param.insertText as SnippetString).value,
+      "@param [${1:<Type>}] opts ${2:<description>}\n# @option opts [${3:<Type>}] :timeout (5) ${4:<description>}");
+    assert.ok(items.some((item) => item.label === "@note" && item.kind === CompletionItemKind.Keyword));
+  });
+
+  test("complete parts missing in documented sections", async () => {
+    const items = await yardCompletions("completion/gaps", 5, 3);
+    assert.deepEqual(missingTagLabels(items), ["@option opts :timeout", "@yieldparam value", "@yieldreturn"]);
+  });
+
+  test("complete author of a class", async () => {
+    const items = await yardCompletions("completion/class", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@author Test User <test@example.com>"]);
+  });
+
+  test("complete names after tags", async () => {
+    assert.deepEqual(missingTagLabels(await yardCompletions("completion/names", 1, 9)), ["retries", "opts"]);
+    assert.deepEqual(missingTagLabels(await yardCompletions("completion/names", 2, 9)), ["[ArgumentError]"]);
+    const options = await yardCompletions("completion/names", 3, 10);
+    assert.deepEqual(missingTagLabels(options), ["opts :timeout"]);
+    assert.equal((options[0].insertText as SnippetString).value,
+      "opts [${1:<Type>}] :timeout (5) ${2:<description>}");
+  });
+
+  test("complete only standard tags in a comment not documenting a definition", async () => {
+    const items = await yardCompletions("completion/not_comment", 0, 3);
+    assert.deepEqual(missingTagLabels(items), []);
+    assert.ok(items.length > 0);
+  });
+
+  test("don't complete outside of whole line comments", async () => {
+    assert.deepEqual(await yardCompletions("completion/not_comment", 3, 13), []);
+    assert.deepEqual(await yardCompletions("completion/not_comment", 4, 7), []);
+  });
+
+  test("don't complete if disabled", async () => {
+    await updateConfig({ completion: { enabled: false } });
+    assert.deepEqual(await yardCompletions("completion/method", 3, 3), []);
+    await updateConfig({ completion: { enabled: true } });
+  });
 });
 
 suite("Extension Tests", () => {

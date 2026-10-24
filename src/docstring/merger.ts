@@ -4,6 +4,7 @@ import { TagWithOptions } from "../entities/tag_with_options";
 import { TagWithTypes } from "../entities/tag_with_types";
 import { Yield } from "../entities/yield";
 import { IEntity } from "../types";
+import { bareName, paramNameBeforeType, sameName } from "./names";
 import { IDocItem } from "./parser";
 
 // Blank lines settings applied to inserted tags
@@ -37,8 +38,7 @@ export class DocstringMerger {
 
   // Params style of the existing docstring: is name written before types, undefined if it's unknown
   public get paramNameBeforeType(): boolean | undefined {
-    const item = this.items.find((i) => i.nameFirst !== undefined);
-    return item ? item.nameFirst : undefined;
+    return paramNameBeforeType(this.items);
   }
 
   // Merge docstring into a list of entities to render
@@ -69,16 +69,16 @@ export class DocstringMerger {
     const generated = this.entities.filter((entity) => entity.type === "TagWithOptions") as TagWithOptions[];
     const paramItems = tags.filter((item) => item.tag === "param");
     const optionItems = tags.filter((item) => item.tag === "option");
-    const isDocumented = (item: IDocItem) => generated.some((param) => this.sameName(item.name, param.name));
+    const isDocumented = (item: IDocItem) => generated.some((param) => sameName(item.name, param.name));
     const used: IDocItem[] = [];
     const group: ISegment[] = [];
 
     generated.forEach((param, index) => {
-      let item = paramItems.find((i) => this.sameName(i.name, param.name));
+      let item = paramItems.find((i) => sameName(i.name, param.name));
       const stale = paramItems[index];
       if (!item && stale && stale.name && !isDocumented(stale)) { item = stale; }
-      const isRenamed = item && !this.sameName(item.name, param.name);
-      const options = optionItems.filter((option) => this.sameName(option.name, item ? item.name : param.name));
+      const isRenamed = item && !sameName(item.name, param.name);
+      const options = optionItems.filter((option) => sameName(option.name, item ? item.name : param.name));
       used.push(...(item ? [item] : []), ...options);
 
       if (item) {
@@ -87,7 +87,7 @@ export class DocstringMerger {
         group.push({ entity: new TagWithOptions({ ...param, options: [] } as TagWithOptions), rank: 1 });
       }
       options.forEach((option) => group.push({
-        item: isRenamed ? this.renamed(option, "option", this.bareName(param.name)) : option, rank: 1,
+        item: isRenamed ? this.renamed(option, "option", bareName(param.name)) : option, rank: 1,
       }));
       const keys = options.map((option) => option.key);
       param.options
@@ -170,16 +170,6 @@ export class DocstringMerger {
     const pattern = new RegExp("^(@" + tag + "\\s+(?:\\[[^\\]]*\\]\\s*)?)" + escaped);
     const [first, ...rest] = item.lines;
     return { ...item, name, lines: [first.replace(pattern, "$1" + name), ...rest] };
-  }
-
-  // Do param names match ignoring splat and block sigils
-  private sameName(name: string | undefined, other: string | undefined): boolean {
-    return !!name && !!other && this.bareName(name) === this.bareName(other);
-  }
-
-  // Param name without splat and block sigils
-  private bareName(name: string): string {
-    return name.replace(/^(?:\*\*|\*|&)/, "");
   }
 
   // Is item a blank text line

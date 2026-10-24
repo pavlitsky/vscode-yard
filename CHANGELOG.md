@@ -13,6 +13,9 @@
   in a method body, including keyword splats (`**opts`).
 - Update existing documentation of methods with the same command: sync params with the method signature
   and add missing tags, keeping written texts and tags. Command also works with cursor within a comment.
+- Complete YARD tags in comments, tags missing in documentation of a definition below are offered first.
+  Names are completed after `@param`, `@yieldparam`, `@option` and `@raise` tags. Can be disabled with
+  `yard.completion.enabled` setting.
 
 ## [0.4.0] - 2020-03-23
 

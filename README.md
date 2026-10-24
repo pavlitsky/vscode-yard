@@ -22,6 +22,8 @@ It's able to document:
 
 Methods named in ASCII and Japanese are supported.
 
+YARD tags are completed in comments, see [Tags completion](#tags-completion).
+
 ## Usage
 
 Position cursor on a first line of a definition you wish to document.
@@ -109,6 +111,28 @@ end
 ```
 
 Documentation of classes, modules, constants and attributes isn't updated.
+
+### Tags completion
+
+Type `@` in a comment to complete YARD tags. Tags missing in documentation of a definition
+right below the comment are offered first: undocumented params with their options, block
+tags, return value, exceptions raised in a method body, author of a class. Standard YARD
+tags follow them.
+
+```ruby
+# Fetch a resource.
+#
+# @param [String] url resource path
+# @           <- offers @param retries, @param opts, @yield [response], @return,
+#                @raise [ArgumentError], then standard tags like @note, @example
+def fetch(url, retries = 3, opts = { timeout: 5 })
+  raise ArgumentError, "bad url" unless url
+  yield response
+end
+```
+
+Names are completed after a typed tag: undocumented params after `@param `, block values after
+`@yieldparam `, option keys after `@option ` and exception classes after `@raise `.
 
 Another snippets examples, default spacers setup:
 
@@ -237,11 +261,11 @@ a curt and verbose documentation styles.
 "yard.tags.authorFromGit" // Fill @author name and email from git config (user.name and user.email)
 "yard.tags.yield" // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
+"yard.completion.enabled" // Complete YARD tags in comments
 ```
 
 ## TODO
 
-* (maybe) Editor snippets for tags (`@option`, `@param` etc) or tags autocompletion
 * (maybe) A better support for array / keyword args splats, see
   [comment](https://github.com/lsegal/yard/issues/439#issuecomment-3292412).
 

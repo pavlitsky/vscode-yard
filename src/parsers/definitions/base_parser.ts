@@ -7,5 +7,7 @@ export interface IBaseParser {
   // Can existing documentation be updated by this parser
   readonly supportsUpdate?: boolean;
   isApplicable(): boolean;
+  // Classes of exceptions raised by a definition
+  raises?(): string[];
   parse(context?: IParseContext): IEntity[];
 }
