@@ -59,8 +59,8 @@ export default class YardDocumenter {
     return context;
   }
 
-  private updateContext(textEditor?: TextEditor) {
-    this.editor = textEditor || window.activeTextEditor;
+  private updateContext() {
+    this.editor = window.activeTextEditor;
     if (this.editor) {
       this.line = this.editor.document.lineAt(this.editor.selection.active);
       this.eol = this.editor.document.eol === EndOfLine.LF ? "\n" : "\r\n";

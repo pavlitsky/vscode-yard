@@ -9,12 +9,11 @@ import { findGaps, isRaiseDocumented } from "../docstring/gaps";
 import { paramNameBeforeType } from "../docstring/names";
 import { DocstringParser, IDocItem } from "../docstring/parser";
 import { Author } from "../entities/author";
-import { TagOption } from "../entities/tag_option";
-import { TagWithTypes } from "../entities/tag_with_types";
 import { IBaseParser } from "../parsers/definitions/base_parser";
 import { ParserResolver } from "../parsers/resolver";
 import { Renderer } from "../renderers/snippet_string";
 import { GitAuthorResolver } from "../resolvers/git_author";
+import { RaiseTag } from "../tags/raise";
 import { IEntity } from "../types";
 import { yardTags } from "./yard_tags";
 
@@ -25,7 +24,6 @@ const NAME_PATTERN = /^\s*#\s*@(param|yieldparam|option|raise)\s+((?:\[[^\]]*\]\
 
 // Documented definition a completion is requested for
 interface IDefinitionContext {
-  document: TextDocument;
   eol: string;
   parser?: IBaseParser;
   entities: IEntity[];
@@ -71,7 +69,7 @@ export class TagCompletionProvider implements CompletionItemProvider {
       const author = authorFromGit ? await (new GitAuthorResolver(document)).resolve() : undefined;
       entities = parser.parse({ author, blocks: true });
     }
-    return { document, entities, eol, items, paramNameBeforeType: paramNameBeforeType(items), parser };
+    return { entities, eol, items, paramNameBeforeType: paramNameBeforeType(items), parser };
   }
 
   // Tags missing in documentation of the definition
@@ -83,7 +81,7 @@ export class TagCompletionProvider implements CompletionItemProvider {
 
     gaps.params.forEach((param) =>
       add("@param " + param.name, param.options.length ? "Param with options" : "Param", param));
-    gaps.options.forEach((option: TagOption) =>
+    gaps.options.forEach((option) =>
       add("@option " + option.paramName + " :" + option.key, "Option of " + option.paramName, option));
     if (gaps.yieldSection) {
       const names = gaps.yieldSection.yieldParams.map((param) => param.name || "<name>");
@@ -92,8 +90,8 @@ export class TagCompletionProvider implements CompletionItemProvider {
     gaps.yieldParams.forEach((param) => add("@yieldparam " + param.name, "Block param", param));
     if (gaps.yieldReturn) { add("@yieldreturn", "Block return value", gaps.yieldReturn); }
     if (gaps.returnTag) { add("@return", "Return value", gaps.returnTag); }
-    this.raises(context).forEach((exception) => add("@raise [" + exception + "]", "Raised exception",
-      new TagWithTypes({ tagName: "raise", types: exception } as TagWithTypes)));
+    this.raises(context).forEach((exception) =>
+      add("@raise [" + exception + "]", "Raised exception", new RaiseTag({ types: exception })));
     const author = context.entities.find((entity) => entity.type === "Author") as Author;
     if (author && author.authorName && !context.items.some((item) => item.tag === "author")) {
       add("@author " + author.authorName + (author.authorEmail ? " <" + author.authorEmail + ">" : ""), "Author", author);

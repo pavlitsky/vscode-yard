@@ -7,7 +7,7 @@
     "engines": {
         "vscode": "^1.90.0"
     },
-    "lincense": "SEE LICENSE IN LICENSE.txt",
+    "license": "MIT",
     "keywords": [
         "documentation",
         "ruby",
@@ -37,7 +37,6 @@
     },
     "homepage": "https://github.com/pavlitsky/vscode-yard/blob/master/README.md",
     "activationEvents": [
-        "onCommand:extension.generateYard",
         "onLanguage:ruby"
     ],
     "main": "./out/extension.js",

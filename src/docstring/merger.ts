@@ -1,9 +1,8 @@
 "use strict";
 import { Raw } from "../entities/raw";
 import { TagWithOptions } from "../entities/tag_with_options";
-import { TagWithTypes } from "../entities/tag_with_types";
-import { Yield } from "../entities/yield";
 import { IEntity } from "../types";
+import { generatedReturn, generatedYield } from "./gaps";
 import { bareName, paramNameBeforeType, sameName } from "./names";
 import { IDocItem } from "./parser";
 
@@ -115,7 +114,7 @@ export class DocstringMerger {
 
   // Add yield section or its missing parts: named block params and block return value
   private mergeYield(segments: ISegment[]): ISegment[] {
-    const generated = this.entities.find((entity) => entity.type === "Yield") as Yield;
+    const generated = generatedYield(this.entities);
     if (!generated) { return segments; }
     const isYieldTag = (segment: ISegment) => segment.rank === 2;
     if (!segments.some(isYieldTag)) { return this.insertGroup(segments, [{ entity: generated, rank: 2 }], 2); }
@@ -140,8 +139,7 @@ export class DocstringMerger {
 
   // Add return value tag if it's missing
   private mergeReturn(segments: ISegment[]): ISegment[] {
-    const generated = this.entities.find((entity) =>
-      entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "return");
+    const generated = generatedReturn(this.entities);
     if (!generated || segments.some((s) => s.item && s.item.tag === "return")) { return segments; }
     return this.insertGroup(segments, [{ entity: generated, rank: 3 }], 3);
   }

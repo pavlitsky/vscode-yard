@@ -82,9 +82,8 @@ export default class MethodDef implements IBaseParser {
       .map((param) => {
         const name = this.paramName(param);
         const value: Node = "value" in param ? param.value as Node : null;
-        const defaultValue = value ? value.location.slice() : "";
         const typesPlaceholder = this.typesPlaceholders[nodeType(param)] || "";
-        return new ParamTag({ name, defaultValue, options: this.buildOptions(param, value), typesPlaceholder });
+        return new ParamTag({ name, options: this.buildOptions(param, value), typesPlaceholder });
       });
   }
 
@@ -128,12 +127,9 @@ export default class MethodDef implements IBaseParser {
     return options;
   }
 
-  // Build options hash section
+  // Build placeholders of options hash keys
   private seedOptions(paramName: string, count: number = 3): OptionTag[] {
-    const options: OptionTag[] = [];
-    Array.from(Array(count), () =>
-    options.push(new OptionTag({ paramName, defaultValue: undefined })));
-    return options;
+    return Array.from({ length: count }, () => new OptionTag({ paramName }));
   }
 
   // List method params in order of appearance
@@ -154,7 +150,6 @@ export default class MethodDef implements IBaseParser {
     if (type === "MultiTargetNode") {
       return param.location.slice();
     }
-    const name = "name" in param && param.name ? String(param.name) : "";
-    return name;
+    return "name" in param && param.name ? String(param.name) : "";
   }
 }

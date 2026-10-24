@@ -40,8 +40,8 @@ from the command palette.
   #
   # <Description>
   #
-  # @param [<Type>] bar <description>
-  # @param [<Type>] baz <description>
+  # @param bar [<Type>] <description>
+  # @param baz [<Type>] <description>
   #
   # @return [<Type>] <description>
   #
@@ -57,8 +57,8 @@ Use `Tab` and `Shift+Tab` keys to navigate and fill in placeholders.
   #
   # An example instance method description.
   #
-  # @param [Integer] bar first param used for demonstration
-  # @param [Boolean] baz second param with a default value
+  # @param bar [Integer] first param used for demonstration
+  # @param baz [Boolean] second param with a default value
   #
   # @return [nil] nothing returned so it's always nil
   #

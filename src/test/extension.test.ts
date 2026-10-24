@@ -2,13 +2,42 @@
 import * as assert from "assert";
 import { readFileSync } from "fs";
 import * as path from "path";
-import { commands, CompletionItem, CompletionItemKind, CompletionList, ConfigurationTarget, extensions, Position,
-  Selection, SnippetString, TextDocument, TextEditor, Uri, window, workspace, WorkspaceConfiguration } from "vscode";
+import { commands, CompletionItem, CompletionItemKind, CompletionList, extensions, Position, Selection, SnippetString,
+  Uri, window, workspace } from "vscode";
 
 const extensionID = "pavlitsky.yard";
 const extensionPath = extensions.getExtension(extensionID).extensionPath;
 const projectPath = path.join(extensionPath, "src", "test", "project");
-const workspacePath = path.join(extensionPath, "out", "test");
+
+// Spacers settings: default ones, verbose with all empty lines and curt without empty lines
+const defaultSpacers = {
+  afterDescription: true,
+  afterSingleTag: false,
+  afterTags: true,
+  beforeDescription: true,
+  beforeSingleTag: false,
+  beforeTags: true,
+  separateTags: true,
+};
+const verboseSpacers = { ...defaultSpacers, afterSingleTag: true, beforeSingleTag: true };
+const curtSpacers = {
+  afterDescription: false,
+  afterSingleTag: false,
+  afterTags: false,
+  beforeDescription: false,
+  beforeSingleTag: false,
+  beforeTags: false,
+  separateTags: false,
+};
+
+// Git config passed through environment overrides repository, global and system configs
+const gitEnv = {
+  GIT_CONFIG_COUNT: "2",
+  GIT_CONFIG_KEY_0: "user.name",
+  GIT_CONFIG_KEY_1: "user.email",
+  GIT_CONFIG_VALUE_0: "Test User",
+  GIT_CONFIG_VALUE_1: "test@example.com",
+};
 
 // Update extension configuration with specified options grouped by sections: spacers, tags etc.
 async function updateConfig(options) {
@@ -61,23 +90,16 @@ async function waitForSelection(text: string, timeout: number = 2000) {
   assert.fail(`Selection "${text}" expected`);
 }
 
-async function expectDocumented(testCases) {
-  testCases.forEach (async (testCase) => {
-    await test(`document ${testCase}`, async () => await expectFileDocumented(testCase));
+// Register a test for each test case documenting its file
+function expectDocumented(testCases: string[]) {
+  testCases.forEach((testCase) => {
+    test(`document ${testCase}`, () => expectFileDocumented(testCase));
   });
 }
 
 suite("Default Documenter Tests", () => {
   const configOptions = {
-    spacers: {
-      afterDescription: true,
-      afterSingleTag: false,
-      afterTags: true,
-      beforeDescription: true,
-      beforeSingleTag: false,
-      beforeTags: true,
-      separateTags: true,
-    },
+    spacers: defaultSpacers,
     tags: {
       author: true,
       authorFromGit: false,
@@ -168,15 +190,7 @@ suite("Default Documenter Tests", () => {
 
 suite("Verbose Documenter Tests", () => {
   const configOptions = {
-    spacers: {
-      afterDescription: true,
-      afterSingleTag: true,
-      afterTags: true,
-      beforeDescription: true,
-      beforeSingleTag: true,
-      beforeTags: true,
-      separateTags: true,
-    },
+    spacers: verboseSpacers,
     tags: {
       author: true,
       authorFromGit: false,
@@ -199,15 +213,7 @@ suite("Verbose Documenter Tests", () => {
 
 suite("Curt Documenter Tests", () => {
   const configOptions = {
-    spacers: {
-      afterDescription: false,
-      afterSingleTag: false,
-      afterTags: false,
-      beforeDescription: false,
-      beforeSingleTag: false,
-      beforeTags: false,
-      separateTags: false,
-    },
+    spacers: curtSpacers,
     tags: {
       author: false,
       authorFromGit: false,
@@ -232,15 +238,7 @@ suite("Curt Documenter Tests", () => {
 
 suite("Special options", () => {
   const configOptions = {
-    spacers: {
-      afterDescription: true,
-      afterSingleTag: false,
-      afterTags: true,
-      beforeDescription: true,
-      beforeSingleTag: false,
-      beforeTags: true,
-      separateTags: true,
-    },
+    spacers: defaultSpacers,
     tags: {
       author: true,
       authorFromGit: false,
@@ -259,30 +257,13 @@ suite("Special options", () => {
 
 suite("Author from git", () => {
   const configOptions = {
-    spacers: {
-      afterDescription: true,
-      afterSingleTag: false,
-      afterTags: true,
-      beforeDescription: true,
-      beforeSingleTag: false,
-      beforeTags: true,
-      separateTags: true,
-    },
+    spacers: defaultSpacers,
     tags: {
       author: true,
       authorFromGit: true,
       paramNameBeforeType: true,
       yield: false,
     },
-  };
-
-  // Git config passed through environment overrides repository, global and system configs
-  const gitEnv = {
-    GIT_CONFIG_COUNT: "2",
-    GIT_CONFIG_KEY_0: "user.name",
-    GIT_CONFIG_KEY_1: "user.email",
-    GIT_CONFIG_VALUE_0: "Test User",
-    GIT_CONFIG_VALUE_1: "test@example.com",
   };
 
   const testCases = [
@@ -302,15 +283,7 @@ suite("Author from git", () => {
 
 suite("Blocks Documenter Tests", () => {
   const configOptions = {
-    spacers: {
-      afterDescription: true,
-      afterSingleTag: false,
-      afterTags: true,
-      beforeDescription: true,
-      beforeSingleTag: false,
-      beforeTags: true,
-      separateTags: true,
-    },
+    spacers: defaultSpacers,
     tags: {
       author: false,
       authorFromGit: false,
@@ -353,15 +326,7 @@ suite("Blocks Documenter Tests", () => {
 
 suite("Curt Blocks Documenter Tests", () => {
   const configOptions = {
-    spacers: {
-      afterDescription: false,
-      afterSingleTag: false,
-      afterTags: false,
-      beforeDescription: false,
-      beforeSingleTag: false,
-      beforeTags: false,
-      separateTags: false,
-    },
+    spacers: curtSpacers,
     tags: {
       author: false,
       authorFromGit: false,
@@ -383,30 +348,13 @@ suite("Tags Completion Tests", () => {
     completion: {
       enabled: true,
     },
-    spacers: {
-      afterDescription: true,
-      afterSingleTag: false,
-      afterTags: true,
-      beforeDescription: true,
-      beforeSingleTag: false,
-      beforeTags: true,
-      separateTags: true,
-    },
+    spacers: defaultSpacers,
     tags: {
       author: true,
       authorFromGit: true,
       paramNameBeforeType: false,
       yield: false,
     },
-  };
-
-  // Git config passed through environment overrides repository, global and system configs
-  const gitEnv = {
-    GIT_CONFIG_COUNT: "2",
-    GIT_CONFIG_KEY_0: "user.name",
-    GIT_CONFIG_KEY_1: "user.email",
-    GIT_CONFIG_VALUE_0: "Test User",
-    GIT_CONFIG_VALUE_1: "test@example.com",
   };
 
   suiteSetup(async () => {

@@ -23,6 +23,17 @@ export interface IDocGaps {
   returnTag?: TagWithTypes;
 }
 
+// Generated yield section
+export function generatedYield(entities: IEntity[]): Yield | undefined {
+  return entities.find((entity) => entity.type === "Yield") as Yield;
+}
+
+// Generated return value tag
+export function generatedReturn(entities: IEntity[]): TagWithTypes | undefined {
+  return entities.find((entity) =>
+    entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "return") as TagWithTypes;
+}
+
 // Find generated documentation entities a docstring is missing
 export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
   const tagged = (tag: string) => items.filter((item) => item.tag === tag);
@@ -35,21 +46,20 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
     yieldParams: [],
   };
 
-  const generatedYield = entities.find((entity) => entity.type === "Yield") as Yield;
-  if (generatedYield) {
+  const yieldSection = generatedYield(entities);
+  if (yieldSection) {
     const yieldItems = items.filter((item) => ["yield", "yieldparam", "yieldreturn"].indexOf(item.tag) >= 0);
     if (yieldItems.length === 0) {
-      gaps.yieldSection = generatedYield;
+      gaps.yieldSection = yieldSection;
     } else {
-      gaps.yieldParams = generatedYield.yieldParams.filter((param) =>
+      gaps.yieldParams = yieldSection.yieldParams.filter((param) =>
         param.name && !tagged("yieldparam").some((item) => item.name === param.name));
-      if (tagged("yieldreturn").length === 0) { gaps.yieldReturn = generatedYield.yieldReturn; }
+      if (tagged("yieldreturn").length === 0) { gaps.yieldReturn = yieldSection.yieldReturn; }
     }
   }
 
-  const generatedReturn = entities.find((entity) =>
-    entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "return") as TagWithTypes;
-  if (generatedReturn && tagged("return").length === 0) { gaps.returnTag = generatedReturn; }
+  const returnTag = generatedReturn(entities);
+  if (returnTag && tagged("return").length === 0) { gaps.returnTag = returnTag; }
   return gaps;
 }
 
