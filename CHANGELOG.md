@@ -29,6 +29,18 @@
   literal values.
 - Fill in types declared by Sorbet signatures (`sig { params(...).returns(...) }`) and rbs-inline annotations
   (`#: (String) -> bool`, `# @rbs name: String`). Documentation is placed above `sig` and above `#:` annotations.
+- Append `@since` tag to new documentation, prefilled with a gem version read from a gemspec or `version.rb`,
+  enabled with `yard.tags.since` setting.
+- Refer to methods of superclasses overridden by methods calling `super` with `@see` tags, enabled with
+  `yard.tags.see` setting.
+- Document TODO notes written in methods with `@todo` tags, enabled with `yard.tags.todo` setting.
+- Document definitions hidden from RDoc with `# :nodoc:` with `@private` tag, YARD doesn't read RDoc's directive.
+- Document methods and attributes of `ActiveSupport::Concern` blocks (`included do`, `class_methods do`)
+  with directives above a block, YARD doesn't look into blocks.
+- Document Rails class attributes (`class_attribute`, `cattr_*`, `mattr_*`) with `@!attribute [rw] self.name`
+  directives. A plain `@return` comment made YARD document them as instance readers.
+- Document methods overloaded by several rbs-inline method types with `@overload` tags, enabled with
+  `yard.tags.overload` setting.
 - Document methods and attributes YARD doesn't see with `@!method` and `@!attribute` directives: `define_method`,
   `delegate`, `def_delegators`, Rails scopes and associations.
 - Document members of Struct and Data classes with `@attr` and `@attr_reader` tags.

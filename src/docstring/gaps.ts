@@ -1,4 +1,5 @@
 "use strict";
+import { Overload } from "../entities/overload";
 import { Tag } from "../entities/tag";
 import { TagOption } from "../entities/tag_option";
 import { TagWithOptions } from "../entities/tag_with_options";
@@ -14,6 +15,8 @@ export interface IDocGaps {
   abstractTag?: Tag;
   // Undocumented deprecated method
   deprecatedTag?: Tag;
+  // Undocumented private object hidden with ':nodoc:'
+  privateTag?: Tag;
   // Undocumented params with their options
   params: TagWithOptions[];
   // Undocumented options of documented params
@@ -26,9 +29,40 @@ export interface IDocGaps {
   yieldReturn?: TagWithTypes;
   // Undocumented return value
   returnTag?: TagWithTypes;
+  // Overloads of a method documented without @overload tags
+  overloads: Overload[];
+  // Undocumented reference to an overridden method
+  seeTag?: Tag;
+  // Undocumented TODO notes
+  todos: Tag[];
 }
 
-// Generated tag of a text only: @abstract, @deprecated
+// Tags documenting a method signature without overloads
+const signatureTags = ["option", "param", "return", "yield", "yieldparam", "yieldreturn"];
+
+// Can a method be documented with overloads: docstring has @overload tags or it doesn't document the method signature.
+// Docstring documenting params or return value without overloads is kept that way.
+export function isOverloadable(items: IDocItem[]): boolean {
+  const tags = items.map((item) => item.tag);
+  return tags.indexOf("overload") >= 0 || !tags.some((tag) => signatureTags.indexOf(tag) >= 0);
+}
+
+// Generated tags of TODO notes
+export function generatedTodos(entities: IEntity[]): Tag[] {
+  return entities.filter((entity) => entity.type === "Tag" && (entity as Tag).tagName === "todo") as Tag[];
+}
+
+// Is a text documented with a tag of the same name and text: @todo, @see
+export function isTextDocumented(items: IDocItem[], tagName: string, text: string): boolean {
+  return items.some((item) => item.tag === tagName && item.lines[0].replace(/^@\S+\s*/, "").trim() === text);
+}
+
+// Generated overloads
+export function generatedOverloads(entities: IEntity[]): Overload[] {
+  return entities.filter((entity) => entity.type === "Overload") as Overload[];
+}
+
+// Generated tag of a text only or without a text: @abstract, @deprecated, @private
 export function generatedTextTag(entities: IEntity[], tagName: string): Tag | undefined {
   return entities.find((entity) => entity.type === "Tag" && (entity as Tag).tagName === tagName) as Tag | undefined;
 }
@@ -58,7 +92,9 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
   const gaps: IDocGaps = {
     options: params.filter(isDocumented).flatMap((param) => param.options.filter((option) =>
       option.key && !tagged("option").some((item) => sameName(item.name, param.name) && item.key === option.key))),
+    overloads: tagged("overload").length === 0 ? generatedOverloads(entities) : [],
     params: params.filter((param) => !isDocumented(param)),
+    todos: generatedTodos(entities).filter((todo) => !isTextDocumented(items, "todo", todo.text)),
     yieldParams: [],
   };
 
@@ -78,6 +114,11 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
   if (abstractTag && tagged("abstract").length === 0) { gaps.abstractTag = abstractTag; }
   const deprecatedTag = generatedTextTag(entities, "deprecated");
   if (deprecatedTag && tagged("deprecated").length === 0) { gaps.deprecatedTag = deprecatedTag; }
+  const privateTag = generatedTextTag(entities, "private");
+  if (privateTag && tagged("private").length === 0) { gaps.privateTag = privateTag; }
+
+  const seeTag = generatedTextTag(entities, "see");
+  if (seeTag && !isTextDocumented(items, "see", seeTag.text)) { gaps.seeTag = seeTag; }
 
   const returnTag = generatedReturn(entities);
   if (returnTag && tagged("return").length === 0) { gaps.returnTag = returnTag; }

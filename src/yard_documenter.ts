@@ -4,6 +4,7 @@ import { CommentBlocks, ICommentBlock } from "./ast/comments";
 import { loadParser } from "./ast/prism";
 import { Builder } from "./builder";
 import { annotationLinesCount } from "./parsers/signatures/method_signature";
+import { GemVersionResolver } from "./resolvers/gem_version";
 import { GitAuthorResolver } from "./resolvers/git_author";
 import { IParseContext } from "./types";
 
@@ -39,7 +40,7 @@ export default class YardDocumenter {
     const docLinesCount = block ? block.lines.length - annotationLinesCount(block.lines) : 0;
     const existing = block && docLinesCount > 0 ? { ...block, lines: block.lines.slice(0, docLinesCount) } : undefined;
     if (existing && !builder.supportsUpdate()) { return; }
-    const context = await this.parseContext(builder, document, block ? block.lines : []);
+    const context = await this.parseContext(builder, document, block ? block.lines : [], comments, !existing);
     const below = block ? document.lineAt(block.startLine - 1 + docLinesCount) : line;
 
     // Update existing documentation or insert a new one
@@ -53,12 +54,22 @@ export default class YardDocumenter {
     return editor.insertSnippet(snippet, new Position(below.lineNumber, below.firstNonWhitespaceCharacterIndex));
   }
 
-  // Collect environment-dependent details for the builder
-  private async parseContext(builder: Builder, document: TextDocument, comments: string[]): Promise<IParseContext> {
+  // Collect environment-dependent details for the builder. Version a definition is added in is documented
+  // only in new documentation.
+  private async parseContext(builder: Builder, document: TextDocument, comments: string[], blocks: CommentBlocks,
+    isNew: boolean): Promise<IParseContext> {
     const config = workspace.getConfiguration("yard.tags");
-    const context: IParseContext = { blocks: !!config.get("yield"), comments, raises: !!config.get("raise") };
+    const context: IParseContext = {
+      blocks: !!config.get("yield"), comments, overloads: !!config.get("overload"), raises: !!config.get("raise"),
+      commentsWithin: (startLine, endLine) => blocks.within(startLine, endLine),
+      see: !!config.get("see"), todos: !!config.get("todo"), trailingComment: (line) => blocks.trailing(line),
+    };
     if (builder.requiresAuthor() && config.get("author") && config.get("authorFromGit")) {
       context.author = await (new GitAuthorResolver(document)).resolve();
+    }
+    if (isNew && config.get("since")) {
+      context.since = true;
+      context.version = await (new GemVersionResolver(document)).resolve();
     }
     return context;
   }

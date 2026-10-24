@@ -1,6 +1,7 @@
 "use strict";
 import type { ParseResult } from "./ast/prism";
 import { SnippetString, workspace } from "vscode";
+import { isOverloadable } from "./docstring/gaps";
 import { DocstringMerger } from "./docstring/merger";
 import { DocstringParser } from "./docstring/parser";
 import { IBaseParser } from "./parsers/definitions/base_parser";
@@ -44,17 +45,19 @@ export class Builder {
   }
 
   // Build a snippet of existing documentation comments merged with generated documentation,
-  // undefined if documentation is up to date
+  // undefined if documentation is up to date. Documentation of a method signature without overloads is kept that way.
   public update(comments: string[], context: IParseContext = {}): SnippetString | undefined {
     if (!this.parser?.supportsUpdate) { return; }
     const spacers = workspace.getConfiguration("yard.spacers");
-    const merger = new DocstringMerger((new DocstringParser(comments)).parse(), this.parser.parse(context), {
+    const items = (new DocstringParser(comments)).parse();
+    const entities = this.parser.parse({ ...context, overloads: context.overloads && isOverloadable(items) });
+    const merger = new DocstringMerger(items, entities, {
       beforeTags: !!spacers.get("beforeTags"),
       separateTags: !!spacers.get("separateTags"),
     });
-    const entities = merger.merge();
+    const merged = merger.merge();
     if (!merger.changed) { return; }
-    const renderer = new Renderer(entities, this.eol, { paramNameBeforeType: merger.paramNameBeforeType });
+    const renderer = new Renderer(merged, this.eol, { paramNameBeforeType: merger.paramNameBeforeType });
     return renderer.render(false);
   }
 }

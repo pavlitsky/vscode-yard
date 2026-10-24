@@ -52,6 +52,16 @@ function contains(node: Node, other: Node): boolean {
     other.location.startOffset + other.location.length <= node.location.startOffset + node.location.length;
 }
 
+// Nodes containing a node from the outermost one, the node itself isn't included
+export function ancestors(root: Node, node: Node): Node[] {
+  const result: Node[] = [];
+  walk(root, (current) => {
+    if (current === node || !contains(current, node)) { return false; }
+    result.push(current);
+  });
+  return result;
+}
+
 // Statements around a statement starting with a node, the node is the statement itself or it's wrapped
 // by a call on the same line like 'private def foo'
 export function neighbourStatements(root: Node, node: Node): { previous: Node | null; next: Node | null } {

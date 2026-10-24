@@ -17,6 +17,20 @@ export interface IParseContext {
   blocks?: boolean;
   // Is documenting of raised exceptions enabled
   raises?: boolean;
+  // Is documenting of overloaded methods with @overload tags enabled
+  overloads?: boolean;
   // Comments above a definition, rbs-inline annotations are read from them
   comments?: string[];
+  // Comment trailing code on a line, RDoc's ':nodoc:' is read from it
+  trailingComment?: (line: number) => string | undefined;
+  // Comments within lines of a definition, TODO notes are read from them
+  commentsWithin?: (startLine: number, endLine: number) => string[];
+  // Is documenting of TODO notes with @todo tags enabled
+  todos?: boolean;
+  // Is referring to overridden methods of superclasses with @see tags enabled
+  see?: boolean;
+  // Is documenting of a version new definitions are added in with @since tag enabled
+  since?: boolean;
+  // Version of a gem a document belongs to
+  version?: string;
 }

@@ -17,6 +17,8 @@ interface IRbsType {
 export interface IRbsPositional {
   kind: "required" | "optional" | "rest";
   types?: string;
+  // Param name following its type: Integer count
+  name?: string;
 }
 
 // Block of an RBS method type
@@ -29,7 +31,9 @@ export interface IRbsBlock {
 export interface IRbsMethodType {
   positionals: IRbsPositional[];
   keywords: { [name: string]: string | undefined };
-  keywordRest?: { types?: string };
+  // Names of optional keywords: ?key: String
+  optionalKeywords?: string[];
+  keywordRest?: { types?: string; name?: string };
   block?: IRbsBlock;
   returns?: string;
 }
@@ -144,25 +148,27 @@ export class RbsParser {
       // Keyword: name: Type
       this.position += 2;
       methodType.keywords[token.value] = joinTypes(this.type().types);
+      if (optional) { methodType.optionalKeywords = (methodType.optionalKeywords ?? []).concat(token.value); }
       this.paramName();
       return;
     }
     if (!optional && this.accept("**")) {
-      methodType.keywordRest = { types: joinTypes(this.type().types) };
-      this.paramName();
+      const types = joinTypes(this.type().types);
+      methodType.keywordRest = { name: this.paramName(), types };
       return;
     }
     const rest = !optional && this.accept("*");
     const kind = rest ? "rest" : optional ? "optional" : "required";
-    methodType.positionals.push({ kind, types: joinTypes(this.type().types) });
-    this.paramName();
+    const types = joinTypes(this.type().types);
+    methodType.positionals.push({ kind, name: this.paramName(), types });
   }
 
-  // Skip an optional param name following its type: Integer count
-  private paramName() {
+  // Consume an optional param name following its type: Integer count
+  private paramName(): string | undefined {
     const token = this.tokens[this.position];
     if (token && token.kind === "name" && /^[a-z_]/.test(token.value) && !BUILTIN_TYPES[token.value]) {
       this.position++;
+      return token.value;
     }
   }
 

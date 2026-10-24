@@ -20,6 +20,8 @@ export interface ICommentBlock {
 export class CommentBlocks {
   // Comment texts by line numbers
   private comments = new Map<number, string>();
+  // Trailing comment texts by line numbers
+  private trailingComments = new Map<number, string>();
 
   // Line indentation tells whole line comments from trailing ones
   constructor(result: ParseResult, indentation: (line: number) => number) {
@@ -29,9 +31,27 @@ export class CommentBlocks {
     result.comments.forEach((comment) => {
       const line = comment.location.startLine();
       if (comment.type !== INLINE_COMMENT || magicLines.indexOf(line) >= 0) { return; }
-      if (comment.location.startColumn() !== indentation(line)) { return; }
+      if (comment.location.startColumn() !== indentation(line)) {
+        this.trailingComments.set(line, comment.location.slice());
+        return;
+      }
       this.comments.set(line, comment.location.slice());
     });
+  }
+
+  // Comment trailing code on a line
+  public trailing(line: number): string | undefined {
+    return this.trailingComments.get(line);
+  }
+
+  // Whole line and trailing comments within lines, in order of lines
+  public within(startLine: number, endLine: number): string[] {
+    const comments: string[] = [];
+    for (let line = startLine; line <= endLine; line++) {
+      const comment = this.comments.get(line) ?? this.trailingComments.get(line);
+      if (comment !== undefined) { comments.push(comment); }
+    }
+    return comments;
   }
 
   // Block ending right above a line

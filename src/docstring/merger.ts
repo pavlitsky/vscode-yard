@@ -2,7 +2,10 @@
 import { Raw } from "../entities/raw";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { IEntity } from "../types";
-import { generatedRaises, generatedReturn, generatedTextTag, generatedYield, isRaiseDocumented } from "./gaps";
+import {
+  generatedOverloads, generatedRaises, generatedReturn, generatedTextTag, generatedTodos, generatedYield,
+  isRaiseDocumented, isTextDocumented,
+} from "./gaps";
 import { bareName, paramNameBeforeType, sameName } from "./names";
 import { IDocItem } from "./parser";
 
@@ -12,10 +15,11 @@ export interface IMergeSpacers {
   separateTags: boolean;
 }
 
-// Order of tags: abstract and deprecated tags, then params with options, then yield section, then raised exceptions,
-// then return value. Other tags aren't ranked.
+// Order of tags: abstract, deprecated and private tags, then params with options or overloads, then yield section,
+// then raised exceptions, then return value, then an overridden method, then TODO notes. Other tags aren't ranked.
 const tagRanks: { [tag: string]: number } = {
-  abstract: 0, deprecated: 0, option: 1, param: 1, raise: 3, return: 4, yield: 2, yieldparam: 2, yieldreturn: 2,
+  abstract: 0, deprecated: 0, option: 1, overload: 1, param: 1, private: 0, raise: 3, return: 4, see: 5, todo: 6,
+  yield: 2, yieldparam: 2, yieldreturn: 2,
 };
 
 // Part of a merged docstring: an existing item or a new entity
@@ -25,6 +29,7 @@ type ISegment = { item: IDocItem; entity?: undefined; rank?: number } |
 // Merge an existing docstring with freshly generated documentation entities.
 // Texts and tags are kept as they're written, missing tags are added and params are synced with the method signature:
 // params are reordered, a stale param is renamed if a new param takes its place, otherwise it's removed.
+// Overloads are added if they're missing, documented overloads are kept as they're written.
 export class DocstringMerger {
   // Is merged docstring different from the existing one
   public changed = false;
@@ -52,16 +57,29 @@ export class DocstringMerger {
     }
     this.descriptionEndsWithText = description.length > 0 && !this.isBlank(description[description.length - 1]);
 
-    let segments = this.mergeParams(tags);
+    let segments = this.mergeOverloads(tags);
     segments = this.mergeTextTag(segments, "abstract");
     segments = this.mergeTextTag(segments, "deprecated");
+    segments = this.mergeTextTag(segments, "private");
     segments = this.mergeYield(segments);
     segments = this.mergeRaises(segments);
     segments = this.mergeReturn(segments);
+    segments = this.mergeSee(segments);
+    segments = this.mergeTodos(segments);
 
     const lines = description.flatMap((item) => item.lines);
     return [new Raw({ lines }) as IEntity].concat(segments.map((segment) =>
       segment.entity ? segment.entity : new Raw({ lines: segment.item.lines })));
+  }
+
+  // Add overloads if they're missing, params of an overloaded method are documented within overloads.
+  // Params are synced with the method signature if it isn't overloaded.
+  private mergeOverloads(tags: IDocItem[]): ISegment[] {
+    const generated = generatedOverloads(this.entities);
+    if (generated.length === 0) { return this.mergeParams(tags); }
+    const segments: ISegment[] = tags.map((item) => ({ item, rank: tagRanks[item.tag] }));
+    if (tags.some((item) => item.tag === "overload")) { return segments; }
+    return this.insertGroup(segments, generated.map((entity) => ({ entity, rank: 1 })), 1);
   }
 
   // Sync params and their options with the method signature
@@ -113,7 +131,7 @@ export class DocstringMerger {
     return segments;
   }
 
-  // Add a text only tag if it's missing: @abstract, @deprecated
+  // Add a text only tag or a tag without a text if it's missing: @abstract, @deprecated, @private
   private mergeTextTag(segments: ISegment[], tagName: string): ISegment[] {
     const generated = generatedTextTag(this.entities, tagName);
     if (!generated || segments.some((s) => s.item?.tag === tagName)) { return segments; }
@@ -164,6 +182,32 @@ export class DocstringMerger {
     const generated = generatedReturn(this.entities);
     if (!generated || segments.some((s) => s.item?.tag === "return")) { return segments; }
     return this.insertGroup(segments, [{ entity: generated, rank: 4 }], 4);
+  }
+
+  // Add a reference to an overridden method if it isn't documented, other references are kept
+  private mergeSee(segments: ISegment[]): ISegment[] {
+    const generated = generatedTextTag(this.entities, "see");
+    if (!generated || isTextDocumented(this.items, "see", generated.text)) { return segments; }
+    const last = this.lastIndex(segments, (s) => s.item?.tag === "see");
+    if (last < 0) { return this.insertGroup(segments, [{ entity: generated, rank: 5 }], 5); }
+    const result = segments.slice();
+    result.splice(last + 1, 0, { entity: generated, rank: 5 });
+    this.changed = true;
+    return result;
+  }
+
+  // Add tags of undocumented TODO notes after documented ones, documented notes are kept even if they're gone
+  private mergeTodos(segments: ISegment[]): ISegment[] {
+    const missing = generatedTodos(this.entities)
+      .filter((tag) => !isTextDocumented(this.items, "todo", tag.text))
+      .map((entity) => ({ entity, rank: 6 }));
+    if (missing.length === 0) { return segments; }
+    const last = this.lastIndex(segments, (s) => s.item?.tag === "todo");
+    if (last < 0) { return this.insertGroup(segments, missing, 6); }
+    const result = segments.slice();
+    result.splice(last + 1, 0, ...missing);
+    this.changed = true;
+    return result;
   }
 
   // Insert a new group of tags before tags ranked higher, or after the last tag ranked lower.

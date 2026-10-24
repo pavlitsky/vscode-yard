@@ -8,6 +8,8 @@ export interface IDefinitionSite {
   errors?: ParseError[];
   // Statement preceding the definition, it may be a Sorbet sig
   previous?: Node | null;
+  // Nodes containing the definition from the outermost one
+  ancestors?: Node[];
 }
 
 // Interface each parser should implement

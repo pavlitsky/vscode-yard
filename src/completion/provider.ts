@@ -5,10 +5,11 @@ import {
 } from "vscode";
 import { CommentBlocks } from "../ast/comments";
 import { loadParser } from "../ast/prism";
-import { findGaps, isRaiseDocumented } from "../docstring/gaps";
+import { findGaps, isOverloadable, isRaiseDocumented } from "../docstring/gaps";
 import { paramNameBeforeType } from "../docstring/names";
 import { DocstringParser, IDocItem } from "../docstring/parser";
 import { Author } from "../entities/author";
+import { Overload } from "../entities/overload";
 import { IBaseParser } from "../parsers/definitions/base_parser";
 import { ParserResolver } from "../parsers/resolver";
 import { Renderer } from "../renderers/snippet_string";
@@ -70,7 +71,14 @@ export class TagCompletionProvider implements CompletionItemProvider {
     if (parser) {
       const authorFromGit = parser.requiresAuthor && workspace.getConfiguration("yard.tags").get("authorFromGit");
       const author = authorFromGit ? await (new GitAuthorResolver(document)).resolve() : undefined;
-      entities = parser.parse({ author, blocks: true, comments: block.lines });
+      const overloads = !!workspace.getConfiguration("yard.tags").get("overload") && isOverloadable(items);
+      const trailingComment = (line: number) => comments.trailing(line);
+      const commentsWithin = (startLine: number, endLine: number) => comments.within(startLine, endLine);
+      const config = workspace.getConfiguration("yard.tags");
+      const [see, todos] = [!!config.get("see"), !!config.get("todo")];
+      entities = parser.parse({
+        author, blocks: true, comments: block.lines, commentsWithin, overloads, see, todos, trailingComment,
+      });
     }
     return { entities, eol, items, paramNameBeforeType: paramNameBeforeType(items), parser };
   }
@@ -84,6 +92,8 @@ export class TagCompletionProvider implements CompletionItemProvider {
 
     if (gaps.abstractTag) { add("@abstract", "Abstract method", gaps.abstractTag); }
     if (gaps.deprecatedTag) { add("@deprecated", "Deprecated method", gaps.deprecatedTag); }
+    if (gaps.privateTag) { add("@private", "Hidden with :nodoc:", gaps.privateTag); }
+    gaps.overloads.forEach((overload) => add("@overload " + this.overloadSignature(overload), "Overload", overload));
     gaps.params.forEach((param) =>
       add("@param " + param.name, param.options.length ? "Param with options" : "Param", param));
     gaps.options.forEach((option) =>
@@ -95,6 +105,8 @@ export class TagCompletionProvider implements CompletionItemProvider {
     gaps.yieldParams.forEach((param) => add("@yieldparam " + param.name, "Block param", param));
     if (gaps.yieldReturn) { add("@yieldreturn", "Block return value", gaps.yieldReturn); }
     if (gaps.returnTag) { add("@return", "Return value", gaps.returnTag); }
+    if (gaps.seeTag) { add("@see " + gaps.seeTag.text, "Overridden method", gaps.seeTag); }
+    gaps.todos.forEach((todo) => add("@todo " + todo.text, "TODO note", todo));
     this.raises(context).forEach((exception) =>
       add("@raise [" + exception + "]", "Raised exception", new RaiseTag({ types: exception })));
     const author = context.entities.find((entity) => entity.type === "Author") as Author;
@@ -102,6 +114,13 @@ export class TagCompletionProvider implements CompletionItemProvider {
       add("@author " + author.authorName + (author.authorEmail ? " <" + author.authorEmail + ">" : ""), "Author", author);
     }
     return items;
+  }
+
+  // Overload signature as it's labeled, unknown names are labeled with placeholders
+  private overloadSignature(overload: Overload): string {
+    const params = overload.params.map((param) => param.prefix + (param.name || "<name>") + (param.keyword ? ":" : "") +
+      (param.defaultValue === undefined ? "" : (param.keyword ? " " : " = ") + (param.defaultValue || "<default>")));
+    return overload.methodName + (params.length ? "(" + params.join(", ") + ")" : "");
   }
 
   // Standard YARD tags

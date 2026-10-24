@@ -7,6 +7,8 @@ import { AuthorTag } from "../../tags/author";
 import { DescriptionTag } from "../../tags/description";
 import { IEntity, IParseContext } from "../../types";
 import { literalName, positionalArguments } from "../call_arguments";
+import { nodocTags } from "../nodoc";
+import { sinceTags } from "../since";
 import { IBaseParser } from "./base_parser";
 
 // Members of a Struct.new or a Data.define call with tags YARD reads their types from:
@@ -37,13 +39,15 @@ export default class StructDef implements IBaseParser {
     return structMembers((this.node as ConstantWriteNode | ConstantPathWriteNode).value) !== undefined;
   }
 
-  // Parse documentation tree
+  // Parse documentation tree, Struct or Data class hidden from RDoc with ':nodoc:' is private
   public parse(context: IParseContext = {}): IEntity[] {
     const { name = "", email = "" } = context.author || {};
     return [
       new DescriptionTag(),
       ...structMembers((this.node as ConstantWriteNode | ConstantPathWriteNode).value) ?? [],
+      ...nodocTags(this.node, context),
       new AuthorTag({ authorName: name, authorEmail: email }),
+      ...sinceTags(context),
     ];
   }
 }

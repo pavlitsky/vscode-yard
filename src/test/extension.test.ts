@@ -167,6 +167,7 @@ suite("Default Documenter Tests", () => {
     "attribute/accessor",
     "attribute/class_accessor",
     "attribute/class_attribute",
+    "attribute/module_reader",
     "attribute/parentheses",
     "method/update/sync",
     "method/update/rename_options",
@@ -223,7 +224,17 @@ suite("Default Documenter Tests", () => {
     "method/rbs/rbs_params",
     "method/rbs/overloads",
     "method/rbs/malformed",
+    "method/todo/disabled",
+    "method/nodoc/method",
+    "method/nodoc/update",
+    "method/nodoc/up_to_date",
+    "method/nodoc/class",
+    "method/nodoc/constant",
+    "method/nodoc/not_nodoc",
     "directive/define_method",
+    "directive/concern_included",
+    "directive/concern_class_methods",
+    "directive/concern_empty",
     "directive/define_singleton_method",
     "directive/define_method_no_block",
     "directive/delegate",
@@ -250,6 +261,10 @@ suite("Default Documenter Tests", () => {
 
   test("document method/update/cursor_on_def", async () => {
     await expectFileDocumented("method/update/cursor_on_def", undefined, 2);
+  });
+
+  test("document method/see/disabled", async () => {
+    await expectFileDocumented("method/see/disabled", undefined, 1);
   });
 
   test("document method/sorbet/cursor_on_def", async () => {
@@ -360,6 +375,130 @@ suite("Raise disabled", () => {
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
+  expectDocumented(testCases);
+});
+
+suite("Overloads Documenter Tests", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      overload: true, // Non default
+      paramNameBeforeType: false,
+      raise: true,
+      yield: false,
+    },
+  };
+
+  const testCases = [
+    "method/overload/annotations",
+    "method/overload/optional",
+    "method/overload/splat",
+    "method/overload/keywords",
+    "method/overload/rbs_method",
+    "method/overload/update",
+    "method/overload/update_documented",
+    "method/overload/update_params",
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  suiteTeardown(async () => { await updateConfig({ tags: { overload: undefined } }); });
+  expectDocumented(testCases);
+
+  test("document method/overload/block", async () => {
+    await updateConfig({ tags: { yield: true } });
+    await expectFileDocumented("method/overload/block");
+    await updateConfig({ tags: { yield: false } });
+  });
+
+  test("complete overloads missing in method documentation", async () => {
+    const items = await yardCompletions("completion/overload", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@overload convert(value)", "@overload convert(value)"]);
+    assert.equal((items[0].insertText as SnippetString).value,
+      "@overload convert(value)\n#   @param [Integer] value ${1:<description>}\n#   @return [String] ${2:<description>}");
+  });
+});
+
+suite("TODO Notes Documenter Tests", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: false,
+      raise: true,
+      todo: true, // Non default
+      yield: false,
+    },
+  };
+
+  const testCases = [
+    "method/todo/notes",
+    "method/todo/update",
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  suiteTeardown(async () => { await updateConfig({ tags: { todo: undefined } }); });
+  expectDocumented(testCases);
+
+  test("complete TODO notes missing in method documentation", async () => {
+    const items = await yardCompletions("completion/todo", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@return", "@todo bypass cache"]);
+    assert.equal((items[1].insertText as SnippetString).value, "@todo bypass cache");
+  });
+});
+
+suite("Overridden Methods Documenter Tests", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: false,
+      raise: true,
+      see: true, // Non default
+      yield: false,
+    },
+  };
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  suiteTeardown(async () => { await updateConfig({ tags: { see: undefined } }); });
+  ["instance", "class_method", "module", "update"].forEach((testCase) => {
+    test(`document method/see/${testCase}`, () => expectFileDocumented(`method/see/${testCase}`, undefined, 1));
+  });
+
+  test("document method/see/singleton", () => expectFileDocumented("method/see/singleton", undefined, 2));
+
+  test("complete reference to an overridden method", async () => {
+    const items = await yardCompletions("completion/see", 2, 5);
+    assert.deepEqual(missingTagLabels(items), ["@return", "@see User#save"]);
+  });
+});
+
+suite("Since Documenter Tests", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: false,
+      raise: true,
+      since: true, // Non default
+      yield: false,
+    },
+  };
+
+  const testCases = [
+    "since/gem/lib/sample/method",
+    "since/gem/lib/sample/class",
+    "since/gem/lib/sample/update",
+    "since/literal_gem/lib/constant",
+    "since/no_gem",
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  suiteTeardown(async () => { await updateConfig({ tags: { since: undefined } }); });
   expectDocumented(testCases);
 });
 
@@ -499,6 +638,12 @@ suite("Tags Completion Tests", () => {
     const abstract = items.find((item) => item.label === "@abstract");
     assert.ok(abstract);
     assert.equal((abstract.insertText as SnippetString).value, "@abstract ${1:<description>}");
+  });
+
+  test("complete private tag of a method hidden with nodoc", async () => {
+    const items = await yardCompletions("completion/nodoc", 1, 3);
+    assert.deepEqual(missingTagLabels(items), ["@private", "@return"]);
+    assert.equal((items[0].insertText as SnippetString).value, "@private");
   });
 
   test("complete deprecated tag of a method warning about deprecation", async () => {

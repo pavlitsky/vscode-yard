@@ -39,6 +39,11 @@ export abstract class DirectiveMethod extends MethodDef {
   // Method name as it's written in the directive, class methods are prefixed with 'self.'
   protected abstract get directiveName(): string;
 
+  // Methods named with 'self.' are class methods
+  protected override get isClassMethod(): boolean {
+    return this.directiveName.startsWith("self.");
+  }
+
   // Params of the block or the lambda
   protected override get parameters(): ParametersNode | null {
     const params = this.callable ? this.callable.parameters : null;
