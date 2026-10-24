@@ -1,14 +1,14 @@
 "use strict";
-import { EndOfLine, Position, TextEditor, TextLine, window, workspace } from "vscode";
+import { EndOfLine, Position, Range, TextEditor, TextLine, window, workspace } from "vscode";
+import { CommentBlocks, ICommentBlock } from "./ast/comments";
 import { loadParser } from "./ast/prism";
 import { Builder } from "./builder";
 import { GitAuthorResolver } from "./resolvers/git_author";
 import { IParseContext } from "./types";
 
-// Generate YARD comment
+// Generate YARD comment or update an existing one
 export default class YardDocumenter {
   private editor: TextEditor;
-  private position: Position;
   private line: TextLine;
   private eol: string;
 
@@ -16,18 +16,32 @@ export default class YardDocumenter {
   public async generate() {
     // Update current editor, line, cursor position
     this.updateContext();
+    if (!this.editor) { return; }
 
-    // Check if documenter should run
-    if (!this.shouldRun()) { return; }
+    // Parse document and find comments. Cursor within a comment refers to a definition right below the comment.
+    const document = this.editor.document;
+    const tree = (await loadParser())(document.getText());
+    const comments = new CommentBlocks(tree, (line) => document.lineAt(line - 1).firstNonWhitespaceCharacterIndex);
+    const cursorBlock = comments.at(this.line.lineNumber + 1);
+    if (cursorBlock) {
+      if (cursorBlock.endLine >= document.lineCount) { return; }
+      this.line = document.lineAt(cursorBlock.endLine);
+    }
 
-    // Parse document and resolve documenter by a definition starting on the current line
-    const parse = await loadParser();
-    const tree = parse(this.editor.document.getText());
+    // Resolve documenter by a definition starting on the line
     const builder = new Builder(tree.value, this.line.lineNumber + 1, this.eol);
-    const snippet = builder.build(await this.parseContext(builder));
-    if (!snippet) { return; }
+    const existing = comments.above(this.line.lineNumber + 1);
+    if (existing && !builder.supportsUpdate()) { return; }
+    const context = await this.parseContext(builder);
 
-    // Insert documentation snippet
+    // Update existing documentation or insert a new one
+    if (existing) {
+      const updated = builder.update(existing.lines, context);
+      if (!updated) { return; }
+      return this.editor.insertSnippet(updated, this.commentRange(existing));
+    }
+    const snippet = builder.build(context);
+    if (!snippet) { return; }
     return this.editor.insertSnippet(snippet, this.snippetPosition());
   }
 
@@ -44,27 +58,20 @@ export default class YardDocumenter {
   private updateContext(textEditor?: TextEditor) {
     this.editor = textEditor || window.activeTextEditor;
     if (this.editor) {
-      this.position = this.editor.selection.active;
-      this.line = this.editor.document.lineAt(this.position);
+      this.line = this.editor.document.lineAt(this.editor.selection.active);
       this.eol = this.editor.document.eol === EndOfLine.LF ? "\n" : "\r\n";
     }
   }
 
   // Get position for a snippet
   private snippetPosition(): Position {
-    return this.position.with({character: this.line.firstNonWhitespaceCharacterIndex});
+    return new Position(this.line.lineNumber, this.line.firstNonWhitespaceCharacterIndex);
   }
 
-  // Check if previous line already has some comment
-  private commentExists(): boolean {
-    if (this.line.lineNumber === 0) { return false; }
-    const prevLinePosition = this.position.with({line: this.line.lineNumber - 1});
-    const prevLine = this.editor.document.lineAt(prevLinePosition);
-    return prevLine.text.trim().startsWith("#");
-  }
-
-  // Is documenter should run
-  private shouldRun(): boolean {
-    return this.editor && !this.commentExists();
+  // Range of an existing comment, it ends where the definition starts the same way a new snippet is inserted
+  private commentRange(block: ICommentBlock): Range {
+    const firstLine = this.editor.document.lineAt(block.startLine - 1);
+    return new Range(firstLine.lineNumber, firstLine.firstNonWhitespaceCharacterIndex,
+      this.line.lineNumber, this.line.firstNonWhitespaceCharacterIndex);
   }
 }

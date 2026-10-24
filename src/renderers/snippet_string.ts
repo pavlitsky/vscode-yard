@@ -2,6 +2,7 @@
 import { SnippetString, workspace, WorkspaceConfiguration } from "vscode";
 import { Author } from "../entities/author";
 import { Directive } from "../entities/directive";
+import { Raw } from "../entities/raw";
 import { TagOption } from "../entities/tag_option";
 import { TagWithOptions } from "../entities/tag_with_options";
 import { TagWithTypes } from "../entities/tag_with_types";
@@ -9,6 +10,12 @@ import { Text } from "../entities/text";
 import { Yield } from "../entities/yield";
 import { IEntity } from "../types";
 import { SpacerHelper } from "./snippet_string/spacer_helper";
+
+// Rendering options overriding settings
+export interface IRenderOptions {
+  // Print param name before its type, 'yard.tags.paramNameBeforeType' setting is used if undefined
+  paramNameBeforeType?: boolean;
+}
 
 // Render documentation tree into a snippet
 export class Renderer {
@@ -20,21 +27,22 @@ export class Renderer {
   // Placeholder numbers by link keys
   private links: { [key: string]: number };
 
-  constructor(private entities: IEntity[], private eol: string) {
+  constructor(private entities: IEntity[], private eol: string, private options: IRenderOptions = {}) {
     this.config = workspace.getConfiguration("yard.tags");
   }
 
-  // Render entities and return documentation snippet
-  public render(): SnippetString {
+  // Render entities and return documentation snippet.
+  // Spacers settings add empty lines around entities unless entities already contain them.
+  public render(useSpacers: boolean = true): SnippetString {
     this.snippet = new SnippetString();
     this.tabstop = 1;
     this.links = {};
     this.spacer = new SpacerHelper(this.snippet, this.eol);
     this.entities.forEach((entity, index, entities) => {
       if (!this.shouldRenderEntity(entity)) { return; }
-      this.spacer.beforeEntity(entity, entities, index);
+      if (useSpacers) { this.spacer.beforeEntity(entity, entities, index); }
       this.renderEntity(entity);
-      this.spacer.afterEntity();
+      if (useSpacers) { this.spacer.afterEntity(); }
     });
     return this.decorateSnippet();
   }
@@ -49,6 +57,7 @@ export class Renderer {
   private renderEntity(entity: IEntity) {
     switch (entity.type) {
       case("Directive"): this.directiveEntity(entity); break;
+      case("Raw"): this.rawEntity(entity); break;
       case("Author"): this.authorEntity(entity); break;
       case("TagOption"): this.tagOptionEntity(entity); break;
       case("TagWithOptions"): this.tagWithOptionsEntity(entity); break;
@@ -108,7 +117,7 @@ export class Renderer {
   // @tagName [types] name <description>
   private tagWithTypesEntity(entity: TagWithTypes) {
     this.snippet.appendText("@" + entity.tagName);
-    if (this.config.get("paramNameBeforeType")) {
+    if (this.paramNameBeforeType()) {
       this.spacedName(entity);
       this.typesList(entity.types);
     } else {
@@ -141,6 +150,14 @@ export class Renderer {
     if (entity.yieldReturn) { this.tagWithTypesEntity(entity.yieldReturn); }
   }
 
+  // Render lines of an existing documentation as they're written
+  private rawEntity(entity: Raw) {
+    entity.lines.forEach((line) => {
+      this.snippet.appendText(line);
+      this.spacer.endOfLine();
+    });
+  }
+
   // Render a descriptive text line
   // <Description>
   private textEntity(entity: Text) {
@@ -155,6 +172,12 @@ export class Renderer {
     } else {
       this.placeholder(placeholder);
     }
+  }
+
+  // Is param name printed before its type
+  private paramNameBeforeType(): boolean {
+    const option = this.options.paramNameBeforeType;
+    return option !== undefined ? option : !!this.config.get("paramNameBeforeType");
   }
 
   // Render a placeholder. Placeholders of the same link key share a number and are filled in together.
@@ -196,7 +219,8 @@ export class Renderer {
   private decorateSnippet() {
     let lines: string[] = this.snippet.value.split(this.eol);
     lines = lines.filter((element, position, array) => {
-      return (position === 0 || element !== array[position - 1]) && position < array.length - 1;
+      const isRepeatedEmptyLine = position > 0 && element === "" && array[position - 1] === "";
+      return !isRepeatedEmptyLine && position < array.length - 1;
     });
     const decoratedLines: string = lines
       .map((line) => "#" + (line ? " " + line : ""))

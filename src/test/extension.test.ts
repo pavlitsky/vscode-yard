@@ -2,7 +2,7 @@
 import * as assert from "assert";
 import { readFileSync } from "fs";
 import * as path from "path";
-import { commands, ConfigurationTarget, extensions, TextDocument, TextEditor, Uri, window, workspace,
+import { commands, ConfigurationTarget, extensions, Selection, TextDocument, TextEditor, Uri, window, workspace,
   WorkspaceConfiguration } from "vscode";
 
 const extensionID = "pavlitsky.yard";
@@ -22,10 +22,11 @@ async function updateConfig(options) {
 }
 
 // Assert that processed file contains the same result as expected file.
-// Snippet can be filled in with an optional callback before comparison.
-async function expectFileDocumented(fileName: string, fillSnippet?: () => Promise<void>) {
+// Snippet can be filled in with an optional callback before comparison. Cursor is put on a first line by default.
+async function expectFileDocumented(fileName: string, fillSnippet?: () => Promise<void>, line: number = 0) {
   const textDocument = await workspace.openTextDocument(path.join(projectPath, fileName + ".rb"));
   const editor = await window.showTextDocument(textDocument);
+  editor.selection = new Selection(line, 0, line, 0);
   await commands.executeCommand("extension.generateYard");
   if (fillSnippet) { await fillSnippet(); }
   const generatedText = editor.document.getText();
@@ -120,10 +121,25 @@ suite("Default Documenter Tests", () => {
     "attribute/class_accessor",
     "attribute/class_attribute",
     "attribute/parentheses",
+    "method/update/sync",
+    "method/update/rename_options",
+    "method/update/kept_tags",
+    "method/update/name_first",
+    "method/update/initialize",
+    "method/update/up_to_date",
+    "method/update/class_documented",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
   expectDocumented(testCases);
+
+  test("document method/update/cursor_on_def", async () => {
+    await expectFileDocumented("method/update/cursor_on_def", undefined, 2);
+  });
+
+  test("document method/update/magic_comment", async () => {
+    await expectFileDocumented("method/update/magic_comment", undefined, 1);
+  });
 });
 
 suite("Verbose Documenter Tests", () => {
@@ -181,6 +197,7 @@ suite("Curt Documenter Tests", () => {
     "curt/instance_two_params",
     "curt/options_hash_param",
     "curt/options_keys",
+    "curt/update",
     "curt/constant",
     "curt/attribute",
   ];
@@ -293,6 +310,8 @@ suite("Blocks Documenter Tests", () => {
     "method/yield/nested_def",
     "method/yield/heredoc",
     "method/yield/multiline_params",
+    "method/yield/update",
+    "method/yield/update_partial",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });

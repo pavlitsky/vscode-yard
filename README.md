@@ -66,6 +66,50 @@ Use `Tab` and `Shift+Tab` keys to navigate and fill in placeholders.
 
 Done!
 
+### Updating documentation
+
+Run the same command on a documented method, with cursor on the method definition or
+anywhere within its comment, to sync documentation with the code. Texts and tags are kept
+as they're written, missing tags are added as placeholders:
+
+* Params are reordered to match the method signature. A param which no longer exists is
+  renamed if a new param takes its place, otherwise it's removed.
+* Missing `@param`, `@option`, `@yield`, `@yieldparam`, `@yieldreturn` and `@return` tags are added.
+* New tags follow the params style of the existing documentation.
+
+```ruby
+#
+# Fetch a resource.
+#
+# @param [String] path resource path
+# @param [Integer] retries how many times to retry
+#
+# @note Raises on timeout.
+#
+def fetch(url, timeout, retries = 3)
+end
+```
+
+becomes
+
+```ruby
+#
+# Fetch a resource.
+#
+# @param [String] url resource path
+# @param [<Type>] timeout <description>
+# @param [Integer] retries how many times to retry
+#
+# @return [<Type>] <description>
+#
+# @note Raises on timeout.
+#
+def fetch(url, timeout, retries = 3)
+end
+```
+
+Documentation of classes, modules, constants and attributes isn't updated.
+
 Another snippets examples, default spacers setup:
 
 ```ruby
@@ -197,7 +241,6 @@ a curt and verbose documentation styles.
 
 ## TODO
 
-* (killer feature :fire:) Ability to update existing documentation.
 * (maybe) Editor snippets for tags (`@option`, `@param` etc) or tags autocompletion
 * (maybe) A better support for array / keyword args splats, see
   [comment](https://github.com/lsegal/yard/issues/439#issuecomment-3292412).
@@ -207,5 +250,5 @@ a curt and verbose documentation styles.
 If hotkey isn't working open VS Code Keyboard Shortcuts and check for keybinging
 conflicts.
 
-This also may happen if destination is already documented. In this case extension
-silently does nothing.
+This also may happen if a documented definition isn't a method or its documentation is
+up to date. In this case extension silently does nothing.

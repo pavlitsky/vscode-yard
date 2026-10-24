@@ -23,6 +23,9 @@ export default class MethodDef implements IBaseParser {
     RestParameterNode: "*",
   };
 
+  // Existing method documentation is synced with the method
+  public readonly supportsUpdate = true;
+
   constructor(private node: Node) {}
 
   // Is this parser ready to process the node

@@ -14,6 +14,7 @@ export class TagOption {
       types = "",
       defaultValue = "",
       text = "",
+      type = "TagOption",
     } = params;
 
     this.paramName = paramName;
@@ -21,5 +22,6 @@ export class TagOption {
     this.types = types;
     this.defaultValue = defaultValue;
     this.text = text;
+    this.type = type;
   }
 }
