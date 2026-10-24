@@ -263,6 +263,10 @@ suite("Default Documenter Tests", () => {
     await expectFileDocumented("method/update/cursor_on_def", undefined, 2);
   });
 
+  test("document method/see/disabled", async () => {
+    await expectFileDocumented("method/see/disabled", undefined, 1);
+  });
+
   test("document method/sorbet/cursor_on_def", async () => {
     await expectFileDocumented("method/sorbet/cursor_on_def", undefined, 1);
   });
@@ -442,6 +446,33 @@ suite("TODO Notes Documenter Tests", () => {
     const items = await yardCompletions("completion/todo", 1, 3);
     assert.deepEqual(missingTagLabels(items), ["@return", "@todo bypass cache"]);
     assert.equal((items[1].insertText as SnippetString).value, "@todo bypass cache");
+  });
+});
+
+suite("Overridden Methods Documenter Tests", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: false,
+      raise: true,
+      see: true, // Non default
+      yield: false,
+    },
+  };
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  suiteTeardown(async () => { await updateConfig({ tags: { see: undefined } }); });
+  ["instance", "class_method", "module", "update"].forEach((testCase) => {
+    test(`document method/see/${testCase}`, () => expectFileDocumented(`method/see/${testCase}`, undefined, 1));
+  });
+
+  test("document method/see/singleton", () => expectFileDocumented("method/see/singleton", undefined, 2));
+
+  test("complete reference to an overridden method", async () => {
+    const items = await yardCompletions("completion/see", 2, 5);
+    assert.deepEqual(missingTagLabels(items), ["@return", "@see User#save"]);
   });
 });
 

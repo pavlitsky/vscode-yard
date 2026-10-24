@@ -11,6 +11,7 @@ import { OverloadTag } from "../../tags/overload";
 import { ParamTag } from "../../tags/param";
 import { RaiseTag } from "../../tags/raise";
 import { ReturnTag } from "../../tags/return";
+import { SeeTag } from "../../tags/see";
 import { YieldTag } from "../../tags/yield";
 import { YieldParamTag } from "../../tags/yield_param";
 import { YieldReturnTag } from "../../tags/yield_return";
@@ -22,6 +23,7 @@ import { OptionsUsage } from "../options_usage";
 import { RaiseUsage } from "../raise_usage";
 import { ReturnUsage } from "../return_usage";
 import { nodocTags } from "../nodoc";
+import { SuperUsage } from "../super_usage";
 import { todoTags } from "../todo_notes";
 import { methodSignature, rbsOverloads } from "../signatures/method_signature";
 import { IOverloadParam, overloadParams } from "../signatures/overload";
@@ -93,7 +95,8 @@ export default class MethodDef implements IBaseParser {
 
   // Parse documentation tree. Types are taken from a Sorbet or an rbs-inline signature if there's one.
   // Method overloaded by rbs-inline annotations is documented with @overload tags if it's enabled.
-  // Method hidden from RDoc with ':nodoc:' is private. TODO notes within the method are documented if it's enabled.
+  // Method hidden from RDoc with ':nodoc:' is private. TODO notes within the method are documented if it's enabled,
+  // a method calling super refers to the overridden method if it's enabled.
   public parse(context: IParseContext = {}): IEntity[] {
     const overloads = context.overloads ? rbsOverloads(this.site.previous ?? null, context.comments || []) : undefined;
     if (overloads) {
@@ -104,6 +107,7 @@ export default class MethodDef implements IBaseParser {
         ...nodocTags(this.node, context),
         ...overloads.map((overload, index) => this.buildOverload(context, overload, index)),
         ...this.buildRaises(context),
+        this.buildSee(context),
         ...todoTags(this.node, context),
       ].filter((element): element is IEntity => element !== undefined);
     }
@@ -117,6 +121,7 @@ export default class MethodDef implements IBaseParser {
       this.buildYield(context, signature),
       ...this.buildRaises(context),
       this.buildReturn(signature),
+      this.buildSee(context),
       ...todoTags(this.node, context),
     ].filter((element): element is IEntity => element !== undefined);
   }
@@ -162,6 +167,11 @@ export default class MethodDef implements IBaseParser {
   // Name of the method
   protected get methodName(): string {
     return this.def.name;
+  }
+
+  // Is the method a class method: def self.name
+  protected get isClassMethod(): boolean {
+    return isNode(this.def.receiver, "SelfNode");
   }
 
   // Build description section
@@ -278,6 +288,13 @@ export default class MethodDef implements IBaseParser {
   private defaultSource(param: Node | undefined): string {
     const value = param && "value" in param ? param.value as Node | null : null;
     return value ? value.location.slice().replace(/\s*\n\s*/g, " ") : "";
+  }
+
+  // Build see tag referring to a method of a superclass overridden by the method if it calls super
+  private buildSee(context: IParseContext): IEntity | undefined {
+    if (!context.see) { return; }
+    const reference = (new SuperUsage(this.body, this.site.ancestors ?? [])).detect(this.methodName, this.isClassMethod);
+    return reference ? new SeeTag({ text: reference }) : undefined;
   }
 
   // Build return section

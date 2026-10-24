@@ -31,6 +31,8 @@ export interface IDocGaps {
   returnTag?: TagWithTypes;
   // Overloads of a method documented without @overload tags
   overloads: Overload[];
+  // Undocumented reference to an overridden method
+  seeTag?: Tag;
   // Undocumented TODO notes
   todos: Tag[];
 }
@@ -50,9 +52,9 @@ export function generatedTodos(entities: IEntity[]): Tag[] {
   return entities.filter((entity) => entity.type === "Tag" && (entity as Tag).tagName === "todo") as Tag[];
 }
 
-// Is a TODO note documented with a @todo tag of the same text
-export function isTodoDocumented(items: IDocItem[], text: string): boolean {
-  return items.some((item) => item.tag === "todo" && item.lines[0].replace(/^@todo\s*/, "").trim() === text);
+// Is a text documented with a tag of the same name and text: @todo, @see
+export function isTextDocumented(items: IDocItem[], tagName: string, text: string): boolean {
+  return items.some((item) => item.tag === tagName && item.lines[0].replace(/^@\S+\s*/, "").trim() === text);
 }
 
 // Generated overloads
@@ -92,7 +94,7 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
       option.key && !tagged("option").some((item) => sameName(item.name, param.name) && item.key === option.key))),
     overloads: tagged("overload").length === 0 ? generatedOverloads(entities) : [],
     params: params.filter((param) => !isDocumented(param)),
-    todos: generatedTodos(entities).filter((todo) => !isTodoDocumented(items, todo.text)),
+    todos: generatedTodos(entities).filter((todo) => !isTextDocumented(items, "todo", todo.text)),
     yieldParams: [],
   };
 
@@ -114,6 +116,9 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
   if (deprecatedTag && tagged("deprecated").length === 0) { gaps.deprecatedTag = deprecatedTag; }
   const privateTag = generatedTextTag(entities, "private");
   if (privateTag && tagged("private").length === 0) { gaps.privateTag = privateTag; }
+
+  const seeTag = generatedTextTag(entities, "see");
+  if (seeTag && !isTextDocumented(items, "see", seeTag.text)) { gaps.seeTag = seeTag; }
 
   const returnTag = generatedReturn(entities);
   if (returnTag && tagged("return").length === 0) { gaps.returnTag = returnTag; }

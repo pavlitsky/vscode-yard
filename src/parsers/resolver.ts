@@ -1,7 +1,7 @@
 "use strict";
 import type { Node } from "@ruby/prism" with { "resolution-mode": "import" };
 import type { ParseError } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
-import { neighbourStatements, walk } from "../ast/prism";
+import { ancestors, neighbourStatements, walk } from "../ast/prism";
 import { IBaseParser } from "./definitions/base_parser";
 import definitions_parsers from "./definitions_parsers";
 import { isSig } from "./signatures/sorbet";
@@ -23,8 +23,9 @@ export class ParserResolver {
       if (node.location.startLine() !== this.line) { return; }
       if (!sig && isSig(node)) { sig = node; }
       const { previous } = neighbourStatements(this.root, node);
+      const site = { ancestors: ancestors(this.root, node), errors: this.errors, previous };
       for (const parser of definitions_parsers) {
-        const p = new parser(node, { errors: this.errors, previous });
+        const p = new parser(node, site);
         if (p.isApplicable()) {
           resolved = p;
           return false;

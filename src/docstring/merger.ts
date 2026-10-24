@@ -4,7 +4,7 @@ import { TagWithOptions } from "../entities/tag_with_options";
 import { IEntity } from "../types";
 import {
   generatedOverloads, generatedRaises, generatedReturn, generatedTextTag, generatedTodos, generatedYield,
-  isRaiseDocumented, isTodoDocumented,
+  isRaiseDocumented, isTextDocumented,
 } from "./gaps";
 import { bareName, paramNameBeforeType, sameName } from "./names";
 import { IDocItem } from "./parser";
@@ -16,10 +16,10 @@ export interface IMergeSpacers {
 }
 
 // Order of tags: abstract, deprecated and private tags, then params with options or overloads, then yield section,
-// then raised exceptions, then return value, then TODO notes. Other tags aren't ranked.
+// then raised exceptions, then return value, then an overridden method, then TODO notes. Other tags aren't ranked.
 const tagRanks: { [tag: string]: number } = {
-  abstract: 0, deprecated: 0, option: 1, overload: 1, param: 1, private: 0, raise: 3, return: 4, todo: 5, yield: 2,
-  yieldparam: 2, yieldreturn: 2,
+  abstract: 0, deprecated: 0, option: 1, overload: 1, param: 1, private: 0, raise: 3, return: 4, see: 5, todo: 6,
+  yield: 2, yieldparam: 2, yieldreturn: 2,
 };
 
 // Part of a merged docstring: an existing item or a new entity
@@ -64,6 +64,7 @@ export class DocstringMerger {
     segments = this.mergeYield(segments);
     segments = this.mergeRaises(segments);
     segments = this.mergeReturn(segments);
+    segments = this.mergeSee(segments);
     segments = this.mergeTodos(segments);
 
     const lines = description.flatMap((item) => item.lines);
@@ -183,14 +184,26 @@ export class DocstringMerger {
     return this.insertGroup(segments, [{ entity: generated, rank: 4 }], 4);
   }
 
+  // Add a reference to an overridden method if it isn't documented, other references are kept
+  private mergeSee(segments: ISegment[]): ISegment[] {
+    const generated = generatedTextTag(this.entities, "see");
+    if (!generated || isTextDocumented(this.items, "see", generated.text)) { return segments; }
+    const last = this.lastIndex(segments, (s) => s.item?.tag === "see");
+    if (last < 0) { return this.insertGroup(segments, [{ entity: generated, rank: 5 }], 5); }
+    const result = segments.slice();
+    result.splice(last + 1, 0, { entity: generated, rank: 5 });
+    this.changed = true;
+    return result;
+  }
+
   // Add tags of undocumented TODO notes after documented ones, documented notes are kept even if they're gone
   private mergeTodos(segments: ISegment[]): ISegment[] {
     const missing = generatedTodos(this.entities)
-      .filter((tag) => !isTodoDocumented(this.items, tag.text))
-      .map((entity) => ({ entity, rank: 5 }));
+      .filter((tag) => !isTextDocumented(this.items, "todo", tag.text))
+      .map((entity) => ({ entity, rank: 6 }));
     if (missing.length === 0) { return segments; }
     const last = this.lastIndex(segments, (s) => s.item?.tag === "todo");
-    if (last < 0) { return this.insertGroup(segments, missing, 5); }
+    if (last < 0) { return this.insertGroup(segments, missing, 6); }
     const result = segments.slice();
     result.splice(last + 1, 0, ...missing);
     this.changed = true;

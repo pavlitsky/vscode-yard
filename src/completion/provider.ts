@@ -74,9 +74,10 @@ export class TagCompletionProvider implements CompletionItemProvider {
       const overloads = !!workspace.getConfiguration("yard.tags").get("overload") && isOverloadable(items);
       const trailingComment = (line: number) => comments.trailing(line);
       const commentsWithin = (startLine: number, endLine: number) => comments.within(startLine, endLine);
-      const todos = !!workspace.getConfiguration("yard.tags").get("todo");
+      const config = workspace.getConfiguration("yard.tags");
+      const [see, todos] = [!!config.get("see"), !!config.get("todo")];
       entities = parser.parse({
-        author, blocks: true, comments: block.lines, commentsWithin, overloads, todos, trailingComment,
+        author, blocks: true, comments: block.lines, commentsWithin, overloads, see, todos, trailingComment,
       });
     }
     return { entities, eol, items, paramNameBeforeType: paramNameBeforeType(items), parser };
@@ -104,6 +105,7 @@ export class TagCompletionProvider implements CompletionItemProvider {
     gaps.yieldParams.forEach((param) => add("@yieldparam " + param.name, "Block param", param));
     if (gaps.yieldReturn) { add("@yieldreturn", "Block return value", gaps.yieldReturn); }
     if (gaps.returnTag) { add("@return", "Return value", gaps.returnTag); }
+    if (gaps.seeTag) { add("@see " + gaps.seeTag.text, "Overridden method", gaps.seeTag); }
     gaps.todos.forEach((todo) => add("@todo " + todo.text, "TODO note", todo));
     this.raises(context).forEach((exception) =>
       add("@raise [" + exception + "]", "Raised exception", new RaiseTag({ types: exception })));

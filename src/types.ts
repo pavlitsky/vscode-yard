@@ -27,4 +27,6 @@ export interface IParseContext {
   commentsWithin?: (startLine: number, endLine: number) => string[];
   // Is documenting of TODO notes with @todo tags enabled
   todos?: boolean;
+  // Is referring to overridden methods of superclasses with @see tags enabled
+  see?: boolean;
 }

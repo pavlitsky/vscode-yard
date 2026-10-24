@@ -22,6 +22,7 @@ It's able to document:
 * Deprecated methods warning about their deprecation.
 * Definitions hidden from RDoc with `# :nodoc:`, with `@private` tag.
 * TODO notes written in methods, with `@todo` tags (optional, see `yard.tags.todo` setting).
+* Methods overriding methods of a superclass, with `@see` tags (optional, see `yard.tags.see` setting).
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
@@ -88,7 +89,7 @@ as they're written, missing tags are added as placeholders:
 * Params are reordered to match the method signature. A param which no longer exists is
   renamed if a new param takes its place, otherwise it's removed.
 * Missing `@abstract`, `@deprecated`, `@private`, `@param`, `@option`, `@overload`, `@yield`, `@yieldparam`,
-  `@yieldreturn`, `@raise`, `@return` and `@todo` tags are added.
+  `@yieldreturn`, `@raise`, `@return`, `@see` and `@todo` tags are added.
   Documented exceptions are kept even if a method doesn't raise them.
 * New tags follow the params style of the existing documentation.
 
@@ -204,7 +205,7 @@ so definitions spanning multiple lines and any Ruby syntax are supported.
 Requires VS Code 1.90 or newer.
 
 List of generated tags: `@abstract`, `@attr`, `@attr_reader`, `@author`, `@deprecated`, `@option`,
-`@overload`, `@param`, `@private`, `@raise`, `@return`, `@todo`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
+`@overload`, `@param`, `@private`, `@raise`, `@return`, `@see`, `@todo`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
 `@!attribute`, `@!method`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
@@ -426,6 +427,27 @@ def fetch(url)
 end
 ```
 
+A method calling `super` refers to the method it overrides with a `@see` tag, when `yard.tags.see`
+setting is enabled. YARD doesn't link overridden methods, and documentation of a method isn't
+inherited once it's documented. The overridden method is looked up in a superclass written as a constant,
+methods of `class << self` and `def self.name` methods refer to class methods. Methods of modules
+and blocks don't get the tag, `super` goes to an unknown ancestor there:
+
+```ruby
+class Admin < Base::User
+  #
+  # <Description>
+  #
+  # @return [<Type>] <description>
+  #
+  # @see Base::User#name
+  #
+  def name
+    super.upcase
+  end
+end
+```
+
 ### Overloads
 
 A method with several rbs-inline method types, written as several `#:` annotations or as
@@ -539,6 +561,7 @@ a curt and verbose documentation styles.
 "yard.tags.yield" // Document blocks of methods with @yield, @yieldparam and @yieldreturn tags
 "yard.tags.raise" // Document exceptions raised in methods with @raise tags
 "yard.tags.overload" // Document methods overloaded by rbs-inline annotations with @overload tags
+"yard.tags.see" // Refer to methods of superclasses overridden by methods calling super with @see tags
 "yard.tags.todo" // Document TODO, FIXME, XXX, HACK and OPTIMIZE notes written in method bodies with @todo tags
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 "yard.completion.enabled" // Complete YARD tags in comments

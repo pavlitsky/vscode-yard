@@ -60,7 +60,7 @@ export default class YardDocumenter {
     const context: IParseContext = {
       blocks: !!config.get("yield"), comments, overloads: !!config.get("overload"), raises: !!config.get("raise"),
       commentsWithin: (startLine, endLine) => blocks.within(startLine, endLine),
-      todos: !!config.get("todo"), trailingComment: (line) => blocks.trailing(line),
+      see: !!config.get("see"), todos: !!config.get("todo"), trailingComment: (line) => blocks.trailing(line),
     };
     if (builder.requiresAuthor() && config.get("author") && config.get("authorFromGit")) {
       context.author = await (new GitAuthorResolver(document)).resolve();

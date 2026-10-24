@@ -29,6 +29,8 @@
   literal values.
 - Fill in types declared by Sorbet signatures (`sig { params(...).returns(...) }`) and rbs-inline annotations
   (`#: (String) -> bool`, `# @rbs name: String`). Documentation is placed above `sig` and above `#:` annotations.
+- Refer to methods of superclasses overridden by methods calling `super` with `@see` tags, enabled with
+  `yard.tags.see` setting.
 - Document TODO notes written in methods with `@todo` tags, enabled with `yard.tags.todo` setting.
 - Document definitions hidden from RDoc with `# :nodoc:` with `@private` tag, YARD doesn't read RDoc's directive.
 - Document methods and attributes of `ActiveSupport::Concern` blocks (`included do`, `class_methods do`)

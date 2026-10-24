@@ -124,6 +124,11 @@
                     "default": false,
                     "description": "Document TODO, FIXME, XXX, HACK and OPTIMIZE notes written in method bodies with @todo tags"
                 },
+                "yard.tags.see": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Refer to methods of superclasses overridden by methods calling super with @see tags"
+                },
                 "yard.completion.enabled": {
                     "type": "boolean",
                     "default": true,
