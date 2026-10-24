@@ -88,7 +88,7 @@ export class Renderer {
     this.snippet.appendText("@" + entity.tagName);
     if (entity.hasText) {
       this.snippet.appendText(" ");
-      this.textOrPlaceholder(entity.text, "<description>");
+      this.textOrPlaceholder(entity.text, entity.textPlaceholder || "<description>");
     }
     this.spacer.endOfLine();
   }

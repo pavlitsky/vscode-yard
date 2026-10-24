@@ -29,6 +29,8 @@
   literal values.
 - Fill in types declared by Sorbet signatures (`sig { params(...).returns(...) }`) and rbs-inline annotations
   (`#: (String) -> bool`, `# @rbs name: String`). Documentation is placed above `sig` and above `#:` annotations.
+- Append `@since` tag to new documentation, prefilled with a gem version read from a gemspec or `version.rb`,
+  enabled with `yard.tags.since` setting.
 - Refer to methods of superclasses overridden by methods calling `super` with `@see` tags, enabled with
   `yard.tags.see` setting.
 - Document TODO notes written in methods with `@todo` tags, enabled with `yard.tags.todo` setting.

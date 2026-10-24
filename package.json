@@ -129,6 +129,11 @@
                     "default": false,
                     "description": "Refer to methods of superclasses overridden by methods calling super with @see tags"
                 },
+                "yard.tags.since": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Append @since tag to new documentation, prefilled with a version of a gem the document belongs to"
+                },
                 "yard.completion.enabled": {
                     "type": "boolean",
                     "default": true,

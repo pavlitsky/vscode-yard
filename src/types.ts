@@ -29,4 +29,8 @@ export interface IParseContext {
   todos?: boolean;
   // Is referring to overridden methods of superclasses with @see tags enabled
   see?: boolean;
+  // Is documenting of a version new definitions are added in with @since tag enabled
+  since?: boolean;
+  // Version of a gem a document belongs to
+  version?: string;
 }

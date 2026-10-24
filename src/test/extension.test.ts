@@ -476,6 +476,32 @@ suite("Overridden Methods Documenter Tests", () => {
   });
 });
 
+suite("Since Documenter Tests", () => {
+  const configOptions = {
+    spacers: defaultSpacers,
+    tags: {
+      author: false,
+      authorFromGit: false,
+      paramNameBeforeType: false,
+      raise: true,
+      since: true, // Non default
+      yield: false,
+    },
+  };
+
+  const testCases = [
+    "since/gem/lib/sample/method",
+    "since/gem/lib/sample/class",
+    "since/gem/lib/sample/update",
+    "since/literal_gem/lib/constant",
+    "since/no_gem",
+  ];
+
+  suiteSetup(async () => { await updateConfig(configOptions); });
+  suiteTeardown(async () => { await updateConfig({ tags: { since: undefined } }); });
+  expectDocumented(testCases);
+});
+
 suite("Author from git", () => {
   const configOptions = {
     spacers: defaultSpacers,

@@ -23,6 +23,7 @@ import { OptionsUsage } from "../options_usage";
 import { RaiseUsage } from "../raise_usage";
 import { ReturnUsage } from "../return_usage";
 import { nodocTags } from "../nodoc";
+import { sinceTags } from "../since";
 import { SuperUsage } from "../super_usage";
 import { todoTags } from "../todo_notes";
 import { methodSignature, rbsOverloads } from "../signatures/method_signature";
@@ -96,7 +97,8 @@ export default class MethodDef implements IBaseParser {
   // Parse documentation tree. Types are taken from a Sorbet or an rbs-inline signature if there's one.
   // Method overloaded by rbs-inline annotations is documented with @overload tags if it's enabled.
   // Method hidden from RDoc with ':nodoc:' is private. TODO notes within the method are documented if it's enabled,
-  // a method calling super refers to the overridden method if it's enabled.
+  // a method calling super refers to the overridden method if it's enabled. Version a method is added in is
+  // documented if it's enabled.
   public parse(context: IParseContext = {}): IEntity[] {
     const overloads = context.overloads ? rbsOverloads(this.site.previous ?? null, context.comments || []) : undefined;
     if (overloads) {
@@ -109,6 +111,7 @@ export default class MethodDef implements IBaseParser {
         ...this.buildRaises(context),
         this.buildSee(context),
         ...todoTags(this.node, context),
+        ...sinceTags(context),
       ].filter((element): element is IEntity => element !== undefined);
     }
     const signature = methodSignature(this.parameters, this.site.previous ?? null, context.comments || []);
@@ -123,6 +126,7 @@ export default class MethodDef implements IBaseParser {
       this.buildReturn(signature),
       this.buildSee(context),
       ...todoTags(this.node, context),
+      ...sinceTags(context),
     ].filter((element): element is IEntity => element !== undefined);
   }
 

@@ -5,6 +5,7 @@ import { AuthorTag } from "../../tags/author";
 import { DescriptionTag } from "../../tags/description";
 import { IParseContext } from "../../types";
 import { nodocTags } from "../nodoc";
+import { sinceTags } from "../since";
 import { IBaseParser } from "./base_parser";
 import { structMembers } from "./struct";
 
@@ -31,6 +32,7 @@ export default class ClassOrModule implements IBaseParser {
       ...members,
       ...nodocTags(this.node, context),
       new AuthorTag({ authorName: name, authorEmail: email }),
+      ...sinceTags(context),
     ];
   }
 }

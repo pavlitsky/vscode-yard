@@ -6,6 +6,7 @@ import { DescriptionTag } from "../../tags/description";
 import { ReturnTag } from "../../tags/return";
 import { IEntity, IParseContext } from "../../types";
 import { nodocTags } from "../nodoc";
+import { sinceTags } from "../since";
 import { literalName, positionalArguments } from "../call_arguments";
 import { isSig, SorbetSignature } from "../signatures/sorbet";
 import { IBaseParser, IDefinitionSite } from "./base_parser";
@@ -34,7 +35,7 @@ export default class Attribute implements IBaseParser {
   // Attribute hidden from RDoc with ':nodoc:' is private.
   public parse(context: IParseContext = {}): IEntity[] {
     if (this.classRegExp.test((this.node as CallNode).name)) { return this.directives(context); }
-    return [new ReturnTag({ types: this.types() }), ...nodocTags(this.node, context)];
+    return [new ReturnTag({ types: this.types() }), ...nodocTags(this.node, context), ...sinceTags(context)];
   }
 
   // Directive for each attribute: @!attribute [rw] name, class attributes are named with 'self.'
@@ -46,7 +47,10 @@ export default class Attribute implements IBaseParser {
       .filter((arg) => isNode(arg, "SymbolNode"))
       .map((arg) => new Directive({
         directiveName: "attribute",
-        entities: [new DescriptionTag(), new ReturnTag({ types: this.types() }), ...nodocTags(this.node, context)],
+        entities: [
+          new DescriptionTag(), new ReturnTag({ types: this.types() }), ...nodocTags(this.node, context),
+          ...sinceTags(context),
+        ],
         signature: "[" + access + "] " + prefix + literalName(arg),
       }));
   }

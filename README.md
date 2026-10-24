@@ -23,6 +23,7 @@ It's able to document:
 * Definitions hidden from RDoc with `# :nodoc:`, with `@private` tag.
 * TODO notes written in methods, with `@todo` tags (optional, see `yard.tags.todo` setting).
 * Methods overriding methods of a superclass, with `@see` tags (optional, see `yard.tags.see` setting).
+* Version of a gem new definitions are added in, with `@since` tag (optional, see `yard.tags.since` setting).
 * Classes and Modules.
 * Constants.
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
@@ -205,7 +206,7 @@ so definitions spanning multiple lines and any Ruby syntax are supported.
 Requires VS Code 1.90 or newer.
 
 List of generated tags: `@abstract`, `@attr`, `@attr_reader`, `@author`, `@deprecated`, `@option`,
-`@overload`, `@param`, `@private`, `@raise`, `@return`, `@see`, `@todo`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
+`@overload`, `@param`, `@private`, `@raise`, `@return`, `@see`, `@since`, `@todo`, `@yield`, `@yieldparam`, `@yieldreturn`. Generated directives:
 `@!attribute`, `@!method`.
 
 `@author` name and email are taken from git config (`user.name` and `user.email`)
@@ -448,6 +449,25 @@ class Admin < Base::User
 end
 ```
 
+New documentation of methods, classes, modules, constants and attributes ends with a `@since` tag,
+when `yard.tags.since` setting is enabled. Its version is a placeholder prefilled with a version
+of the gem a document belongs to, so it can be kept or typed over with a next version. The gem
+is the nearest directory with a gemspec up from the document, version is read from the gemspec
+(`spec.version = "1.4.0"`) or from `VERSION` constant of `lib/**/version.rb`. Updating
+documentation doesn't add `@since` tag, existing definitions aren't new:
+
+```ruby
+#
+# <Description>
+#
+# @return [<Type>] <description>
+#
+# @since 1.4.0
+#
+def fetch
+end
+```
+
 ### Overloads
 
 A method with several rbs-inline method types, written as several `#:` annotations or as
@@ -562,6 +582,7 @@ a curt and verbose documentation styles.
 "yard.tags.raise" // Document exceptions raised in methods with @raise tags
 "yard.tags.overload" // Document methods overloaded by rbs-inline annotations with @overload tags
 "yard.tags.see" // Refer to methods of superclasses overridden by methods calling super with @see tags
+"yard.tags.since" // Append @since tag to new documentation, prefilled with a version of a gem
 "yard.tags.todo" // Document TODO, FIXME, XXX, HACK and OPTIMIZE notes written in method bodies with @todo tags
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 "yard.completion.enabled" // Complete YARD tags in comments

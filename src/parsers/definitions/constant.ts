@@ -4,6 +4,7 @@ import { isNode } from "../../ast/prism";
 import { ReturnTag } from "../../tags/return";
 import { IEntity, IParseContext } from "../../types";
 import { nodocTags } from "../nodoc";
+import { sinceTags } from "../since";
 import { IBaseParser } from "./base_parser";
 
 // Parse a constant definition into documentation entities
@@ -20,6 +21,6 @@ export default class Constant implements IBaseParser {
 
   // Parse documentation tree, constant hidden from RDoc with ':nodoc:' is private
   public parse(context: IParseContext = {}): IEntity[] {
-    return [new ReturnTag(), ...nodocTags(this.node, context)];
+    return [new ReturnTag(), ...nodocTags(this.node, context), ...sinceTags(context)];
   }
 }
