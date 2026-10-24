@@ -3,3 +3,14 @@
 export interface IEntity {
   type?: string;
 }
+
+// Author's name and email
+export interface IAuthorInfo {
+  name?: string;
+  email?: string;
+}
+
+// Environment-dependent details passed to parsers
+export interface IParseContext {
+  author?: IAuthorInfo;
+}

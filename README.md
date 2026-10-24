@@ -122,6 +122,10 @@ after snippet filled in.
 
 List of generated tags: `@author`, `@option`, `@param`, `@return`.
 
+`@author` name and email are taken from git config (`user.name` and `user.email`)
+of the repository the document belongs to, or from global git config if it's outside
+of a repository. Placeholders are inserted when values can't be resolved.
+
 ## Configuration
 
 Insertion of empty lines are configurable to make it able to tune between
@@ -136,6 +140,7 @@ a curt and verbose documentation styles.
 "yard.spacers.beforeSingleTag" // Prepend an empty line to directives or single tags (for example constants)
 "yard.spacers.afterSingleTag" // Append an empty line to directives or single tags (for example constants)
 "yard.tags.author" // Append @author tag to Class and Module documentation
+"yard.tags.authorFromGit" // Fill @author name and email from git config (user.name and user.email)
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 ```
 
@@ -143,7 +148,6 @@ a curt and verbose documentation styles.
 
 * Ability to document blocks: `@yield`, `@yieldparam`, `@yieldreturn`.
 * Support for non-empty options hash parameters.
-* Resolve `@author` information from environment or settings.
 * (killer feature :fire:) Ability to update existing documentation.
 * (maybe) Editor snippets for tags (`@option`, `@param` etc) or tags autocompletion
 * (maybe) A better support for array / keyword args splats, see

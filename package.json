@@ -99,6 +99,11 @@
                     "default": false,
                     "description": "Append @author tag to Class and Module documentation"
                 },
+                "yard.tags.authorFromGit": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Fill @author name and email from git config (user.name and user.email) of the current repository, or global git config outside of a repository"
+                },
                 "yard.tags.paramNameBeforeType": {
                     "type": "boolean",
                     "default": true,

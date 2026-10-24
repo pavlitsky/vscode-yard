@@ -51,6 +51,7 @@ suite("Default Documenter Tests", () => {
     },
     tags: {
       author: true,
+      authorFromGit: false,
       paramNameBeforeType: false,
     },
   };
@@ -111,6 +112,7 @@ suite("Verbose Documenter Tests", () => {
     },
     tags: {
       author: true,
+      authorFromGit: false,
       paramNameBeforeType: false,
     },
   };
@@ -140,6 +142,7 @@ suite("Curt Documenter Tests", () => {
     },
     tags: {
       author: false,
+      authorFromGit: false,
       paramNameBeforeType: false,
     },
   };
@@ -169,6 +172,7 @@ suite("Special options", () => {
     },
     tags: {
       author: true,
+      authorFromGit: false,
       paramNameBeforeType: true, // Non default
     },
   };
@@ -181,6 +185,47 @@ suite("Special options", () => {
   expectDocumented(testCases);
 });
 
+suite("Author from git", () => {
+  const configOptions = {
+    spacers: {
+      afterDescription: true,
+      afterSingleTag: false,
+      afterTags: true,
+      beforeDescription: true,
+      beforeSingleTag: false,
+      beforeTags: true,
+      separateTags: true,
+    },
+    tags: {
+      author: true,
+      authorFromGit: true,
+      paramNameBeforeType: true,
+    },
+  };
+
+  // Git config passed through environment overrides repository, global and system configs
+  const gitEnv = {
+    GIT_CONFIG_COUNT: "2",
+    GIT_CONFIG_KEY_0: "user.name",
+    GIT_CONFIG_KEY_1: "user.email",
+    GIT_CONFIG_VALUE_0: "Test User",
+    GIT_CONFIG_VALUE_1: "test@example.com",
+  };
+
+  const testCases = [
+    "author/class",
+    "author/module",
+  ];
+
+  suiteSetup(async () => {
+    await updateConfig(configOptions);
+    Object.assign(process.env, gitEnv);
+  });
+  suiteTeardown(() => {
+    Object.keys(gitEnv).forEach((key) => delete process.env[key]);
+  });
+  expectDocumented(testCases);
+});
 
 suite("Extension Tests", () => {
   test("should be present", () => {

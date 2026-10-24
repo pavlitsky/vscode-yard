@@ -1,6 +1,8 @@
 "use strict";
-import { EndOfLine, Position, TextEditor, TextLine, window } from "vscode";
+import { EndOfLine, Position, TextEditor, TextLine, window, workspace } from "vscode";
 import { Builder } from "./builder";
+import { GitAuthorResolver } from "./resolvers/git_author";
+import { IParseContext } from "./types";
 
 // Generate YARD comment
 export default class YardDocumenter {
@@ -11,7 +13,7 @@ export default class YardDocumenter {
   private eol: string;
 
   // Build and insert documentation snippet
-  public generate() {
+  public async generate() {
     // Update current editor, line, cursor position
     this.updateContext();
 
@@ -19,11 +21,19 @@ export default class YardDocumenter {
     if (!this.shouldRun()) { return; }
 
     // Resolve documenter by current line's content
-    const snippet = (new Builder(this.lineText, this.eol)).build();
+    const builder = new Builder(this.lineText, this.eol);
+    const snippet = builder.build(await this.parseContext(builder));
     if (!snippet) { return; }
 
     // Insert documentation snippet
     return this.editor.insertSnippet(snippet, this.snippetPosition());
+  }
+
+  // Collect environment-dependent details for the builder
+  private async parseContext(builder: Builder): Promise<IParseContext> {
+    const config = workspace.getConfiguration("yard.tags");
+    if (!builder.requiresAuthor() || !config.get("author") || !config.get("authorFromGit")) { return {}; }
+    return { author: await (new GitAuthorResolver(this.editor.document)).resolve() };
   }
 
   private updateContext(textEditor?: TextEditor) {
