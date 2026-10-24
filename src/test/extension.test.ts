@@ -95,6 +95,9 @@ suite("Default Documenter Tests", () => {
     "method/instance_two_params",
     "method/default_params",
     "method/splat_params",
+    "method/anonymous_params",
+    "method/forwarding",
+    "method/post_params",
     "method/options_hash_param",
     "method/options/literal_keys",
     "method/options/body_keys",
@@ -143,6 +146,7 @@ suite("Default Documenter Tests", () => {
     "method/update/initialize",
     "method/update/up_to_date",
     "method/update/class_documented",
+    "method/update/splat_names",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });

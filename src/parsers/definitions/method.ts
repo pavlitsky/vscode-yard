@@ -17,12 +17,15 @@ import { IBaseParser } from "./base_parser";
 
 // Parse a class or an instance method definition into documentation entities
 export default class MethodDef implements IBaseParser {
-  // Prefixes of splat and block param names
-  private readonly sigils: { [type: string]: string } = {
-    BlockParameterNode: "&",
-    KeywordRestParameterNode: "**",
-    RestParameterNode: "*",
+  // Types placeholders of splat and block params
+  private readonly typesPlaceholders: { [type: string]: string } = {
+    BlockParameterNode: "Proc",
+    KeywordRestParameterNode: "Hash{Symbol => Object}",
+    RestParameterNode: "Array<Object>",
   };
+  // Params which can't be documented: arguments forwarding and anonymous splat and block params,
+  // YARD doesn't list them in a method signature
+  private readonly anonymousTypes = ["BlockParameterNode", "KeywordRestParameterNode", "RestParameterNode"];
 
   // Existing method documentation is synced with the method
   public readonly supportsUpdate = true;
@@ -63,12 +66,21 @@ export default class MethodDef implements IBaseParser {
   private buildParams(context: IParseContext): IEntity[] {
     return this.params()
       .filter((param) => !(context.blocks && isNode(param, "BlockParameterNode")))
+      .filter((param) => this.isDocumentable(param))
       .map((param) => {
         const name = this.paramName(param);
         const value: Node = "value" in param ? param.value as Node : null;
         const defaultValue = value ? value.location.slice() : "";
-        return new ParamTag({ name, defaultValue, options: this.buildOptions(param, value) });
+        const typesPlaceholder = this.typesPlaceholders[nodeType(param)] || "";
+        return new ParamTag({ name, defaultValue, options: this.buildOptions(param, value), typesPlaceholder });
       });
+  }
+
+  // Can param be documented with @param tag
+  private isDocumentable(param: Node): boolean {
+    const type = nodeType(param);
+    if (type === "ForwardingParameterNode") { return false; }
+    return this.anonymousTypes.indexOf(type) < 0 || !!("name" in param && param.name);
   }
 
   // Build yield section if method accepts a block
@@ -124,13 +136,13 @@ export default class MethodDef implements IBaseParser {
       .sort((a: Node, b: Node) => a.location.startOffset - b.location.startOffset);
   }
 
-  // Param name as it's documented: splat and block params keep their sigils, '...' for arguments forwarding
+  // Param name as it's documented, splat and block params are named without sigils the same way YARD names them
   private paramName(param: Node): string {
     const type = nodeType(param);
-    if (type === "ForwardingParameterNode" || type === "MultiTargetNode") {
+    if (type === "MultiTargetNode") {
       return param.location.slice();
     }
     const name = "name" in param && param.name ? String(param.name) : "";
-    return (this.sigils[type] || "") + name;
+    return name;
   }
 }

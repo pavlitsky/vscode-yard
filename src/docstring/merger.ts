@@ -77,7 +77,8 @@ export class DocstringMerger {
       let item = paramItems.find((i) => sameName(i.name, param.name));
       const stale = paramItems[index];
       if (!item && stale && stale.name && !isDocumented(stale)) { item = stale; }
-      const isRenamed = item && !sameName(item.name, param.name);
+      // Names written with sigils are renamed too, YARD expects them without sigils
+      const isRenamed = item && item.name !== param.name;
       const options = optionItems.filter((option) => sameName(option.name, item ? item.name : param.name));
       used.push(...(item ? [item] : []), ...options);
 

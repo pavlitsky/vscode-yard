@@ -119,9 +119,9 @@ export class Renderer {
     this.snippet.appendText("@" + entity.tagName);
     if (this.paramNameBeforeType()) {
       this.spacedName(entity);
-      this.typesList(entity.types);
+      this.typesList(entity.types, entity.typesPlaceholder);
     } else {
-      this.typesList(entity.types);
+      this.typesList(entity.types, entity.typesPlaceholder);
       this.spacedName(entity);
     }
     this.snippet.appendText(" ");
@@ -208,9 +208,9 @@ export class Renderer {
 
   // Render entity types list
   // [types]
-  private typesList(types: string) {
+  private typesList(types: string, placeholder?: string) {
     this.snippet.appendText(" [");
-    this.textOrPlaceholder(types, "<Type>");
+    this.textOrPlaceholder(types, placeholder || "<Type>");
     this.snippet.appendText("]");
   }
 

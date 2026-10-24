@@ -1,8 +1,8 @@
 #
 # <Description>
 #
-# @param [<Type>] *bar <description>
-# @param [<Type>] **baz <description>
+# @param [Array<Object>] bar <description>
+# @param [Hash{Symbol => Object}] baz <description>
 #
 # @return [<Type>] <description>
 #

@@ -1,7 +1,7 @@
 #
 # <Description>
 #
-# @param [<Type>] &bar <description>
+# @param [Proc] bar <description>
 #
 # @return [<Type>] <description>
 #

@@ -197,6 +197,10 @@ List of generated tags: `@author`, `@option`, `@param`, `@return`, `@yield`,
 of the repository the document belongs to, or from global git config if it's outside
 of a repository. Placeholders are inserted when values can't be resolved.
 
+Splat and block params are named without `*`, `**` and `&` the same way YARD names them,
+their types are prefilled with `Array<Object>`, `Hash{Symbol => Object}` and `Proc`. Anonymous
+splats and arguments forwarding (`...`) aren't documented since YARD doesn't list them.
+
 Options hash params, which are params with a hash default value (`opts = {}`) or keyword
 splats (`**opts`), get an `@option` tag for each symbol key found in the default hash or read
 in the method body (`opts[:key]`, `opts.fetch(:key, default)`, `opts[:key] || default` etc.).
@@ -263,11 +267,6 @@ a curt and verbose documentation styles.
 "yard.tags.paramNameBeforeType" // Print param name before its type (for example '@param username [String]')
 "yard.completion.enabled" // Complete YARD tags in comments
 ```
-
-## TODO
-
-* (maybe) A better support for array / keyword args splats, see
-  [comment](https://github.com/lsegal/yard/issues/439#issuecomment-3292412).
 
 ## Troubleshooting
 

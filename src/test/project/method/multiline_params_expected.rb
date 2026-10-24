@@ -3,7 +3,7 @@
 #
 # @param [<Type>] bar <description>
 # @param [<Type>] baz <description>
-# @param [<Type>] &qux <description>
+# @param [Proc] qux <description>
 #
 # @return [<Type>] <description>
 #
