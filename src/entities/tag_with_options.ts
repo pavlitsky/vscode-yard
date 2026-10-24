@@ -7,7 +7,7 @@ export class TagWithOptions extends TagWithTypes {
   public options?: TagOption[];
   public type?: string;
 
-  constructor(params: TagWithOptions = {} as TagWithOptions) {
+  constructor(params: TagWithOptions = {}) {
     super(params);
 
     const {

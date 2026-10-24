@@ -1,19 +1,20 @@
 "use strict";
-import type { Node } from "@ruby/prism" with { "resolution-mode": "import" };
-import type { ParseResult } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
+import type { Node, ProgramNode } from "@ruby/prism" with { "resolution-mode": "import" };
+import type { ParseResult as PrismParseResult } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
+
+// Result of parsing. Prism's declaration of the syntax tree root misses its type, it's declared here.
+export type ParseResult = Omit<PrismParseResult, "value"> & { value: ProgramNode };
 
 // Parse Ruby source into a syntax tree
 export type ParseFunction = (source: string) => ParseResult;
 
-let parser: Promise<ParseFunction>;
+let parser: Promise<ParseFunction> | undefined;
 
 // Load Prism parser once. It's an ES module backed by a WebAssembly build of the Ruby's parser.
 export function loadParser(): Promise<ParseFunction> {
-  if (!parser) {
-    parser = import("@ruby/prism")
-      .then((prism) => prism.loadPrism())
-      .then((parse) => (source: string) => parse(new TextEncoder().encode(source)));
-  }
+  parser ??= import("@ruby/prism")
+    .then((prism) => prism.loadPrism())
+    .then((parse) => (source: string) => parse(new TextEncoder().encode(source)));
   return parser;
 }
 

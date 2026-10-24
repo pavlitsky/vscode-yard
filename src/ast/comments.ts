@@ -1,5 +1,5 @@
 "use strict";
-import type { ParseResult } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
+import type { ParseResult } from "./prism";
 
 // Type of a '#' comment, other comments are =begin/=end embedded documents
 const INLINE_COMMENT = 0;

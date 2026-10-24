@@ -8,7 +8,7 @@ export class Tag implements IEntity {
   public text?: string;
   public type?: string;
 
-  constructor(params: Tag = {} as Tag) {
+  constructor(params: Tag = {}) {
     const {
       tagName = "",
       name = "",

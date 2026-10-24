@@ -7,7 +7,7 @@ export class Yield extends Tag {
   public yieldParams?: TagWithTypes[];
   public yieldReturn?: TagWithTypes;
 
-  constructor(params: Yield = {} as Yield) {
+  constructor(params: Yield = {}) {
     super(params);
 
     const {

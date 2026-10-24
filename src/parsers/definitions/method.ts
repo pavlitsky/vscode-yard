@@ -40,12 +40,12 @@ export default class MethodDef implements IBaseParser {
 
   // Parse documentation tree
   public parse(context: IParseContext = {}): IEntity[] {
-    return []
-      .concat(this.buildDescription())
-      .concat(this.buildParams(context))
-      .concat(this.buildYield(context))
-      .concat(this.buildReturn())
-      .filter((element) => element !== undefined);
+    return [
+      this.buildDescription(),
+      ...this.buildParams(context),
+      this.buildYield(context),
+      this.buildReturn(),
+    ].filter((element) => element !== undefined);
   }
 
   // Is method signature malformed: params parentheses aren't closed or there's a syntax error within the signature.
@@ -121,7 +121,7 @@ export default class MethodDef implements IBaseParser {
     const paramName = String((param as KeywordRestParameterNode).name);
     const options = (new OptionsUsage(paramName, value, this.def.body)).detect()
       .map(({ key, defaultValue }) => new OptionTag({ paramName, key, defaultValue }));
-    if (options.length === 0 && isHash && (value as HashNode).elements.length === 0) {
+    if (options.length === 0 && isHash && value.elements.length === 0) {
       return this.seedOptions(paramName);
     }
     return options;
@@ -136,12 +136,12 @@ export default class MethodDef implements IBaseParser {
   private params(): Node[] {
     const params = this.def.parameters;
     if (!params) { return []; }
-    return [].concat(
-      params.requireds, params.optionals, params.rest, params.posts,
-      params.keywords, params.keywordRest, params.block,
-    )
-      .filter((param: Node) => param && !isNode(param, "NoKeywordsParameterNode"))
-      .sort((a: Node, b: Node) => a.location.startOffset - b.location.startOffset);
+    return [
+      ...params.requireds, ...params.optionals, params.rest, ...params.posts,
+      ...params.keywords, params.keywordRest, params.block,
+    ]
+      .filter((param): param is Node => !!param && nodeType(param) !== "NoKeywordsParameterNode")
+      .sort((a, b) => a.location.startOffset - b.location.startOffset);
   }
 
   // Param name as it's documented, splat and block params are named without sigils the same way YARD names them

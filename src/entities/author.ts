@@ -6,7 +6,7 @@ export class Author extends Tag {
   public authorName?: string;
   public authorEmail?: string;
 
-  constructor(params: Author = {} as Author) {
+  constructor(params: Author = {}) {
     super(params);
 
     const {

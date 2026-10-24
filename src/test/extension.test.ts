@@ -40,7 +40,7 @@ const gitEnv = {
 };
 
 // Update extension configuration with specified options grouped by sections: spacers, tags etc.
-async function updateConfig(options) {
+async function updateConfig(options: { [section: string]: { [key: string]: unknown } }) {
   const config = workspace.getConfiguration("yard");
   for (const section of Object.keys(options)) {
     for (const key of Object.keys(options[section])) {

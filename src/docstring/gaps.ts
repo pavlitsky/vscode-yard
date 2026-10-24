@@ -25,13 +25,13 @@ export interface IDocGaps {
 
 // Generated yield section
 export function generatedYield(entities: IEntity[]): Yield | undefined {
-  return entities.find((entity) => entity.type === "Yield") as Yield;
+  return entities.find((entity) => entity.type === "Yield");
 }
 
 // Generated return value tag
 export function generatedReturn(entities: IEntity[]): TagWithTypes | undefined {
   return entities.find((entity) =>
-    entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "return") as TagWithTypes;
+    entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "return");
 }
 
 // Find generated documentation entities a docstring is missing
@@ -40,8 +40,8 @@ export function findGaps(items: IDocItem[], entities: IEntity[]): IDocGaps {
   const params = entities.filter((entity) => entity.type === "TagWithOptions") as TagWithOptions[];
   const isDocumented = (param: TagWithOptions) => tagged("param").some((item) => sameName(item.name, param.name));
   const gaps: IDocGaps = {
-    options: [].concat(...params.filter(isDocumented).map((param) => param.options.filter((option) =>
-      option.key && !tagged("option").some((item) => sameName(item.name, param.name) && item.key === option.key)))),
+    options: params.filter(isDocumented).flatMap((param) => param.options.filter((option) =>
+      option.key && !tagged("option").some((item) => sameName(item.name, param.name) && item.key === option.key))),
     params: params.filter((param) => !isDocumented(param)),
     yieldParams: [],
   };

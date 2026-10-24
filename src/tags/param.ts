@@ -3,7 +3,7 @@ import { TagWithOptions } from "../entities/tag_with_options";
 
 // @param documentation tag
 export class ParamTag extends TagWithOptions {
-  constructor(params: ParamTag = {} as ParamTag) {
+  constructor(params: ParamTag = {}) {
     super(params);
 
     const {

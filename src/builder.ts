@@ -1,5 +1,5 @@
 "use strict";
-import type { ParseResult } from "@ruby/prism/src/deserialize.js" with { "resolution-mode": "import" };
+import type { ParseResult } from "./ast/prism";
 import { SnippetString, workspace } from "vscode";
 import { DocstringMerger } from "./docstring/merger";
 import { DocstringParser } from "./docstring/parser";

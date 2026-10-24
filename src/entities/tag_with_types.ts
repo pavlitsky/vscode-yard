@@ -10,7 +10,7 @@ export class TagWithTypes extends Tag {
   public typesPlaceholder?: string;
   public type?: string;
 
-  constructor(params: TagWithTypes = {} as TagWithTypes) {
+  constructor(params: TagWithTypes = {}) {
     super(params);
 
     const {

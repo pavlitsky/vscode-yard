@@ -5,7 +5,7 @@ import { IEntity } from "../../types";
 
 // Helper class to manage empty lines of a snippet
 export class SpacerHelper {
-  private lastTag = undefined;
+  private lastTag: Tag | undefined = undefined;
   private isFirstTag: boolean = false;
   private isFirstTagInGroup: boolean = false;
   private isTag: boolean = false;

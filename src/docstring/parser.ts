@@ -44,8 +44,8 @@ export class DocstringParser {
     const [, tag] = /^@(\S+)/.exec(line);
     const item: IDocItem = { tag, lines: [line] };
     if (tag === "param" || tag === "yieldparam") {
-      const typesFirst = /^@\S+\s+\[[^\]]*\]\s*([^\s\[]+)/.exec(line);
-      const nameFirst = /^@\S+\s+([^\s\[]+)(\s+\[)?/.exec(line);
+      const typesFirst = /^@\S+\s+\[[^\]]*\]\s*([^\s[]+)/.exec(line);
+      const nameFirst = /^@\S+\s+([^\s[]+)(\s+\[)?/.exec(line);
       if (typesFirst) {
         item.name = typesFirst[1];
         item.nameFirst = false;
@@ -54,7 +54,7 @@ export class DocstringParser {
         item.nameFirst = nameFirst[2] ? true : undefined;
       }
     } else if (tag === "option") {
-      const match = /^@option\s+([^\s\[]+)(?:\s+\[[^\]]*\])?\s+:?([^\s(]+)/.exec(line);
+      const match = /^@option\s+([^\s[]+)(?:\s+\[[^\]]*\])?\s+:?([^\s(]+)/.exec(line);
       if (match) {
         item.name = match[1];
         item.key = match[2];

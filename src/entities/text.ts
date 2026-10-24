@@ -5,7 +5,7 @@ export class Text implements IEntity {
   public text?: string;
   public type?: string;
 
-  constructor(params: Text = {} as Text) {
+  constructor(params: Text = {}) {
     const {
       text = "",
       type = "Text",

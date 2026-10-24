@@ -5,7 +5,7 @@ export class Raw implements IEntity {
   public lines?: string[];
   public type?: string;
 
-  constructor(params: Raw = {} as Raw) {
+  constructor(params: Raw = {}) {
     const {
       lines = [],
       type = "Raw",

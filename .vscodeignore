@@ -10,3 +10,4 @@ node_modules/@ruby/prism/example.html
 node_modules/@ruby/prism/test.js
 .github/**
 .markdownlint.json
+eslint.config.mjs

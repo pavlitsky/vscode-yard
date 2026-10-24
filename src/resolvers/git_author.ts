@@ -44,7 +44,7 @@ export class GitAuthorResolver {
           const value = error ? "" : stdout.toString().trim();
           resolve(value || undefined);
         });
-      } catch (e) {
+      } catch {
         resolve(undefined);
       }
     });

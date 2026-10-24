@@ -3,7 +3,7 @@ import { TagWithTypes } from "../entities/tag_with_types";
 
 // @yieldreturn documentation tag
 export class YieldReturnTag extends TagWithTypes {
-  constructor(params: YieldReturnTag = {} as YieldReturnTag) {
+  constructor(params: YieldReturnTag = {}) {
     super(params);
 
     const {

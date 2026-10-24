@@ -58,7 +58,7 @@ export class DocstringMerger {
     segments = this.mergeYield(segments);
     segments = this.mergeReturn(segments);
 
-    const lines = [].concat(...description.map((item) => item.lines));
+    const lines = description.flatMap((item) => item.lines);
     return [new Raw({ lines }) as IEntity].concat(segments.map((segment) =>
       segment.entity || new Raw({ lines: segment.item.lines })));
   }
@@ -84,7 +84,7 @@ export class DocstringMerger {
       if (item) {
         group.push({ item: isRenamed ? this.renamed(item, "param", param.name) : item, rank: 1 });
       } else {
-        group.push({ entity: new TagWithOptions({ ...param, options: [] } as TagWithOptions), rank: 1 });
+        group.push({ entity: new TagWithOptions({ ...param, options: [] }), rank: 1 });
       }
       options.forEach((option) => group.push({
         item: isRenamed ? this.renamed(option, "option", bareName(param.name)) : option, rank: 1,
