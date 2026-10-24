@@ -4,10 +4,10 @@ import { TagWithTypes } from "./tag_with_types";
 
 // Yield entity. Extends Tag with block params and block return value.
 export class Yield extends Tag {
-  public yieldParams?: TagWithTypes[];
+  public yieldParams: TagWithTypes[];
   public yieldReturn?: TagWithTypes;
 
-  constructor(params: Yield = {}) {
+  constructor(params: Partial<Yield> = {}) {
     super(params);
 
     const {

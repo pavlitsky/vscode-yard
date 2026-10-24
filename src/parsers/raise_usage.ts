@@ -1,5 +1,6 @@
 "use strict";
-import type { CallNode, Node } from "@ruby/prism" with { "resolution-mode": "import" };
+import type { CallNode, ConstantPathNode, ConstantReadNode, Node }
+  from "@ruby/prism" with { "resolution-mode": "import" };
 import { isNode, nodeType, walkScope } from "../ast/prism";
 
 // Detect classes of exceptions raised in a method body: raise Foo, raise Foo, "message", raise Foo.new(...).
@@ -29,7 +30,7 @@ export class RaiseUsage {
   }
 
   // Is node a constant reference: Foo or Foo::Bar
-  private isConstant(node: Node | null | undefined): boolean {
+  private isConstant(node: Node | null | undefined): node is ConstantReadNode | ConstantPathNode {
     return ["ConstantReadNode", "ConstantPathNode"].indexOf(nodeType(node)) >= 0;
   }
 }

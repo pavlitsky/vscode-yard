@@ -18,13 +18,13 @@ export interface IRenderOptions {
 
 // Render documentation tree into a snippet
 export class Renderer {
-  private snippet: SnippetString;
-  private spacer: SpacerHelper;
+  private snippet = new SnippetString();
+  private spacer = new SpacerHelper(this.snippet, this.eol);
   private config: WorkspaceConfiguration;
   // Number of a next placeholder
-  private tabstop: number;
+  private tabstop = 1;
   // Placeholder numbers by link keys
-  private links: { [key: string]: number };
+  private links: { [key: string]: number } = {};
 
   constructor(private entities: IEntity[], private eol: string, private options: IRenderOptions = {}) {
     this.config = workspace.getConfiguration("yard.tags");
@@ -55,13 +55,13 @@ export class Renderer {
   // Render a single entity depending of its type
   private renderEntity(entity: IEntity) {
     switch (entity.type) {
-      case("Raw"): this.rawEntity(entity); break;
-      case("Author"): this.authorEntity(entity); break;
-      case("TagOption"): this.tagOptionEntity(entity); break;
-      case("TagWithOptions"): this.tagWithOptionsEntity(entity); break;
-      case("TagWithTypes"): this.tagWithTypesEntity(entity); break;
-      case("Text"): this.textEntity(entity); break;
-      case("Yield"): this.yieldEntity(entity); break;
+      case("Raw"): this.rawEntity(entity as Raw); break;
+      case("Author"): this.authorEntity(entity as Author); break;
+      case("TagOption"): this.tagOptionEntity(entity as TagOption); break;
+      case("TagWithOptions"): this.tagWithOptionsEntity(entity as TagWithOptions); break;
+      case("TagWithTypes"): this.tagWithTypesEntity(entity as TagWithTypes); break;
+      case("Text"): this.textEntity(entity as Text); break;
+      case("Yield"): this.yieldEntity(entity as Yield); break;
     }
   }
 

@@ -11,7 +11,7 @@
             "mocha"
         ],
         "esModuleInterop": true,
-        "strict": false,
+        "strict": true,
         "skipLibCheck": true,
         "useDefineForClassFields": false,
         "sourceMap": true,

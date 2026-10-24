@@ -3,10 +3,10 @@ import { Tag } from "./tag";
 
 // Author entity. Extends Tag with name and email.
 export class Author extends Tag {
-  public authorName?: string;
-  public authorEmail?: string;
+  public authorName: string;
+  public authorEmail: string;
 
-  constructor(params: Author = {}) {
+  constructor(params: Partial<Author> = {}) {
     super(params);
 
     const {

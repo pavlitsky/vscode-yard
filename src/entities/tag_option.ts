@@ -1,13 +1,13 @@
 // A single option. Used for a options hash parameters.
 export class TagOption {
-  public paramName?: string;
-  public key?: string;
-  public types?: string;
-  public defaultValue?: string;
-  public text?: string;
-  public type?: string;
+  public paramName: string;
+  public key: string;
+  public types: string;
+  public defaultValue: string;
+  public text: string;
+  public type: string;
 
-  constructor(params: TagOption = {}) {
+  constructor(params: Partial<TagOption> = {}) {
     const {
       paramName = "",
       key = "",

@@ -25,13 +25,13 @@ export interface IDocGaps {
 
 // Generated yield section
 export function generatedYield(entities: IEntity[]): Yield | undefined {
-  return entities.find((entity) => entity.type === "Yield");
+  return entities.find((entity) => entity.type === "Yield") as Yield | undefined;
 }
 
 // Generated return value tag
 export function generatedReturn(entities: IEntity[]): TagWithTypes | undefined {
   return entities.find((entity) =>
-    entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "return");
+    entity.type === "TagWithTypes" && (entity as TagWithTypes).tagName === "return") as TagWithTypes | undefined;
 }
 
 // Find generated documentation entities a docstring is missing

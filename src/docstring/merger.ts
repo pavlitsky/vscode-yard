@@ -18,11 +18,8 @@ const tagRanks: { [tag: string]: number } = {
 };
 
 // Part of a merged docstring: an existing item or a new entity
-interface ISegment {
-  item?: IDocItem;
-  entity?: IEntity;
-  rank?: number;
-}
+type ISegment = { item: IDocItem; entity?: undefined; rank?: number } |
+  { item?: undefined; entity: IEntity; rank?: number };
 
 // Merge an existing docstring with freshly generated documentation entities.
 // Texts and tags are kept as they're written, missing tags are added and params are synced with the method signature:
@@ -60,7 +57,7 @@ export class DocstringMerger {
 
     const lines = description.flatMap((item) => item.lines);
     return [new Raw({ lines }) as IEntity].concat(segments.map((segment) =>
-      segment.entity || new Raw({ lines: segment.item.lines })));
+      segment.entity ? segment.entity : new Raw({ lines: segment.item.lines })));
   }
 
   // Sync params and their options with the method signature
@@ -120,17 +117,17 @@ export class DocstringMerger {
     if (!segments.some(isYieldTag)) { return this.insertGroup(segments, [{ entity: generated, rank: 2 }], 2); }
 
     const result = segments.slice();
-    const documented = result.filter((s) => s.item && s.item.tag === "yieldparam").map((s) => s.item.name);
+    const documented = result.flatMap((s) => s.item?.tag === "yieldparam" ? [s.item.name] : []);
     const missing = generated.yieldParams
       .filter((param) => param.name && documented.indexOf(param.name) < 0)
       .map((param) => ({ entity: param, rank: 2 }));
     if (missing.length > 0) {
-      const last = this.lastIndex(result, (s) => s.item && (s.item.tag === "yield" || s.item.tag === "yieldparam"));
-      const at = last >= 0 ? last + 1 : result.findIndex((s) => s.item && s.item.tag === "yieldreturn");
+      const last = this.lastIndex(result, (s) => s.item?.tag === "yield" || s.item?.tag === "yieldparam");
+      const at = last >= 0 ? last + 1 : result.findIndex((s) => s.item?.tag === "yieldreturn");
       result.splice(at, 0, ...missing);
       this.changed = true;
     }
-    if (generated.yieldReturn && !result.some((s) => s.item && s.item.tag === "yieldreturn")) {
+    if (generated.yieldReturn && !result.some((s) => s.item?.tag === "yieldreturn")) {
       result.splice(this.lastIndex(result, isYieldTag) + 1, 0, { entity: generated.yieldReturn, rank: 2 });
       this.changed = true;
     }
@@ -140,15 +137,15 @@ export class DocstringMerger {
   // Add return value tag if it's missing
   private mergeReturn(segments: ISegment[]): ISegment[] {
     const generated = generatedReturn(this.entities);
-    if (!generated || segments.some((s) => s.item && s.item.tag === "return")) { return segments; }
+    if (!generated || segments.some((s) => s.item?.tag === "return")) { return segments; }
     return this.insertGroup(segments, [{ entity: generated, rank: 3 }], 3);
   }
 
   // Insert a new group of tags before tags ranked higher, or after the last tag ranked lower.
   // Group is separated from neighbour tags with blank lines according to spacers settings.
   private insertGroup(segments: ISegment[], group: ISegment[], rank: number): ISegment[] {
-    let at = segments.findIndex((segment) => segment.rank > rank);
-    if (at < 0) { at = this.lastIndex(segments, (segment) => segment.rank < rank) + 1; }
+    let at = segments.findIndex((segment) => segment.rank !== undefined && segment.rank > rank);
+    if (at < 0) { at = this.lastIndex(segments, (segment) => segment.rank !== undefined && segment.rank < rank) + 1; }
     const before = segments[at - 1];
     const after = segments[at];
     const blank = () => ({ item: { tag: "", lines: [""] } });
@@ -165,7 +162,7 @@ export class DocstringMerger {
 
   // Rename a param in a @param or @option tag line
   private renamed(item: IDocItem, tag: string, name: string): IDocItem {
-    const escaped = item.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escaped = (item.name ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const pattern = new RegExp("^(@" + tag + "\\s+(?:\\[[^\\]]*\\]\\s*)?)" + escaped);
     const [first, ...rest] = item.lines;
     return { ...item, name, lines: [first.replace(pattern, "$1" + name), ...rest] };

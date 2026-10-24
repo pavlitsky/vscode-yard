@@ -13,8 +13,8 @@ export class ParserResolver {
   constructor(private root: Node, private line: number, private errors: ParseError[] = []) { }
 
   // Instantiate each parser for nodes starting on the line and check if it's ready to parse the node
-  public resolve(): IBaseParser {
-    let resolved: IBaseParser;
+  public resolve(): IBaseParser | undefined {
+    let resolved: IBaseParser | undefined;
     walk(this.root, (node) => {
       if (resolved || !this.containsLine(node)) { return false; }
       if (node.location.startLine() !== this.line) { return; }

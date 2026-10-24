@@ -19,9 +19,9 @@ export class OptionsUsage {
   // Longer default values aren't documented to keep comments readable
   private readonly maxDefaultLength = 40;
   // Keys in order of appearance
-  private keys: string[];
+  private keys: string[] = [];
   // Default values found for each key
-  private defaults: { [key: string]: string[] };
+  private defaults: { [key: string]: string[] } = {};
 
   constructor(private name: string, private defaultHash: Node | null, private body: Node | null) {}
 

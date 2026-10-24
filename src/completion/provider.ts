@@ -35,7 +35,8 @@ interface IDefinitionContext {
 // Complete YARD tags in comments. Tags missing in documentation of a definition below the comment are offered first,
 // standard YARD tags follow them. Names are completed after @param, @yieldparam, @option and @raise tags.
 export class TagCompletionProvider implements CompletionItemProvider {
-  public async provideCompletionItems(document: TextDocument, position: Position): Promise<CompletionItem[]> {
+  public async provideCompletionItems(document: TextDocument, position: Position):
+    Promise<CompletionItem[] | undefined> {
     if (!workspace.getConfiguration("yard.completion").get("enabled")) { return; }
     const prefix = document.lineAt(position).text.slice(0, position.character);
     const tagMatch = TAG_PATTERN.exec(prefix);
@@ -48,12 +49,14 @@ export class TagCompletionProvider implements CompletionItemProvider {
       const range = new Range(position.translate(0, -tagMatch[1].length), position);
       return this.tagItems(context, range).concat(this.standardTagItems(context, range));
     }
+    if (!nameMatch) { return; }
     const [, tag, types, name] = nameMatch;
     return this.nameItems(context, tag, types, new Range(position.translate(0, -name.length), position));
   }
 
   // Parse the document and collect details of a definition documented by a comment at the position
-  private async definitionContext(document: TextDocument, position: Position): Promise<IDefinitionContext> {
+  private async definitionContext(document: TextDocument, position: Position):
+    Promise<IDefinitionContext | undefined> {
     const tree = (await loadParser())(document.getText());
     const comments = new CommentBlocks(tree, (line) => document.lineAt(line - 1).firstNonWhitespaceCharacterIndex);
     const block = comments.at(position.line + 1);

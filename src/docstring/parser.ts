@@ -24,7 +24,7 @@ export class DocstringParser {
   public parse(): IDocItem[] {
     const contents = this.comments.map((comment) => comment.replace(/^#/, "").replace(/^ /, ""));
     const items: IDocItem[] = [];
-    let tag: IDocItem;
+    let tag: IDocItem | undefined;
     contents.forEach((line, index) => {
       if (/^@\S/.test(line)) {
         tag = this.parseTag(line);
@@ -41,7 +41,7 @@ export class DocstringParser {
 
   // Parse a tag line
   private parseTag(line: string): IDocItem {
-    const [, tag] = /^@(\S+)/.exec(line);
+    const tag = /^@(\S+)/.exec(line)?.[1] ?? "";
     const item: IDocItem = { tag, lines: [line] };
     if (tag === "param" || tag === "yieldparam") {
       const typesFirst = /^@\S+\s+\[[^\]]*\]\s*([^\s[]+)/.exec(line);

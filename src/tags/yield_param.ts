@@ -3,7 +3,7 @@ import { TagWithTypes } from "../entities/tag_with_types";
 
 // @yieldparam documentation tag
 export class YieldParamTag extends TagWithTypes {
-  constructor(params: YieldParamTag = {}) {
+  constructor(params: Partial<YieldParamTag> = {}) {
     super(params);
 
     const {

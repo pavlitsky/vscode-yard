@@ -4,10 +4,10 @@ import { TagWithTypes } from "./tag_with_types";
 
 // Tag extended with options hash.
 export class TagWithOptions extends TagWithTypes {
-  public options?: TagOption[];
-  public type?: string;
+  public options: TagOption[];
+  public type: string;
 
-  constructor(params: TagWithOptions = {}) {
+  constructor(params: Partial<TagWithOptions> = {}) {
     super(params);
 
     const {

@@ -45,7 +45,7 @@ export default class MethodDef implements IBaseParser {
       ...this.buildParams(context),
       this.buildYield(context),
       this.buildReturn(),
-    ].filter((element) => element !== undefined);
+    ].filter((element): element is IEntity => element !== undefined);
   }
 
   // Is method signature malformed: params parentheses aren't closed or there's a syntax error within the signature.
@@ -81,7 +81,7 @@ export default class MethodDef implements IBaseParser {
       .filter((param) => this.isDocumentable(param))
       .map((param) => {
         const name = this.paramName(param);
-        const value: Node = "value" in param ? param.value as Node : null;
+        const value: Node | null = "value" in param ? param.value as Node : null;
         const typesPlaceholder = this.typesPlaceholders[nodeType(param)] || "";
         return new ParamTag({ name, options: this.buildOptions(param, value), typesPlaceholder });
       });
@@ -95,7 +95,7 @@ export default class MethodDef implements IBaseParser {
   }
 
   // Build yield section if method accepts a block
-  private buildYield(context: IParseContext): IEntity {
+  private buildYield(context: IParseContext): IEntity | undefined {
     if (!context.blocks) { return; }
     const blockParam = this.params().find((param) => isNode(param, "BlockParameterNode")) as BlockParameterNode;
     const blockName = blockParam ? blockParam.name || undefined : undefined;
@@ -107,7 +107,7 @@ export default class MethodDef implements IBaseParser {
   }
 
   // Build return section
-  private buildReturn(): IEntity {
+  private buildReturn(): IEntity | undefined {
     if (this.def.name === "initialize") { return; }
     return new ReturnTag();
   }

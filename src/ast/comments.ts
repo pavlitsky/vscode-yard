@@ -53,7 +53,7 @@ export class CommentBlocks {
     let startLine = endLine;
     while (this.comments.has(startLine - 1)) { startLine--; }
     const lines: string[] = [];
-    for (let line = startLine; line <= endLine; line++) { lines.push(this.comments.get(line)); }
+    for (let line = startLine; line <= endLine; line++) { lines.push(this.comments.get(line) ?? ""); }
     return { startLine, endLine, lines };
   }
 }

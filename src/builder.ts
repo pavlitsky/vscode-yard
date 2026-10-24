@@ -10,7 +10,7 @@ import { IParseContext } from "./types";
 
 // Build documentation snippet
 export class Builder {
-  private parser: IBaseParser;
+  private parser: IBaseParser | undefined;
 
   constructor(tree: ParseResult, line: number, private eol: string) {
     this.parser = (new ParserResolver(tree.value, line, tree.errors)).resolve();
@@ -41,7 +41,7 @@ export class Builder {
   // Build a snippet of existing documentation comments merged with generated documentation,
   // undefined if documentation is up to date
   public update(comments: string[], context: IParseContext = {}): SnippetString | undefined {
-    if (!this.supportsUpdate()) { return; }
+    if (!this.parser?.supportsUpdate) { return; }
     const spacers = workspace.getConfiguration("yard.spacers");
     const merger = new DocstringMerger((new DocstringParser(comments)).parse(), this.parser.parse(context), {
       beforeTags: !!spacers.get("beforeTags"),

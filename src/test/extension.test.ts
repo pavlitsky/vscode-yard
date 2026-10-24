@@ -6,7 +6,9 @@ import { commands, CompletionItem, CompletionItemKind, CompletionList, extension
   Uri, window, workspace } from "vscode";
 
 const extensionID = "pavlitsky.yard";
-const extensionPath = extensions.getExtension(extensionID).extensionPath;
+const extension = extensions.getExtension(extensionID);
+if (!extension) { throw new Error(`Extension ${extensionID} isn't installed`); }
+const extensionPath = extension.extensionPath;
 const projectPath = path.join(extensionPath, "src", "test", "project");
 
 // Spacers settings: default ones, verbose with all empty lines and curt without empty lines
@@ -57,7 +59,7 @@ async function yardCompletions(fileName: string, line: number, character: number
     new Position(line, character));
   return list.items
     .filter((item) => typeof item.detail === "string" && item.detail.startsWith("YARD"))
-    .sort((a, b) => a.sortText.localeCompare(b.sortText));
+    .sort((a, b) => (a.sortText ?? "").localeCompare(b.sortText ?? ""));
 }
 
 // Labels of completion items missing in documentation, they're sorted before standard tags
@@ -371,6 +373,7 @@ suite("Tags Completion Tests", () => {
       "@param retries", "@param opts", "@yield [response]", "@return", "@raise [ArgumentError]", "@raise [RuntimeError]",
     ]);
     const param = items.find((item) => item.label === "@param opts");
+    assert.ok(param);
     assert.equal((param.insertText as SnippetString).value,
       "@param [${1:<Type>}] opts ${2:<description>}\n# @option opts [${3:<Type>}] :timeout (5) ${4:<description>}");
     assert.ok(items.some((item) => item.label === "@note" && item.kind === CompletionItemKind.Keyword));
