@@ -16,8 +16,10 @@ import { YieldReturnTag } from "../../tags/yield_return";
 import { IEntity, IParseContext } from "../../types";
 import { BlockUsage } from "../block_usage";
 import { DeprecationUsage } from "../deprecation_usage";
+import { defaultTypes } from "../literal_types";
 import { OptionsUsage } from "../options_usage";
 import { RaiseUsage } from "../raise_usage";
+import { ReturnUsage } from "../return_usage";
 import { IBaseParser } from "./base_parser";
 
 // Parse a class or an instance method definition into documentation entities
@@ -133,7 +135,7 @@ export default class MethodDef implements IBaseParser {
       .map((param) => {
         const name = this.paramName(param);
         const value: Node | null = "value" in param ? param.value as Node : null;
-        const typesPlaceholder = this.typesPlaceholders[nodeType(param)] || "";
+        const typesPlaceholder = this.typesPlaceholders[nodeType(param)] || (value ? defaultTypes([value]) : "");
         return new ParamTag({ name, options: this.buildOptions(param, value), typesPlaceholder });
       });
   }
@@ -166,7 +168,8 @@ export default class MethodDef implements IBaseParser {
   // Build return section
   private buildReturn(): IEntity | undefined {
     if (this.def.name === "initialize") { return; }
-    return new ReturnTag({ typesPlaceholder: this.returnTypesPlaceholder() });
+    const typesPlaceholder = (new ReturnUsage(this.def.body)).detect() || this.returnTypesPlaceholder();
+    return new ReturnTag({ typesPlaceholder });
   }
 
   // Return types placeholder of a conventional method, empty if return type is unknown
@@ -186,7 +189,7 @@ export default class MethodDef implements IBaseParser {
     if (!isHash && !isKeywordRest) { return []; }
     const paramName = String((param as KeywordRestParameterNode).name);
     const options = (new OptionsUsage(paramName, value, this.def.body)).detect()
-      .map(({ key, defaultValue }) => new OptionTag({ paramName, key, defaultValue }));
+      .map(({ key, defaultValue, types }) => new OptionTag({ paramName, key, defaultValue, typesPlaceholder: types }));
     if (options.length === 0 && isHash && value.elements.length === 0) {
       return this.seedOptions(paramName);
     }

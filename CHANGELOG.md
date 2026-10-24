@@ -25,6 +25,8 @@
 - Document methods which only raise `NotImplementedError` with `@abstract` tag.
 - Document methods warning about their deprecation with `@deprecated` tag.
 - Prefill return types of predicates, comparisons, conversions like `to_s` and size methods.
+- Prefill types of params and options with literal default values, and return types of methods returning
+  literal values.
 
 ## [0.4.0] - 2020-03-23
 

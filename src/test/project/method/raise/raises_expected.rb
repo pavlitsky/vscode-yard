@@ -2,7 +2,7 @@
 # <Description>
 #
 # @param [<Type>] url <description>
-# @param [<Type>] retries <description>
+# @param [Integer] retries <description>
 #
 # @raise [ArgumentError] <description>
 # @raise [Net::ReadTimeout] <description>

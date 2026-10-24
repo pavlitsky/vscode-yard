@@ -1,8 +1,8 @@
 #
 # <Description>
 #
-# @param [<Type>] opts <description>
-# @option opts [<Type>] :timeout (5) <description>
+# @param [Hash] opts <description>
+# @option opts [Integer] :timeout (5) <description>
 #
 # @return [<Type>] <description>
 #

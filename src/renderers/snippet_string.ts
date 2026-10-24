@@ -90,7 +90,7 @@ export class Renderer {
   // @option paramName [types] :<key> (default) <description>
   private tagOptionEntity(entity: TagOption) {
     this.snippet.appendText("@option " + entity.paramName);
-    this.typesList(entity.types);
+    this.typesList(entity.types, entity.typesPlaceholder);
     this.snippet.appendText(" :");
     this.textOrPlaceholder(entity.key, "<key>");
     if (entity.defaultValue) { this.snippet.appendText(" (" + entity.defaultValue + ")"); }

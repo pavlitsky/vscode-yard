@@ -2,9 +2,9 @@
 # <Description>
 #
 # @param [<Type>] url <description>
-# @param [<Type>] opts <description>
-# @option opts [<Type>] :timeout (5) <description>
-# @option opts [<Type>] :format (:json) <description>
+# @param [Hash] opts <description>
+# @option opts [Integer] :timeout (5) <description>
+# @option opts [Symbol] :format (:json) <description>
 #
 # @return [<Type>] <description>
 #

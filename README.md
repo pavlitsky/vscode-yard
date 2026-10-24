@@ -44,7 +44,7 @@ from the command palette.
   # <Description>
   #
   # @param bar [<Type>] <description>
-  # @param baz [<Type>] <description>
+  # @param baz [Boolean] <description>
   #
   # @return [<Type>] <description>
   #
@@ -206,10 +206,25 @@ Splat and block params are named without `*`, `**` and `&` the same way YARD nam
 their types are prefilled with `Array<Object>`, `Hash{Symbol => Object}` and `Proc`. Anonymous
 splats and arguments forwarding (`...`) aren't documented since YARD doesn't list them.
 
-Return types of conventional methods are prefilled as placeholders: predicates (`valid?`) and
-comparisons (`==`, `<`, `>=` etc.) return `Boolean`, conversions return their classes (`to_s` and
-`inspect` return `String`, `to_h` returns `Hash`, `to_i` returns `Integer` and so on), `size`,
-`length`, `count` and `hash` return `Integer`, `<=>` and `=~` return `Integer, nil`.
+Types are prefilled as placeholders when they're known, so they can be kept or typed over:
+
+* Types of params and options with literal default values: `retries = 3` is `Integer`, `opts = {}`
+  is `Hash`, `format: :json` is `Symbol`, `cache = Set.new` is `Set`, `parent = nil` is `Object, nil`.
+* Return types of methods returning literal values, both the last expression and explicit `return`
+  values are looked through, including `if` and `unless` branches:
+
+  ```ruby
+  # @return [Record, nil] <description>
+  def record
+    return nil if @id.nil?
+    Record.new(@id)
+  end
+  ```
+
+* Otherwise return types of conventional methods: predicates (`valid?`) and comparisons (`==`, `<`,
+  `>=` etc.) return `Boolean`, conversions return their classes (`to_s` and `inspect` return `String`,
+  `to_h` returns `Hash`, `to_i` returns `Integer` and so on), `size`, `length`, `count` and `hash`
+  return `Integer`, `<=>` and `=~` return `Integer, nil`.
 
 Options hash params, which are params with a hash default value (`opts = {}`) or keyword
 splats (`**opts`), get an `@option` tag for each symbol key found in the default hash or read
@@ -221,9 +236,9 @@ A default value is shown when it's known:
 # <Description>
 #
 # @param url [<Type>] <description>
-# @param opts [<Type>] <description>
-# @option opts [<Type>] :timeout (5) <description>
-# @option opts [<Type>] :limit (10) <description>
+# @param opts [Hash] <description>
+# @option opts [Integer] :timeout (5) <description>
+# @option opts [Integer] :limit (10) <description>
 #
 # @return [<Type>] <description>
 #

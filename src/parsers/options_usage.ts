@@ -2,6 +2,7 @@
 import type { AssocNode, CallNode, HashNode, IndexOrWriteNode, LocalVariableReadNode, Node, OrNode, SymbolNode }
   from "@ruby/prism" with { "resolution-mode": "import" };
 import { isNode, walkScope } from "../ast/prism";
+import { defaultTypes } from "./literal_types";
 
 // Option of an options hash
 export interface IOption {
@@ -9,6 +10,8 @@ export interface IOption {
   key: string;
   // Default value source, empty string if unknown
   defaultValue: string;
+  // Types of default values, empty string if unknown
+  types: string;
 }
 
 // Detect options hash keys: keys of a default hash literal and keys read from the hash in a method body.
@@ -21,7 +24,7 @@ export class OptionsUsage {
   // Keys in order of appearance
   private keys: string[] = [];
   // Default values found for each key
-  private defaults: { [key: string]: string[] } = {};
+  private defaults: { [key: string]: Node[] } = {};
 
   constructor(private name: string, private defaultHash: Node | null, private body: Node | null) {}
 
@@ -35,7 +38,7 @@ export class OptionsUsage {
       });
     }
     walkScope(this.body, (node) => this.visit(node));
-    return this.keys.map((key) => ({ key, defaultValue: this.defaultValue(key) }));
+    return this.keys.map((key) => ({ key, defaultValue: this.defaultValue(key), types: defaultTypes(this.defaults[key]) }));
   }
 
   // Collect keys and defaults from a node of a method body
@@ -66,12 +69,13 @@ export class OptionsUsage {
       this.keys.push(key);
       this.defaults[key] = [];
     }
-    if (fallback) { this.defaults[key].push(fallback.location.slice()); }
+    if (fallback) { this.defaults[key].push(fallback); }
   }
 
   // Default value of a key if it's the same in all sources and short enough
   private defaultValue(key: string): string {
-    const values = this.defaults[key].filter((value, index, all) => all.indexOf(value) === index);
+    const values = this.defaults[key].map((value) => value.location.slice())
+      .filter((value, index, all) => all.indexOf(value) === index);
     if (values.length !== 1) { return ""; }
     const [value] = values;
     return value.indexOf("\n") < 0 && value.length <= this.maxDefaultLength ? value : "";

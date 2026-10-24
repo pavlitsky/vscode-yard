@@ -202,6 +202,15 @@ suite("Default Documenter Tests", () => {
     "method/return/size",
     "method/return/unknown",
     "method/return/update",
+    "method/types/defaults",
+    "method/types/return_literal",
+    "method/types/return_nil",
+    "method/types/return_branches",
+    "method/types/return_unknown",
+    "method/types/return_name_fallback",
+    "method/types/return_lambda",
+    "method/types/return_multiple",
+    "method/types/return_endless",
   ];
 
   suiteSetup(async () => { await updateConfig(configOptions); });
@@ -432,7 +441,7 @@ suite("Tags Completion Tests", () => {
     const param = items.find((item) => item.label === "@param opts");
     assert.ok(param);
     assert.equal((param.insertText as SnippetString).value,
-      "@param [${1:<Type>}] opts ${2:<description>}\n# @option opts [${3:<Type>}] :timeout (5) ${4:<description>}");
+      "@param [${1:Hash}] opts ${2:<description>}\n# @option opts [${3:Integer}] :timeout (5) ${4:<description>}");
     assert.ok(items.some((item) => item.label === "@note" && item.kind === CompletionItemKind.Keyword));
   });
 
@@ -471,7 +480,7 @@ suite("Tags Completion Tests", () => {
     const options = await yardCompletions("completion/names", 3, 10);
     assert.deepEqual(missingTagLabels(options), ["opts :timeout"]);
     assert.equal((options[0].insertText as SnippetString).value,
-      "opts [${1:<Type>}] :timeout (5) ${2:<description>}");
+      "opts [${1:Integer}] :timeout (5) ${2:<description>}");
   });
 
   test("complete only standard tags in a comment not documenting a definition", async () => {

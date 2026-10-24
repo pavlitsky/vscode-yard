@@ -1,9 +1,9 @@
 #
 # <Description>
 #
-# @param [<Type>] opts <description>
-# @option opts [<Type>] :timeout <description>
-# @option opts [<Type>] :retries (3) <description>
+# @param [Hash] opts <description>
+# @option opts [Integer] :timeout <description>
+# @option opts [Integer] :retries (3) <description>
 # @option opts [<Type>] :verbose <description>
 #
 # @return [<Type>] <description>

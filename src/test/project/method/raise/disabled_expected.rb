@@ -3,7 +3,7 @@
 #
 # @param [<Type>] url <description>
 #
-# @return [<Type>] <description>
+# @return [nil] <description>
 #
 def fetch(url)
   raise ArgumentError unless url
