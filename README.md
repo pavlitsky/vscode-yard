@@ -25,7 +25,8 @@ It's able to document:
 * Attributes accessors (`attr_reader`, `attr_writer`, `attr_accessor` and more).
 * Struct and Data classes (`Point = Struct.new(:x, :y)`, `Point = Data.define(:x, :y)`).
 * Methods and attributes YARD doesn't see, with `@!method` and `@!attribute` directives:
-  `define_method`, delegated methods (`delegate`, `def_delegators`), Rails scopes and associations.
+  `define_method`, delegated methods (`delegate`, `def_delegators`), Rails scopes, associations and
+  class attributes (`class_attribute`, `cattr_accessor`, `mattr_reader`).
 
 Methods named in ASCII and Japanese are supported.
 
@@ -440,6 +441,9 @@ end
   `@!attribute [rw]` directives. Their types are guessed from association names or `class_name:`
   options: `has_many :categories` returns `ActiveRecord::Associations::CollectionProxy<Category>`,
   `belongs_to :author, class_name: "User", optional: true` returns `User, nil`.
+* Rails class attributes defined with `class_attribute`, `cattr_*` and `mattr_*` get an
+  `@!attribute` directive each, named with `self.` the way YARD tells class attributes:
+  `cattr_accessor :host` is documented with `@!attribute [rw] self.host`.
 
 Struct and Data classes assigned to constants are documented as classes, YARD reads types of their
 members from `@attr` and `@attr_reader` tags. `class Point < Struct.new(:x, :y)` gets `@attr` tags too:

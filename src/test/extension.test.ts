@@ -167,6 +167,7 @@ suite("Default Documenter Tests", () => {
     "attribute/accessor",
     "attribute/class_accessor",
     "attribute/class_attribute",
+    "attribute/module_reader",
     "attribute/parentheses",
     "method/update/sync",
     "method/update/rename_options",
